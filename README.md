@@ -138,7 +138,7 @@ ToolRegistry::register([
 ## Register tools from addon plugin
 
 ```php
-add_action('webo_mcp_register_tools', function () {
+add_action('webo_wordpress_mcp_register_tools', function () {
     ToolRegistry::register([
         'name' => 'rankmath/get-keywords',
         'description' => 'Get RankMath focus keywords',

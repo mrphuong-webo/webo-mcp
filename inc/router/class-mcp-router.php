@@ -269,14 +269,14 @@ class McpRouter {
 			return true;
 		}
 
-		$configured_api_key = (string) get_option( 'webo_wordpress_mcp_api_key', get_option( 'webo_mcp_core_api_key', '' ) );
+		$configured_api_key = (string) get_option( 'webo_wordpress_mcp_api_key', '' );
 		$provided_api_key   = (string) $request->get_header( 'X-WEBO-API-KEY' );
 
 		if ( '' !== $configured_api_key && '' !== $provided_api_key && hash_equals( $configured_api_key, trim( $provided_api_key ) ) ) {
 			return true;
 		}
 
-		$configured_hmac_secret = (string) get_option( 'webo_wordpress_mcp_hmac_secret', get_option( 'webo_mcp_core_hmac_secret', '' ) );
+		$configured_hmac_secret = (string) get_option( 'webo_wordpress_mcp_hmac_secret', '' );
 		$signature              = (string) $request->get_header( 'X-WEBO-SIGNATURE' );
 		$timestamp              = (string) $request->get_header( 'X-WEBO-TIMESTAMP' );
 
@@ -305,9 +305,8 @@ class McpRouter {
 	 */
 	private function is_internal_tools_allowed( WP_REST_Request $request ) {
 		$default_allowed = is_user_logged_in() && current_user_can( 'manage_options' );
-		$allowed         = (bool) apply_filters( 'webo_wordpress_mcp_allow_internal_tools', $default_allowed, $request );
 
-		return (bool) apply_filters( 'webo_mcp_core_allow_internal_tools', $allowed, $request );
+		return (bool) apply_filters( 'webo_wordpress_mcp_allow_internal_tools', $default_allowed, $request );
 	}
 
 	/**
@@ -327,7 +326,6 @@ class McpRouter {
 		}
 
 		$allowed_categories = apply_filters( 'webo_wordpress_mcp_public_categories', array( 'wordpress' ), $request, $tool );
-		$allowed_categories = apply_filters( 'webo_mcp_core_public_categories', $allowed_categories, $request, $tool );
 		if ( ! is_array( $allowed_categories ) ) {
 			$allowed_categories = array( 'wordpress' );
 		}
@@ -340,7 +338,6 @@ class McpRouter {
 		}
 
 		$allowed_names = apply_filters( 'webo_wordpress_mcp_public_tool_allowlist', array(), $request, $tool );
-		$allowed_names = apply_filters( 'webo_mcp_core_public_tool_allowlist', $allowed_names, $request, $tool );
 		if ( ! is_array( $allowed_names ) ) {
 			$allowed_names = array();
 		}

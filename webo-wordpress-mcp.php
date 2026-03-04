@@ -48,7 +48,6 @@ function webo_wordpress_mcp_bootstrap() {
 	);
 
 	do_action( 'webo_wordpress_mcp_register_tools' );
-	do_action( 'webo_mcp_register_tools' );
 }
 add_action( 'init', 'webo_wordpress_mcp_bootstrap', 20 );
 
