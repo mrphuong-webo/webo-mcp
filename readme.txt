@@ -48,8 +48,9 @@ This plugin is designed as the public gateway layer. Advanced/internal abilities
 == Installation ==
 
 1. Upload the plugin folder to /wp-content/plugins/webo-wordpress-mcp
-2. Activate the plugin in WordPress Admin
-3. Send JSON-RPC requests to POST /wp-json/mcp/v1/router
+2. Run `composer install` inside the plugin folder (required for bundled Abilities API)
+3. Activate the plugin in WordPress Admin
+4. Send JSON-RPC requests to POST /wp-json/mcp/v1/router
 
 == Frequently Asked Questions ==
 

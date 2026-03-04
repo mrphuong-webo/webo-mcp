@@ -15,6 +15,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+$webo_wordpress_mcp_autoloader = __DIR__ . '/vendor/autoload.php';
+if ( file_exists( $webo_wordpress_mcp_autoloader ) ) {
+	require_once $webo_wordpress_mcp_autoloader;
+}
+
+$webo_wordpress_mcp_abilities_api = __DIR__ . '/vendor/wordpress/abilities-api/abilities-api.php';
+if ( file_exists( $webo_wordpress_mcp_abilities_api ) ) {
+	require_once $webo_wordpress_mcp_abilities_api;
+}
+
 require_once __DIR__ . '/inc/registry/class-tool-registry.php';
 require_once __DIR__ . '/inc/tools/class-wordpress-tools.php';
 require_once __DIR__ . '/inc/session/class-session-manager.php';
