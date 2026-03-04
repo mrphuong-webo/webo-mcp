@@ -131,6 +131,10 @@ add_filter( 'webo_wordpress_mcp_public_categories', function () {
 }
 ```
 
+- Backward-compatible aliases are accepted for older clients:
+  - `includeinternal`
+  - `includeInternal`
+
 - Diagnostics REST endpoint also supports admin query:
   - `GET /wp-json/webo-wordpress-mcp/v1/tools?include_internal=1`
 

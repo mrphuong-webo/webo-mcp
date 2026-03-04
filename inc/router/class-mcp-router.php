@@ -111,7 +111,15 @@ class McpRouter {
 	public function handle_tools_list( WP_REST_Request $request, array $params, $id ) {
 		$include_internal = $this->is_internal_tools_allowed( $request );
 
-		$requested_include_internal = isset( $params['include_internal'] ) && filter_var( $params['include_internal'], FILTER_VALIDATE_BOOLEAN );
+		$requested_include_internal = false;
+		if ( array_key_exists( 'include_internal', $params ) ) {
+			$requested_include_internal = filter_var( $params['include_internal'], FILTER_VALIDATE_BOOLEAN );
+		} elseif ( array_key_exists( 'includeinternal', $params ) ) {
+			$requested_include_internal = filter_var( $params['includeinternal'], FILTER_VALIDATE_BOOLEAN );
+		} elseif ( array_key_exists( 'includeInternal', $params ) ) {
+			$requested_include_internal = filter_var( $params['includeInternal'], FILTER_VALIDATE_BOOLEAN );
+		}
+
 		if ( $requested_include_internal && current_user_can( 'manage_options' ) ) {
 			$include_internal = true;
 		}
