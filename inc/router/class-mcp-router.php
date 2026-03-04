@@ -31,6 +31,16 @@ class McpRouter {
 				'permission_callback' => '__return_true',
 			)
 		);
+
+		register_rest_route(
+			'mcp',
+			'/mcp-adapter-default-server',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $router, 'handle_request' ),
+				'permission_callback' => '__return_true',
+			)
+		);
 	}
 
 	/**

@@ -40,6 +40,7 @@ AI Agent -> MCP Request -> Tool Router -> Tool Registry -> Tool Execution
 - Class: `WeboMCP\Core\Router\McpRouter`
 - Location: `inc/router/class-mcp-router.php`
 - Endpoint: `POST /wp-json/mcp/v1/router`
+- Legacy compatibility endpoint: `POST /wp-json/mcp/mcp-adapter-default-server`
 - Supported methods:
   - `initialize`
   - `tools/list`
