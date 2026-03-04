@@ -10,20 +10,6 @@ class ComposerStaticInitcf7d89047dfda30a35e314d551d50847
         '2d223b650b5c56928c1affa16ee5cfe2' => __DIR__ . '/..' . '/wordpress/abilities-api/includes/bootstrap.php',
     );
 
-    public static $prefixLengthsPsr4 = array (
-        'W' => 
-        array (
-            'WP\\MCP\\' => 7,
-        ),
-    );
-
-    public static $prefixDirsPsr4 = array (
-        'WP\\MCP\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/wordpress/mcp-adapter/includes',
-        ),
-    );
-
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
@@ -31,8 +17,6 @@ class ComposerStaticInitcf7d89047dfda30a35e314d551d50847
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitcf7d89047dfda30a35e314d551d50847::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitcf7d89047dfda30a35e314d551d50847::$prefixDirsPsr4;
             $loader->classMap = ComposerStaticInitcf7d89047dfda30a35e314d551d50847::$classMap;
 
         }, null, ClassLoader::class);

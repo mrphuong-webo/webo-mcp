@@ -4,8 +4,7 @@
     "type": "wordpress-plugin",
     "require": {
         "php": "^7.4 || ^8.0",
-        "wordpress/abilities-api": "0.4",
-        "wordpress/mcp-adapter": "0.4"
+        "wordpress/abilities-api": "0.4"
     },
     "authors": [
         {

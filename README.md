@@ -7,6 +7,14 @@ Core Tool Registry for WEBO MCP ecosystem.
 - This plugin bundles `wordpress/abilities-api` via Composer for standalone abilities bridge.
 - Run `composer install` in plugin root before activation on environments that do not include `vendor/` in deployment.
 
+## Build release package
+
+- Windows PowerShell:
+  - `cd scripts`
+  - `./build-release.ps1`
+- Output zip: `dist/webo-wordpress-mcp-<version>.zip`
+- Exclusions are controlled by `.distignore`
+
 ## Quick MCP + n8n setup
 
 - MCP endpoint: `POST /wp-json/mcp/v1/router`

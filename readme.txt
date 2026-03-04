@@ -52,6 +52,8 @@ This plugin is designed as the public gateway layer. Advanced/internal abilities
 3. Activate the plugin in WordPress Admin
 4. Send JSON-RPC requests to POST /wp-json/mcp/v1/router
 
+For release packaging, use `scripts/build-release.ps1` to create a clean zip with `.distignore` exclusions.
+
 == Frequently Asked Questions ==
 
 = Which endpoint should MCP clients use? =
