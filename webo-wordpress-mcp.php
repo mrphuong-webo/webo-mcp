@@ -24,6 +24,113 @@ use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Router\McpRouter;
 use WeboMCP\Core\Tools\WordPressTools;
 
+/**
+ * Converts Abilities API input schema to ToolRegistry arguments schema.
+ *
+ * @param array<string, mixed> $input_schema Ability input schema.
+ * @return array<string, array<string, mixed>>
+ */
+function webo_wordpress_mcp_convert_input_schema_to_tool_arguments( array $input_schema ) {
+	$arguments = array();
+
+	if ( ! isset( $input_schema['properties'] ) || ! is_array( $input_schema['properties'] ) ) {
+		return $arguments;
+	}
+
+	$required_fields = array();
+	if ( isset( $input_schema['required'] ) && is_array( $input_schema['required'] ) ) {
+		$required_fields = array_values( array_filter( array_map( 'strval', $input_schema['required'] ) ) );
+	}
+
+	foreach ( $input_schema['properties'] as $property_name => $property_schema ) {
+		if ( ! is_string( $property_name ) || '' === $property_name || ! is_array( $property_schema ) ) {
+			continue;
+		}
+
+		$rule = array(
+			'type'     => isset( $property_schema['type'] ) ? (string) $property_schema['type'] : 'string',
+			'required' => in_array( $property_name, $required_fields, true ),
+		);
+
+		if ( array_key_exists( 'default', $property_schema ) ) {
+			$rule['default'] = $property_schema['default'];
+		}
+
+		if ( isset( $property_schema['minimum'] ) && is_numeric( $property_schema['minimum'] ) ) {
+			$rule['min'] = (float) $property_schema['minimum'];
+		}
+
+		if ( isset( $property_schema['maximum'] ) && is_numeric( $property_schema['maximum'] ) ) {
+			$rule['max'] = (float) $property_schema['maximum'];
+		}
+
+		if ( 'number' === $rule['type'] ) {
+			$rule['type'] = 'integer';
+		}
+
+		$arguments[ $property_name ] = $rule;
+	}
+
+	return $arguments;
+}
+
+/**
+ * Bridges all registered WordPress abilities to MCP ToolRegistry.
+ *
+ * @return void
+ */
+function webo_wordpress_mcp_register_wordpress_abilities() {
+	if ( ! function_exists( 'wp_get_abilities' ) || ! function_exists( 'wp_get_ability' ) ) {
+		return;
+	}
+
+	$abilities = wp_get_abilities();
+	if ( ! is_array( $abilities ) ) {
+		return;
+	}
+
+	foreach ( $abilities as $ability ) {
+		if ( ! is_object( $ability ) || ! method_exists( $ability, 'get_name' ) || ! method_exists( $ability, 'get_description' ) ) {
+			continue;
+		}
+
+		$ability_name = (string) $ability->get_name();
+		if ( '' === $ability_name || ToolRegistry::get( $ability_name ) ) {
+			continue;
+		}
+
+		$input_schema = method_exists( $ability, 'get_input_schema' ) ? $ability->get_input_schema() : array();
+		$category     = method_exists( $ability, 'get_category' ) ? (string) $ability->get_category() : 'wordpress';
+		$description  = (string) $ability->get_description();
+
+		$visibility = 'internal';
+		if ( method_exists( $ability, 'get_meta' ) ) {
+			$meta = $ability->get_meta();
+			if ( is_array( $meta ) && isset( $meta['mcp'] ) && is_array( $meta['mcp'] ) && array_key_exists( 'public', $meta['mcp'] ) ) {
+				$visibility = (bool) $meta['mcp']['public'] ? 'public' : 'internal';
+			}
+		}
+
+		ToolRegistry::register(
+			array(
+				'name'        => $ability_name,
+				'description' => '' !== $description ? $description : sprintf( 'Execute ability: %s', $ability_name ),
+				'category'    => '' !== $category ? $category : 'wordpress',
+				'visibility'  => $visibility,
+				'arguments'   => webo_wordpress_mcp_convert_input_schema_to_tool_arguments( is_array( $input_schema ) ? $input_schema : array() ),
+				'callback'    => static function ( array $arguments ) use ( $ability_name ) {
+					$ability_instance = wp_get_ability( $ability_name );
+					if ( ! $ability_instance || ! method_exists( $ability_instance, 'execute' ) ) {
+						return new WP_Error( 'webo_wordpress_mcp_ability_not_found', sprintf( 'Ability not found: %s', $ability_name ) );
+					}
+
+					return $ability_instance->execute( $arguments );
+				},
+			)
+		);
+	}
+}
+
 function webo_wordpress_mcp_bootstrap() {
 	ToolRegistry::register(
 		array(
@@ -50,6 +157,11 @@ function webo_wordpress_mcp_bootstrap() {
 	);
 
 	do_action( 'webo_wordpress_mcp_register_tools' );
+
+	$auto_bridge = (bool) apply_filters( 'webo_wordpress_mcp_auto_bridge_abilities', true );
+	if ( $auto_bridge ) {
+		webo_wordpress_mcp_register_wordpress_abilities();
+	}
 }
 add_action( 'init', 'webo_wordpress_mcp_bootstrap', 20 );
 

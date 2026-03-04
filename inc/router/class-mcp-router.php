@@ -325,6 +325,10 @@ class McpRouter {
 			return false;
 		}
 
+		if ( 'internal' === $visibility ) {
+			return true;
+		}
+
 		$allowed_categories = apply_filters( 'webo_wordpress_mcp_public_categories', array( 'wordpress' ), $request, $tool );
 		if ( ! is_array( $allowed_categories ) ) {
 			$allowed_categories = array( 'wordpress' );
