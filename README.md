@@ -1,10 +1,102 @@
-# WEBO MCP Core
+# WEBO WordPress MCP
 
 Core Tool Registry for WEBO MCP ecosystem.
 
 ## Architecture
 
 AI Agent -> MCP Request -> Tool Router -> Tool Registry -> Tool Execution
+
+## MCP Router
+
+- Class: `WeboMCP\Core\Router\McpRouter`
+- Location: `inc/router/class-mcp-router.php`
+- Endpoint: `POST /wp-json/mcp/v1/router`
+- Supported methods:
+  - `initialize`
+  - `tools/list`
+  - `tools/call`
+
+### JSON-RPC request example
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "session_id": "abc123",
+    "name": "webo/list-posts",
+    "arguments": {
+      "per_page": 10
+    }
+  },
+  "id": 1
+}
+```
+
+### initialize flow
+
+1. Router validates JSON-RPC payload
+2. Router creates session via `SessionManager::create()`
+3. Router returns `session_id` + capabilities
+
+Example response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "session_id": "abc123",
+    "capabilities": {
+      "tools": true,
+      "methods": ["initialize", "tools/list", "tools/call"]
+    }
+  },
+  "id": 1
+}
+```
+
+### tools/list flow
+
+1. Router reads `ToolRegistry::list_tools()`
+2. Router returns MCP tool metadata list
+3. Mặc định chỉ trả tools có `visibility = public`
+4. Mặc định chỉ allow category `wordpress` (WordPress.org core features)
+
+Để cho phép tools nội bộ (`visibility = internal`) trong môi trường private:
+
+```php
+add_filter( 'webo_wordpress_mcp_allow_internal_tools', '__return_true' );
+```
+
+Để mở rộng category public ngoài `wordpress`:
+
+```php
+add_filter( 'webo_wordpress_mcp_public_categories', function () {
+  return [ 'wordpress', 'custom-public' ];
+}, 10, 3 );
+```
+
+### tools/call flow
+
+1. Router validates security (`WP auth` or `X-WEBO-API-KEY` or HMAC headers)
+2. Router validates session (`params.session_id` or `Mcp-Session-Id` header)
+3. Router validates tool name and arguments
+4. Router checks visibility policy (`public`/`internal`)
+5. Router executes tool via `ToolRegistry::call()`
+5. Router returns JSON-RPC result
+
+### Error format
+
+```json
+{
+  "jsonrpc": "2.0",
+  "error": {
+    "code": -32601,
+    "message": "Method not found"
+  },
+  "id": 1
+}
+```
 
 ## Main class
 
@@ -74,7 +166,7 @@ See full example: `examples/addon-rankmath-example.php`
 
 ## Optional diagnostics endpoint
 
-- `GET /wp-json/webo-mcp-core/v1/tools`
+- `GET /wp-json/webo-wordpress-mcp/v1/tools`
 
 ## Error handling
 

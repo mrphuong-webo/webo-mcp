@@ -37,6 +37,7 @@ class ToolRegistry {
 			'category'    => $tool['category'],
 			'arguments'   => isset( $tool['arguments'] ) && is_array( $tool['arguments'] ) ? $tool['arguments'] : array(),
 			'permission'  => isset( $tool['permission'] ) ? (string) $tool['permission'] : '',
+			'visibility'  => isset( $tool['visibility'] ) ? (string) $tool['visibility'] : 'public',
 			'callback'    => $tool['callback'],
 		);
 
@@ -92,18 +93,39 @@ class ToolRegistry {
 	 *
 	 * @return array<string, array<int, array<string, string>>>
 	 */
-	public static function list_tools() {
+	public static function list_tools( bool $include_internal = false ) {
 		$items = array();
 
 		foreach ( self::$tools as $tool ) {
+			$visibility = isset( $tool['visibility'] ) ? (string) $tool['visibility'] : 'public';
+			if ( ! $include_internal && 'internal' === $visibility ) {
+				continue;
+			}
+
 			$items[] = array(
 				'name'        => $tool['name'],
 				'description' => $tool['description'],
 				'category'    => $tool['category'],
+				'visibility'  => $visibility,
 			);
 		}
 
 		return array( 'tools' => $items );
+	}
+
+	/**
+	 * Checks whether a tool is marked as internal.
+	 *
+	 * @param string $name Tool name.
+	 * @return bool
+	 */
+	public static function is_internal( string $name ) {
+		$tool = self::get( $name );
+		if ( ! $tool ) {
+			return false;
+		}
+
+		return isset( $tool['visibility'] ) && 'internal' === (string) $tool['visibility'];
 	}
 
 	/**
@@ -186,6 +208,13 @@ class ToolRegistry {
 
 		if ( isset( $tool['arguments'] ) && ! is_array( $tool['arguments'] ) ) {
 			return new WP_Error( 'webo_mcp_invalid_arguments_schema', 'Tool arguments schema must be an array' );
+		}
+
+		if ( isset( $tool['visibility'] ) ) {
+			$visibility = (string) $tool['visibility'];
+			if ( ! in_array( $visibility, array( 'public', 'internal' ), true ) ) {
+				return new WP_Error( 'webo_mcp_invalid_visibility', 'Tool visibility must be "public" or "internal"' );
+			}
 		}
 
 		return true;

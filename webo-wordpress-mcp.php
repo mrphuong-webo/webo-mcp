@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name: WEBO MCP Core
+ * Plugin Name: WEBO WordPress MCP
  * Description: Core tool registry platform for WEBO MCP ecosystem.
  * Version: 1.0.0
  * Author: WEBO
  * Requires at least: 6.0
  * Requires PHP: 7.4
- * Text Domain: webo-mcp-core
+ * Text Domain: webo-wordpress-mcp
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,11 +15,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once __DIR__ . '/inc/registry/class-tool-registry.php';
 require_once __DIR__ . '/inc/tools/class-wordpress-tools.php';
+require_once __DIR__ . '/inc/session/class-session-manager.php';
+require_once __DIR__ . '/inc/router/class-mcp-router.php';
 
 use WeboMCP\Core\Registry\ToolRegistry;
+use WeboMCP\Core\Router\McpRouter;
 use WeboMCP\Core\Tools\WordPressTools;
 
-function webo_mcp_core_bootstrap() {
+function webo_wordpress_mcp_bootstrap() {
 	ToolRegistry::register(
 		array(
 			'name'        => 'webo/list-posts',
@@ -44,34 +47,35 @@ function webo_mcp_core_bootstrap() {
 		)
 	);
 
+	do_action( 'webo_wordpress_mcp_register_tools' );
 	do_action( 'webo_mcp_register_tools' );
 }
-add_action( 'init', 'webo_mcp_core_bootstrap', 20 );
+add_action( 'init', 'webo_wordpress_mcp_bootstrap', 20 );
 
 /**
  * Returns MCP-compatible tools/list response payload.
  *
  * @return array<string, array<int, array<string, string>>>
  */
-function webo_mcp_core_list_tools() {
+function webo_wordpress_mcp_list_tools() {
 	return ToolRegistry::list_tools();
 }
 
 /**
  * Optional REST discovery endpoint for diagnostics.
  *
- * GET /wp-json/webo-mcp-core/v1/tools
+ * GET /wp-json/webo-wordpress-mcp/v1/tools
  *
  * @return void
  */
-function webo_mcp_core_register_rest_routes() {
+function webo_wordpress_mcp_register_rest_routes() {
 	register_rest_route(
-		'webo-mcp-core/v1',
+		'webo-wordpress-mcp/v1',
 		'/tools',
 		array(
 			'methods'             => 'GET',
 			'callback'            => static function () {
-				return rest_ensure_response( webo_mcp_core_list_tools() );
+				return rest_ensure_response( webo_wordpress_mcp_list_tools() );
 			},
 			'permission_callback' => static function () {
 				return current_user_can( 'read' );
@@ -79,4 +83,16 @@ function webo_mcp_core_register_rest_routes() {
 		)
 	);
 }
-add_action( 'rest_api_init', 'webo_mcp_core_register_rest_routes' );
+add_action( 'rest_api_init', 'webo_wordpress_mcp_register_rest_routes' );
+
+/**
+ * Registers MCP JSON-RPC router endpoint.
+ *
+ * POST /wp-json/mcp/v1/router
+ *
+ * @return void
+ */
+function webo_wordpress_mcp_register_mcp_router() {
+	McpRouter::register_rest_endpoint();
+}
+add_action( 'rest_api_init', 'webo_wordpress_mcp_register_mcp_router' );
