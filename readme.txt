@@ -4,7 +4,7 @@ Tags: mcp, ai, json-rpc, api, wordpress
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,10 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 
 == Changelog ==
 
+= 1.1.1 =
+* Added empty input_schema definitions for core/get-user-info and core/get-environment-info.
+* Fixes MCP tools/call validation errors when invoking these no-input core tools.
+
 = 1.0.2 =
 * Added new read-only tool: webo/list-active-plugins.
 * Enables MCP clients to verify active plugins with capability check.
@@ -92,6 +96,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+Recommended update to resolve tools/call validation compatibility for core no-input tools.
 
 = 1.0.2 =
 Recommended update to support active plugins verification via MCP tool.

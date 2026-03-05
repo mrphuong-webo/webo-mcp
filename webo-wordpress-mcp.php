@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WEBO WordPress MCP
  * Description: Standalone MCP gateway and WordPress tools platform.
- * Version: 1.0.2
+ * Version: 1.1.1
  * Author: WEBO
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
