@@ -140,6 +140,11 @@ function wp_register_core_abilities(): void {
 			'label'               => __( 'Get User Information' ),
 			'description'         => __( 'Returns basic profile details for the current authenticated user to support personalization, auditing, and access-aware behavior.' ),
 			'category'            => $category_user,
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'properties'           => array(),
+				'additionalProperties' => false,
+			),
 			'output_schema'       => array(
 				'type'                 => 'object',
 				'required'             => array( 'id', 'display_name', 'user_nicename', 'user_login', 'roles', 'locale' ),
@@ -206,6 +211,11 @@ function wp_register_core_abilities(): void {
 			'label'               => __( 'Get Environment Info' ),
 			'description'         => __( 'Returns core details about the site\'s runtime context for diagnostics and compatibility (environment, PHP runtime, database server info, WordPress version).' ),
 			'category'            => $category_site,
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'properties'           => array(),
+				'additionalProperties' => false,
+			),
 			'output_schema'       => array(
 				'type'                 => 'object',
 				'required'             => array( 'environment', 'php_version', 'db_server_info', 'wp_version' ),
