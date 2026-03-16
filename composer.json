@@ -1,0 +1,16 @@
+{
+    "name": "webo/wordpress-mcp",
+    "description": "WEBO WordPress MCP standalone gateway",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "wordpress/abilities-api": "0.4",
+        "wordpress/mcp-adapter": "0.4"
+    },
+    "authors": [
+        {
+            "name": "Đinh WP",
+            "homepage": "https://dinhwp.com"
+        }
+    ]
+}

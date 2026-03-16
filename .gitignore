@@ -1,0 +1,18 @@
+dist/
+
+# Do not share to GitHub (CI / internal / GitLab)
+.github/
+.gitlab-ci.yml
+.distignore
+
+# Local / maintainer-only (do not push to GitHub)
+assets/README-logo.txt
+images/webo-wordpress-mcp-logo.txt
+n8n_ai_system_prompt.txt
+WPORG_RELEASE_CHECKLIST.md
+
+# IDE / OS
+.cursor/
+*.log
+.DS_Store
+Thumbs.db
