@@ -1,10 +1,5 @@
 dist/
 
-# Do not share to GitHub (CI / internal / GitLab)
-.github/
-.gitlab-ci.yml
-.distignore
-
 # Local / maintainer-only (do not push to GitHub)
 assets/README-logo.txt
 images/webo-wordpress-mcp-logo.txt
