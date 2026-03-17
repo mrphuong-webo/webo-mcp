@@ -95,6 +95,167 @@ class WordPressTools {
 	}
 
 	/**
+	 * Discover public content types (post types) on the site.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>
+	 */
+	public static function discover_content_types( array $arguments ) {
+		unset( $arguments );
+
+		$post_types = get_post_types( array( 'public' => true ), 'objects' );
+		$items      = array();
+
+		foreach ( $post_types as $post_type ) {
+			$items[] = array(
+				'name'         => $post_type->name,
+				'label'        => $post_type->label,
+				'description'  => isset( $post_type->description ) ? (string) $post_type->description : '',
+				'hierarchical' => (bool) $post_type->hierarchical,
+				'has_archive'  => (bool) $post_type->has_archive,
+			);
+		}
+
+		return array(
+			'items' => $items,
+			'total' => count( $items ),
+			'tool'  => 'webo/discover-content-types',
+		);
+	}
+
+	/**
+	 * Find content by WordPress URL (path or full URL). Resolves pretty permalinks to post ID and returns content.
+	 * Optionally pass update payload to update the post in the same call.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function find_content_by_url( array $arguments ) {
+		$url = isset( $arguments['url'] ) ? trim( (string) $arguments['url'] ) : '';
+		if ( '' === $url ) {
+			return new \WP_Error( 'webo_wordpress_mcp_url_required', 'url is required' );
+		}
+
+		// Normalize: if relative path, make it full URL for url_to_postid().
+		if ( 0 !== strpos( $url, 'http' ) ) {
+			$url = home_url( '/' . ltrim( $url, '/' ) );
+		}
+
+		$post_id = url_to_postid( $url );
+		if ( $post_id <= 0 ) {
+			return new \WP_Error( 'webo_wordpress_mcp_content_not_found', 'No content found for this URL', array( 'url' => $url ) );
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+		}
+
+		$result = array(
+			'id'      => $post->ID,
+			'title'   => get_the_title( $post ),
+			'content' => $post->post_content,
+			'excerpt' => $post->post_excerpt,
+			'status'  => $post->post_status,
+			'type'    => $post->post_type,
+			'slug'    => $post->post_name,
+			'link'    => get_permalink( $post ),
+			'tool'    => 'webo/find-content-by-url',
+		);
+
+		// Optional: update the post in the same call (requires edit_posts).
+		$update = isset( $arguments['update'] ) && is_array( $arguments['update'] ) ? $arguments['update'] : null;
+		if ( ! empty( $update ) ) {
+			if ( ! current_user_can( 'edit_posts' ) ) {
+				return new \WP_Error( 'webo_mcp_permission_denied', 'Cannot update content: edit_posts capability required' );
+			}
+			$payload = array( 'ID' => $post->ID );
+			if ( isset( $update['title'] ) ) {
+				$payload['post_title'] = sanitize_text_field( (string) $update['title'] );
+			}
+			if ( isset( $update['content'] ) ) {
+				$payload['post_content'] = wp_kses_post( (string) $update['content'] );
+			}
+			if ( isset( $update['status'] ) ) {
+				$payload['post_status'] = sanitize_key( (string) $update['status'] );
+			}
+			if ( count( $payload ) > 1 && ! is_wp_error( wp_update_post( $payload, true ) ) ) {
+				$post    = get_post( $post->ID );
+				$result  = array(
+					'id'      => $post->ID,
+					'title'   => get_the_title( $post ),
+					'content' => $post->post_content,
+					'excerpt' => $post->post_excerpt,
+					'status'  => $post->post_status,
+					'type'    => $post->post_type,
+					'slug'    => $post->post_name,
+					'link'    => get_permalink( $post ),
+					'updated' => true,
+					'tool'    => 'webo/find-content-by-url',
+				);
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Get content by slug (post_name) across one or all public post types.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function get_content_by_slug( array $arguments ) {
+		$slug      = isset( $arguments['slug'] ) ? sanitize_title( (string) $arguments['slug'] ) : '';
+		$post_type = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : '';
+
+		if ( '' === $slug ) {
+			return new \WP_Error( 'webo_wordpress_mcp_slug_required', 'slug is required' );
+		}
+
+		$types_to_search = array();
+		if ( '' !== $post_type ) {
+			if ( ! post_type_exists( $post_type ) ) {
+				return new \WP_Error( 'webo_wordpress_mcp_post_type_not_found', 'Post type not found', array( 'post_type' => $post_type ) );
+			}
+			$types_to_search[] = $post_type;
+		} else {
+			$types_to_search = array_keys( get_post_types( array( 'public' => true ) ) );
+		}
+
+		foreach ( $types_to_search as $pt ) {
+			$query = new \WP_Query(
+				array(
+					'post_type'      => $pt,
+					'name'           => $slug,
+					'post_status'    => 'any',
+					'posts_per_page' => 1,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+				)
+			);
+			if ( ! empty( $query->posts ) ) {
+				$post = get_post( $query->posts[0] );
+				if ( $post ) {
+					return array(
+						'id'      => $post->ID,
+						'title'   => get_the_title( $post ),
+						'content' => $post->post_content,
+						'excerpt' => $post->post_excerpt,
+						'status'  => $post->post_status,
+						'type'    => $post->post_type,
+						'slug'    => $post->post_name,
+						'link'    => get_permalink( $post ),
+						'tool'    => 'webo/get-content-by-slug',
+					);
+				}
+			}
+		}
+
+		return new \WP_Error( 'webo_wordpress_mcp_content_not_found', 'No content found for slug', array( 'slug' => $slug ) );
+	}
+
+	/**
 	 * Create a post.
 	 *
 	 * @param array<string, mixed> $arguments Tool arguments.
@@ -701,6 +862,149 @@ class WordPressTools {
 			return new \WP_Error( 'webo_wordpress_mcp_delete_failed', 'Failed to delete term' );
 		}
 		return array( 'term_id' => $term_id, 'taxonomy' => $taxonomy, 'deleted' => true, 'tool' => 'webo/delete-term' );
+	}
+
+	/**
+	 * Discover public taxonomies on the site.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>
+	 */
+	public static function discover_taxonomies( array $arguments ) {
+		unset( $arguments );
+
+		$taxonomies = get_taxonomies( array( 'public' => true ), 'objects' );
+		$items      = array();
+
+		foreach ( $taxonomies as $taxonomy ) {
+			$items[] = array(
+				'name'          => $taxonomy->name,
+				'label'         => $taxonomy->label,
+				'description'   => isset( $taxonomy->description ) ? (string) $taxonomy->description : '',
+				'object_type'   => (array) $taxonomy->object_type,
+				'hierarchical'  => (bool) $taxonomy->hierarchical,
+			);
+		}
+
+		return array(
+			'items' => $items,
+			'total' => count( $items ),
+			'tool'  => 'webo/discover-taxonomies',
+		);
+	}
+
+	/**
+	 * Get one term by ID and taxonomy.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function get_term( array $arguments ) {
+		$term_id  = isset( $arguments['term_id'] ) ? (int) $arguments['term_id'] : 0;
+		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : 'category';
+
+		if ( $term_id <= 0 ) {
+			return new \WP_Error( 'webo_wordpress_mcp_term_id_required', 'term_id is required' );
+		}
+
+		if ( ! taxonomy_exists( $taxonomy ) ) {
+			return new \WP_Error( 'webo_wordpress_mcp_taxonomy_not_found', 'Taxonomy not found' );
+		}
+
+		$term = get_term( $term_id, $taxonomy );
+		if ( ! $term || is_wp_error( $term ) ) {
+			return new \WP_Error( 'webo_wordpress_mcp_term_not_found', 'Term not found' );
+		}
+
+		return array(
+			'id'          => (int) $term->term_id,
+			'name'        => (string) $term->name,
+			'slug'        => (string) $term->slug,
+			'taxonomy'    => (string) $term->taxonomy,
+			'description' => (string) $term->description,
+			'parent_id'   => (int) $term->parent,
+			'count'       => (int) $term->count,
+			'tool'        => 'webo/get-term',
+		);
+	}
+
+	/**
+	 * Assign terms to a post (replace existing terms for the taxonomy).
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function assign_terms_to_content( array $arguments ) {
+		$post_id   = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
+		$taxonomy  = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : '';
+		$term_ids  = isset( $arguments['term_ids'] ) && is_array( $arguments['term_ids'] ) ? $arguments['term_ids'] : array();
+
+		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
+			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+		}
+
+		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
+			return new \WP_Error( 'webo_wordpress_mcp_taxonomy_not_found', 'Taxonomy not found' );
+		}
+
+		$term_ids = array_map( 'intval', $term_ids );
+		$term_ids = array_filter( $term_ids );
+
+		$result = wp_set_object_terms( $post_id, $term_ids, $taxonomy );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return array(
+			'post_id'   => $post_id,
+			'taxonomy'  => $taxonomy,
+			'term_ids'  => $term_ids,
+			'assigned'  => true,
+			'tool'      => 'webo/assign-terms-to-content',
+		);
+	}
+
+	/**
+	 * Get all terms assigned to a post for one or all taxonomies.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function get_content_terms( array $arguments ) {
+		$post_id  = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
+		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : '';
+
+		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
+			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+		}
+
+		if ( '' !== $taxonomy && ! taxonomy_exists( $taxonomy ) ) {
+			return new \WP_Error( 'webo_wordpress_mcp_taxonomy_not_found', 'Taxonomy not found' );
+		}
+
+		$taxonomies = '' !== $taxonomy ? array( $taxonomy ) : get_object_taxonomies( get_post_type( $post_id ), 'names' );
+		$all_terms  = wp_get_object_terms( $post_id, $taxonomies );
+
+		if ( is_wp_error( $all_terms ) ) {
+			return $all_terms;
+		}
+
+		$items = array();
+		foreach ( $all_terms as $term ) {
+			$items[] = array(
+				'id'          => (int) $term->term_id,
+				'name'        => (string) $term->name,
+				'slug'        => (string) $term->slug,
+				'taxonomy'    => (string) $term->taxonomy,
+			);
+		}
+
+		return array(
+			'post_id' => $post_id,
+			'items'   => $items,
+			'total'   => count( $items ),
+			'tool'    => 'webo/get-content-terms',
+		);
 	}
 
 	// ----- Media -----

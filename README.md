@@ -202,6 +202,29 @@ Excluded by default for WordPress.org-safe behavior:
 - Plugin/theme write-management
 - Multisite-specific abilities
 
+## New tools (content discovery)
+
+Three tools align with MCP servers like [mcp-wordpress-instaWP](https://glama.ai/mcp/servers/pace8/mcp-wordpress-instaWP) for discovery and URL-based access:
+
+| Tool | Description | Arguments |
+|------|-------------|-----------|
+| `webo/discover-content-types` | List public post types (name, label, description, hierarchical, has_archive). | None. |
+| `webo/find-content-by-url` | Resolve a WordPress URL (path or full URL) to content; returns post data. Optionally pass `update` (object with `title`, `content`, `status`) to update in the same call (requires `edit_posts`). | `url` (required), `update` (optional array). |
+| `webo/get-content-by-slug` | Get content by slug (`post_name`). Search in one `post_type` or across all public types. | `slug` (required), `post_type` (optional). |
+
+- **find_content_by_url** uses WordPress `url_to_postid()`; works best with pretty permalinks.
+
+**Taxonomy tools (InstaWP parity):**
+
+| Tool | Description | Arguments |
+|------|-------------|-----------|
+| `webo/discover-taxonomies` | List public taxonomies (name, label, object_type, hierarchical). | None. |
+| `webo/get-term` | Get one term by ID and taxonomy. | `term_id` (required), `taxonomy` (optional, default category). |
+| `webo/assign-terms-to-content` | Assign terms to a post (replaces existing for that taxonomy). | `post_id`, `taxonomy`, `term_ids` (array). |
+| `webo/get-content-terms` | Get all terms assigned to a post; optional taxonomy filter. | `post_id` (required), `taxonomy` (optional). |
+
+- See `docs/TOOLS_COMPARISON.md` for a full InstaWP ↔ webo tool mapping.
+
 ## Tool definition
 
 ```php

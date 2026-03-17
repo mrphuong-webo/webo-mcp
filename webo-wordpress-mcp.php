@@ -339,6 +339,35 @@ function webo_wordpress_mcp_register_standalone_core_tools() {
 			'callback'    => array( WordPressTools::class, 'get_post' ),
 		),
 		array(
+			'name'        => 'webo/discover-content-types',
+			'description' => 'List public post types (content types) on the site',
+			'category'    => 'wordpress',
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'discover_content_types' ),
+		),
+		array(
+			'name'        => 'webo/find-content-by-url',
+			'description' => 'Find content by WordPress URL (path or full URL); optionally pass update to update in same call',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'url'    => array( 'type' => 'string', 'required' => true ),
+				'update' => array( 'type' => 'array', 'required' => false ),
+			),
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'find_content_by_url' ),
+		),
+		array(
+			'name'        => 'webo/get-content-by-slug',
+			'description' => 'Get content by slug (post_name); optionally limit to one post_type',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'slug'      => array( 'type' => 'string', 'required' => true ),
+				'post_type' => array( 'type' => 'string', 'required' => false, 'default' => '' ),
+			),
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'get_content_by_slug' ),
+		),
+		array(
 			'name'        => 'webo/create-post',
 			'description' => 'Create one post/page/custom post',
 			'category'    => 'wordpress',
@@ -578,6 +607,47 @@ function webo_wordpress_mcp_register_standalone_core_tools() {
 			),
 			'permission'  => 'manage_categories',
 			'callback'    => array( WordPressTools::class, 'delete_term' ),
+		),
+		array(
+			'name'        => 'webo/discover-taxonomies',
+			'description' => 'List public taxonomies (name, label, object_type, hierarchical)',
+			'category'    => 'wordpress',
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'discover_taxonomies' ),
+		),
+		array(
+			'name'        => 'webo/get-term',
+			'description' => 'Get one term by term_id and taxonomy',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'term_id'  => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'taxonomy' => array( 'type' => 'string', 'required' => false, 'default' => 'category' ),
+			),
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'get_term' ),
+		),
+		array(
+			'name'        => 'webo/assign-terms-to-content',
+			'description' => 'Assign terms to a post (replaces existing terms for that taxonomy)',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'post_id'  => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'taxonomy' => array( 'type' => 'string', 'required' => true ),
+				'term_ids' => array( 'type' => 'array', 'required' => true ),
+			),
+			'permission'  => 'manage_categories',
+			'callback'    => array( WordPressTools::class, 'assign_terms_to_content' ),
+		),
+		array(
+			'name'        => 'webo/get-content-terms',
+			'description' => 'Get all terms assigned to a post; optionally filter by taxonomy',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'post_id'  => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'taxonomy' => array( 'type' => 'string', 'required' => false, 'default' => '' ),
+			),
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'get_content_terms' ),
 		),
 		array(
 			'name'        => 'webo/list-active-plugins',
