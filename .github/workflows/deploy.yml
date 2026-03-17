@@ -21,4 +21,4 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           source: "*,!.git*,!.github*"
-          target: "/home/bookies.top/public_html/wp-content/plugins/${{ github.event.repository.name }}"
+          target: "${{ secrets.WP_CONTENT_PATH }}/${{ github.event.repository.name }}"
