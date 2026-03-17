@@ -1,6 +1,7 @@
 dist/
 
 # Local / maintainer-only (do not push to GitHub)
+docs/
 assets/README-logo.txt
 images/webo-wordpress-mcp-logo.txt
 n8n_ai_system_prompt.txt

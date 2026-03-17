@@ -2,6 +2,7 @@
 .github/
 .gitlab-ci.yml
 WPORG_RELEASE_CHECKLIST.md
+docs/
 examples/
 composer.json
 composer.lock
