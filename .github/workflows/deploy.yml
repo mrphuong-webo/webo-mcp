@@ -22,3 +22,5 @@ jobs:
           port: 22
           source: "*,!.git*,!.github*"
           target: "${{ secrets.WP_CONTENT_PATH }}/${{ github.event.repository.name }}"
+          # Xóa thư mục đích trước khi copy để server luôn khớp repo (SCP mặc định không xóa file cũ)
+          rm: true
