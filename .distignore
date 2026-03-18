@@ -1,5 +1,6 @@
 .git/
 .github/
+dist/
 .gitignore
 .distignore
 .gitlab-ci.yml

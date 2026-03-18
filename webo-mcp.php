@@ -735,6 +735,13 @@ function webo_mcp_bootstrap() {
 	if ( $auto_bridge ) {
 		webo_mcp_register_wordpress_abilities();
 	}
+
+	/**
+	 * Fires once WEBO MCP finished bootstrapping.
+	 *
+	 * Addons can hook here to register abilities/tools after core is ready.
+	 */
+	do_action( 'webo_mcp_loaded' );
 }
 add_action( 'init', 'webo_mcp_bootstrap', 20 );
 
