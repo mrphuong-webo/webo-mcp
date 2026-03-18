@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, wordpress
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,9 @@ The plugin exposes the following actions and filters for developers:
 - `webo_mcp_enable_adapter` (bool $enabled)  
   Enables or disables the bundled WordPress MCP Adapter runtime. Defaults to true.
 
+- `webo_mcp_validate_media_fetch_url` (true|\WP_Error $ok, string $url, array $parsed)  
+  Reject unsafe URLs for webo/upload-media-from-url (return WP_Error to block).
+
 == Installation ==
 1. Upload the plugin folder to /wp-content/plugins/webo-mcp
 2. Run composer install inside the plugin folder
@@ -111,6 +114,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.1 =
+* Hardening: HMAC auth passes REST permission layer; SSRF guard for upload-media-from-url; paginated search-replace (max 500 posts per call); sanitized safe option updates; removed duplicate unused settings class.
+
 = 2.0.0 =
 * Plugin renamed to WEBO MCP; folder and main file: webo-mcp/webo-mcp.php.
 * Text domain, REST namespace webo-mcp/v1, hooks webo_mcp_* (breaking for custom code using old hook names).

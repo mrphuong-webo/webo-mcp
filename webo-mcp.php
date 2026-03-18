@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WEBO MCP
  * Description: Standalone MCP gateway and WordPress tools platform. Use with Claude, OpenAI, Gemini, Mistral, Perplexity, Groq, Cohere, Together AI, DeepSeek via any MCP-compatible client (Cursor, n8n, Claude Desktop, etc.).
- * Version: 2.0.0
+ * Version: 2.0.1
  * Author: Dinh WP
  * Author URI: https://dinhwp.com
  * Plugin URI: https://webomcp.com
@@ -464,12 +464,14 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/search-replace-posts',
-			'description' => 'Search and replace text in post/page content; use dry_run to preview',
+			'description' => 'Search and replace in post/page content; dry_run to preview. Paginate with offset + max_scan_posts (1-500, default 200).',
 			'category'    => 'wordpress',
 			'arguments'   => array(
-				'search'   => array( 'type' => 'string', 'required' => true ),
-				'replace'  => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'dry_run'  => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
+				'search'           => array( 'type' => 'string', 'required' => true ),
+				'replace'          => array( 'type' => 'string', 'required' => false, 'default' => '' ),
+				'dry_run'          => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
+				'offset'           => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
+				'max_scan_posts'   => array( 'type' => 'integer', 'required' => false, 'default' => 200, 'min' => 1, 'max' => 500 ),
 			),
 			'permission'  => 'edit_posts',
 			'callback'    => array( WordPressTools::class, 'search_replace_posts' ),

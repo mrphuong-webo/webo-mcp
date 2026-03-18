@@ -168,17 +168,49 @@ class McpRouter {
 	}
 
 	public static function secure_permission_callback( WP_REST_Request $request ) {
+		$maybe_set_admin_user = static function () {
+			static $admin_id = null;
+			if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
+				if ( null === $admin_id ) {
+					$admin = get_users(
+						array(
+							'role'    => 'administrator',
+							'number'  => 1,
+							'orderby' => 'ID',
+						)
+					);
+					$admin_id = ! empty( $admin ) ? (int) $admin[0]->ID : 0;
+				}
+				if ( $admin_id > 0 ) {
+					wp_set_current_user( $admin_id );
+				}
+			}
+		};
+
+		// Allow HMAC-signed requests through the REST permission callback.
+		// The router will still enforce per-method security and tool policy.
+		$configured_hmac_secret = (string) get_option( 'webo_mcp_hmac_secret', '' );
+		$signature              = (string) $request->get_header( 'X-WEBO-SIGNATURE' );
+		$timestamp              = (string) $request->get_header( 'X-WEBO-TIMESTAMP' );
+		if ( $configured_hmac_secret !== '' && $signature !== '' && $timestamp !== '' && ctype_digit( $timestamp ) ) {
+			$now           = time();
+			$request_epoch = (int) $timestamp;
+			if ( abs( $now - $request_epoch ) <= 300 ) {
+				$payload            = $timestamp . '.' . (string) $request->get_body();
+				$expected_signature = 'sha256=' . hash_hmac( 'sha256', $payload, $configured_hmac_secret );
+				if ( hash_equals( $expected_signature, trim( $signature ) ) ) {
+					$maybe_set_admin_user();
+					return true;
+				}
+			}
+		}
+
 		$provided_api_key = (string) $request->get_header( 'X-WEBO-API-KEY' );
 		if ( $provided_api_key !== '' ) {
 			$configured_key = (string) get_option( 'webo_mcp_api_key', '' );
 			if ( $configured_key !== '' && hash_equals( $configured_key, trim( $provided_api_key ) ) ) {
 				// API key from Settings (option): set first admin as current user so capability checks pass.
-				if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
-					$admin = get_users( array( 'role' => 'administrator', 'number' => 1, 'orderby' => 'ID' ) );
-					if ( ! empty( $admin ) ) {
-						wp_set_current_user( $admin[0]->ID );
-					}
-				}
+				$maybe_set_admin_user();
 			} else {
 				global $wpdb;
 				$user_id = $wpdb->get_var( $wpdb->prepare( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = 'webo_mcp_api_key' AND meta_value = %s LIMIT 1", trim( $provided_api_key ) ) );

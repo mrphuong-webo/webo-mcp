@@ -285,6 +285,13 @@ See full example: `examples/addon-rankmath-example.php`
 - WordPress.org readme file is `readme.txt`
 - Keep stable version in sync between plugin header and `readme.txt`
 
+## Security hardening (2.0.1+)
+
+- HMAC-signed MCP requests are accepted at the REST layer when `webo_mcp_hmac_secret` is set.
+- `webo/upload-media-from-url` blocks loopback/private IPs; extend via `webo_mcp_validate_media_fetch_url`.
+- `webo/search-replace-posts` scans at most 500 posts per call; use `offset` + `next_offset` to paginate.
+- `webo/update-options` sanitizes each allowlisted option; invalid values are skipped (see response `skipped`).
+
 ## Error handling
 
 - Tool not found: throws `Exception("Tool not registered")`

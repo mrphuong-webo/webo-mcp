@@ -639,20 +639,142 @@ class WordPressTools {
 		);
 
 		$updated = array();
+		$skipped = array();
 		foreach ( $options as $option_name => $option_value ) {
 			$option_name = sanitize_key( (string) $option_name );
 			if ( '' === $option_name || ! in_array( $option_name, $allowed_option_names, true ) ) {
 				continue;
 			}
 
-			update_option( $option_name, $option_value );
+			$sanitized = self::sanitize_safe_option_value( $option_name, $option_value );
+			if ( is_wp_error( $sanitized ) ) {
+				$skipped[ $option_name ] = $sanitized->get_error_message();
+				continue;
+			}
+
+			update_option( $option_name, $sanitized );
 			$updated[] = $option_name;
 		}
 
 		return array(
 			'updated' => $updated,
+			'skipped' => $skipped,
 			'tool'    => 'webo/update-options',
 		);
+	}
+
+	/**
+	 * Sanitizes values for the safe options allowlist used by webo/update-options.
+	 *
+	 * @param string               $option_name Option key.
+	 * @param mixed                $value       Raw value.
+	 * @return mixed|\WP_Error
+	 */
+	private static function sanitize_safe_option_value( string $option_name, $value ) {
+		switch ( $option_name ) {
+			case 'blogname':
+			case 'blogdescription':
+				if ( ! is_scalar( $value ) && null !== $value ) {
+					return new \WP_Error( 'webo_mcp_invalid_option', 'Value must be scalar' );
+				}
+				return sanitize_text_field( (string) $value );
+
+			case 'timezone_string':
+				if ( ! is_scalar( $value ) && null !== $value ) {
+					return new \WP_Error( 'webo_mcp_invalid_option', 'Value must be scalar' );
+				}
+				$s = sanitize_text_field( (string) $value );
+				if ( '' === $s ) {
+					return '';
+				}
+				$zones = timezone_identifiers_list();
+				if ( in_array( $s, $zones, true ) ) {
+					return $s;
+				}
+				return new \WP_Error( 'webo_mcp_invalid_timezone', 'Invalid timezone_string' );
+
+			case 'date_format':
+			case 'time_format':
+				if ( ! is_scalar( $value ) && null !== $value ) {
+					return new \WP_Error( 'webo_mcp_invalid_option', 'Value must be scalar' );
+				}
+				$s = (string) $value;
+				if ( strlen( $s ) > 80 ) {
+					return new \WP_Error( 'webo_mcp_invalid_option', 'Format string too long' );
+				}
+				return sanitize_text_field( $s );
+
+			case 'start_of_week':
+				$n = (int) $value;
+				if ( $n < 0 || $n > 6 ) {
+					return new \WP_Error( 'webo_mcp_invalid_option', 'start_of_week must be 0-6' );
+				}
+				return $n;
+
+			case 'posts_per_page':
+				$n = absint( $value );
+				if ( $n < 1 ) {
+					$n = 1;
+				}
+				if ( $n > 100 ) {
+					$n = 100;
+				}
+				return $n;
+
+			default:
+				return new \WP_Error( 'webo_mcp_invalid_option', 'Unknown option' );
+		}
+	}
+
+	/**
+	 * Blocks obvious SSRF targets for server-side URL fetch (upload from URL).
+	 *
+	 * @param string $url Absolute URL.
+	 * @return true|\WP_Error
+	 */
+	private static function validate_remote_media_url( $url ) {
+		$url = trim( (string) $url );
+		if ( '' === $url ) {
+			return new \WP_Error( 'webo_mcp_invalid_url', 'URL is empty' );
+		}
+
+		$parsed = wp_parse_url( $url );
+		if ( empty( $parsed['scheme'] ) || empty( $parsed['host'] ) ) {
+			return new \WP_Error( 'webo_mcp_invalid_url', 'URL must be absolute http(s)' );
+		}
+
+		$scheme = strtolower( (string) $parsed['scheme'] );
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+			return new \WP_Error( 'webo_mcp_invalid_url', 'Only http and https are allowed' );
+		}
+
+		$host = strtolower( (string) $parsed['host'] );
+		$host_trim = trim( $host, '[]' );
+
+		$blocked = array( 'localhost', '127.0.0.1', '0.0.0.0', '::1', '0000::1' );
+		if ( in_array( $host_trim, $blocked, true ) || in_array( $host, $blocked, true ) ) {
+			return new \WP_Error( 'webo_mcp_url_not_allowed', 'Loopback and local hostnames are blocked' );
+		}
+
+		if ( filter_var( $host_trim, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6 ) ) {
+			if ( ! filter_var( $host_trim, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+				return new \WP_Error( 'webo_mcp_url_not_allowed', 'Private or reserved IPs are blocked' );
+			}
+		}
+
+		/**
+		 * Final gate for media URL fetch (SSRF hardening).
+		 *
+		 * @param true|\WP_Error $ok   Return WP_Error to reject.
+		 * @param string         $url  Request URL.
+		 * @param array          $parsed wp_parse_url parts.
+		 */
+		$gate = apply_filters( 'webo_mcp_validate_media_fetch_url', true, $url, $parsed );
+		if ( is_wp_error( $gate ) ) {
+			return $gate;
+		}
+
+		return true;
 	}
 
 	// ----- Posts: bulk, revisions, search_replace -----
@@ -742,35 +864,74 @@ class WordPressTools {
 		$search  = isset( $arguments['search'] ) ? (string) $arguments['search'] : '';
 		$replace = isset( $arguments['replace'] ) ? (string) $arguments['replace'] : '';
 		$dry_run = isset( $arguments['dry_run'] ) ? (bool) $arguments['dry_run'] : true;
+		$offset  = isset( $arguments['offset'] ) ? max( 0, (int) $arguments['offset'] ) : 0;
+		$limit   = isset( $arguments['max_scan_posts'] ) ? (int) $arguments['max_scan_posts'] : 200;
+		$limit   = max( 1, min( 500, $limit ) );
+
 		if ( '' === $search ) {
 			return new \WP_Error( 'webo_mcp_missing_argument', 'search is required' );
 		}
-		$query = new \WP_Query(
+
+		$count_query = new \WP_Query(
 			array(
-				'post_type'      => array( 'post', 'page' ),
-				'post_status'    => 'any',
-				'posts_per_page' => -1,
-				's'              => '',
-				'fields'         => 'ids',
+				'post_type'              => array( 'post', 'page' ),
+				'post_status'            => 'any',
+				'posts_per_page'         => 1,
+				'fields'                 => 'ids',
+				'no_found_rows'          => false,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
 			)
 		);
+		$total_posts = (int) $count_query->found_posts;
+
+		$query = new \WP_Query(
+			array(
+				'post_type'              => array( 'post', 'page' ),
+				'post_status'            => 'any',
+				'posts_per_page'         => $limit,
+				'offset'                 => $offset,
+				'orderby'                => 'ID',
+				'order'                  => 'ASC',
+				'fields'                 => 'ids',
+				'no_found_rows'          => true,
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+			)
+		);
+
 		$affected = array();
 		foreach ( $query->posts as $post_id ) {
-			$post = get_post( $post_id );
+			$post = get_post( (int) $post_id );
 			if ( ! $post || strpos( $post->post_content, $search ) === false ) {
 				continue;
 			}
-			$affected[] = array( 'post_id' => $post_id, 'title' => get_the_title( $post_id ) );
+			$affected[] = array( 'post_id' => (int) $post_id, 'title' => get_the_title( $post_id ) );
 			if ( ! $dry_run ) {
 				$new_content = str_replace( $search, $replace, $post->post_content );
-				wp_update_post( array( 'ID' => $post_id, 'post_content' => $new_content ) );
+				wp_update_post(
+					array(
+						'ID'           => (int) $post_id,
+						'post_content' => $new_content,
+					),
+					true
+				);
 			}
 		}
+
+		$next_offset = $offset + $limit;
+		$has_more    = $next_offset < $total_posts;
+
 		return array(
-			'affected' => $affected,
-			'count'    => count( $affected ),
-			'dry_run'  => $dry_run,
-			'tool'     => 'webo/search-replace-posts',
+			'affected'      => $affected,
+			'count'         => count( $affected ),
+			'dry_run'       => $dry_run,
+			'offset'        => $offset,
+			'max_scan_posts'=> $limit,
+			'total_posts'   => $total_posts,
+			'has_more'      => $has_more,
+			'next_offset'   => $has_more ? $next_offset : null,
+			'tool'          => 'webo/search-replace-posts',
 		);
 	}
 
@@ -1020,6 +1181,12 @@ class WordPressTools {
 		if ( '' === $image_url ) {
 			return new \WP_Error( 'webo_mcp_missing_argument', 'image_url is required' );
 		}
+
+		$url_check = self::validate_remote_media_url( $image_url );
+		if ( is_wp_error( $url_check ) ) {
+			return $url_check;
+		}
+
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
