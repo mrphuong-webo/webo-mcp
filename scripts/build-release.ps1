@@ -35,6 +35,10 @@ $files = Get-ChildItem -Path $sourcePath -Recurse -File -Force | Where-Object {
     if ($relativePath -match '(?i)(^|/)\.github(/|$)') {
         return $false
     }
+    # WordPress.org rejects .git in plugin zip; inner files are not dot-prefixed.
+    if ($relativePath -match '(?i)(^|/)\.git(/|$)') {
+        return $false
+    }
     foreach ($pattern in $excludePatterns) {
         $normalizedPattern = $pattern.TrimStart('./')
         if ($normalizedPattern.EndsWith('/')) {
