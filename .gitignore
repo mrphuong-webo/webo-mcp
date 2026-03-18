@@ -3,7 +3,7 @@ dist/
 # Local / maintainer-only (do not push to GitHub)
 docs/
 assets/README-logo.txt
-images/webo-wordpress-mcp-logo.txt
+images/webo-mcp-logo.txt
 n8n_ai_system_prompt.txt
 WPORG_RELEASE_CHECKLIST.md
 GITHUB_RESET_STEPS.md

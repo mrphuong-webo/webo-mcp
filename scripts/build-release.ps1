@@ -1,5 +1,5 @@
 param(
-    [string]$PluginSlug = "webo-wordpress-mcp",
+    [string]$PluginSlug = "webo-mcp",
     [string]$Version = "",
     [string]$SourceDir = "..",
     [string]$OutputDir = "..\dist"

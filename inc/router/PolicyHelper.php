@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class PolicyHelper {
 	public static function is_internal_allowed( WP_REST_Request $request ) {
 		$default_allowed = is_user_logged_in() && current_user_can( 'manage_options' );
-		return (bool) apply_filters( 'webo_wordpress_mcp_allow_internal_tools', $default_allowed, $request );
+		return (bool) apply_filters( 'webo_mcp_allow_internal_tools', $default_allowed, $request );
 	}
 
 	public static function is_public_allowed( array $tool, WP_REST_Request $request ) {
@@ -22,7 +22,7 @@ class PolicyHelper {
 		if ( $visibility === 'internal' ) {
 			return true;
 		}
-		$allowed_categories = apply_filters( 'webo_wordpress_mcp_public_categories', array( 'wordpress' ), $request, $tool );
+		$allowed_categories = apply_filters( 'webo_mcp_public_categories', array( 'wordpress' ), $request, $tool );
 		if ( ! is_array( $allowed_categories ) ) {
 			$allowed_categories = array( 'wordpress' );
 		}
@@ -31,7 +31,7 @@ class PolicyHelper {
 		if ( ! empty( $allowed_categories ) && ! in_array( $tool_category, $allowed_categories, true ) ) {
 			return false;
 		}
-		$allowed_names = apply_filters( 'webo_wordpress_mcp_public_tool_allowlist', array(), $request, $tool );
+		$allowed_names = apply_filters( 'webo_mcp_public_tool_allowlist', array(), $request, $tool );
 		if ( ! is_array( $allowed_names ) ) {
 			$allowed_names = array();
 		}

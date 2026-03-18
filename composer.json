@@ -1,6 +1,6 @@
 {
-    "name": "webo/wordpress-mcp",
-    "description": "WEBO WordPress MCP standalone gateway",
+    "name": "webo/mcp",
+    "description": "WEBO MCP WordPress plugin",
     "type": "wordpress-plugin",
     "require": {
         "php": "^7.4 || ^8.0",

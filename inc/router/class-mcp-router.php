@@ -161,7 +161,7 @@ class McpRouter {
 		}
 		if ( is_wp_error( $result ) ) {
 			$code = $result->get_error_code();
-			$data = ( $code && $code !== 'webo_wordpress_mcp_unknown' ) ? array( 'code' => $code ) : null;
+			$data = ( $code && $code !== 'webo_mcp_unknown' ) ? array( 'code' => $code ) : null;
 			return JsonRpcHelper::error( -32003, $result->get_error_message(), $id, $data );
 		}
 		return JsonRpcHelper::success( $result, $id );
@@ -170,7 +170,7 @@ class McpRouter {
 	public static function secure_permission_callback( WP_REST_Request $request ) {
 		$provided_api_key = (string) $request->get_header( 'X-WEBO-API-KEY' );
 		if ( $provided_api_key !== '' ) {
-			$configured_key = (string) get_option( 'webo_wordpress_mcp_api_key', '' );
+			$configured_key = (string) get_option( 'webo_mcp_api_key', '' );
 			if ( $configured_key !== '' && hash_equals( $configured_key, trim( $provided_api_key ) ) ) {
 				// API key from Settings (option): set first admin as current user so capability checks pass.
 				if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
@@ -181,7 +181,7 @@ class McpRouter {
 				}
 			} else {
 				global $wpdb;
-				$user_id = $wpdb->get_var( $wpdb->prepare( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = 'webo_wordpress_mcp_api_key' AND meta_value = %s LIMIT 1", trim( $provided_api_key ) ) );
+				$user_id = $wpdb->get_var( $wpdb->prepare( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = 'webo_mcp_api_key' AND meta_value = %s LIMIT 1", trim( $provided_api_key ) ) );
 				if ( $user_id ) {
 					wp_set_current_user( (int) $user_id );
 				}

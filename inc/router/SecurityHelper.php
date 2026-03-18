@@ -11,12 +11,12 @@ class SecurityHelper {
 		if ( is_user_logged_in() && current_user_can( 'read' ) ) {
 			return true;
 		}
-		$configured_api_key = (string) get_option( 'webo_wordpress_mcp_api_key', '' );
+		$configured_api_key = (string) get_option( 'webo_mcp_api_key', '' );
 		$provided_api_key   = (string) $request->get_header( 'X-WEBO-API-KEY' );
 		if ( $configured_api_key !== '' && $provided_api_key !== '' && hash_equals( $configured_api_key, trim( $provided_api_key ) ) ) {
 			return true;
 		}
-		$configured_hmac_secret = (string) get_option( 'webo_wordpress_mcp_hmac_secret', '' );
+		$configured_hmac_secret = (string) get_option( 'webo_mcp_hmac_secret', '' );
 		$signature              = (string) $request->get_header( 'X-WEBO-SIGNATURE' );
 		$timestamp              = (string) $request->get_header( 'X-WEBO-TIMESTAMP' );
 		if ( $configured_hmac_secret !== '' && $signature !== '' && $timestamp !== '' && ctype_digit( $timestamp ) ) {

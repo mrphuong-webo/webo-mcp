@@ -17,30 +17,30 @@ class PluginSettings {
 			'WEBO MCP Settings',
 			'WEBO MCP',
 			'manage_options',
-			'webo-wordpress-mcp-settings',
+			'webo-mcp-settings',
 			[ self::class, 'render_settings_page' ]
 		);
 	}
 
 	public static function register_settings() {
-		register_setting( 'webo_wordpress_mcp_settings', 'webo_wordpress_mcp_api_key' );
-		register_setting( 'webo_wordpress_mcp_settings', 'webo_wordpress_mcp_hmac_secret' );
-		register_setting( 'webo_wordpress_mcp_settings', 'webo_wordpress_mcp_public_tool_allowlist' );
+		register_setting( 'webo_mcp_settings', 'webo_mcp_api_key' );
+		register_setting( 'webo_mcp_settings', 'webo_mcp_hmac_secret' );
+		register_setting( 'webo_mcp_settings', 'webo_mcp_public_tool_allowlist' );
 	}
 
 	public static function render_settings_page() {
 		echo '<div class="wrap">';
 		echo '<h1>WEBO MCP Settings</h1>';
 		echo '<form method="post" action="options.php">';
-		settings_fields( 'webo_wordpress_mcp_settings' );
-		do_settings_sections( 'webo_wordpress_mcp_settings' );
+		settings_fields( 'webo_mcp_settings' );
+		do_settings_sections( 'webo_mcp_settings' );
 		echo '<table class="form-table">';
-		echo '<tr><th scope="row"><label for="webo_wordpress_mcp_api_key">API Key</label></th>';
-		echo '<td><input type="text" id="webo_wordpress_mcp_api_key" name="webo_wordpress_mcp_api_key" value="' . esc_attr( get_option( 'webo_wordpress_mcp_api_key', '' ) ) . '" class="regular-text" /></td></tr>';
-		echo '<tr><th scope="row"><label for="webo_wordpress_mcp_hmac_secret">HMAC Secret</label></th>';
-		echo '<td><input type="text" id="webo_wordpress_mcp_hmac_secret" name="webo_wordpress_mcp_hmac_secret" value="' . esc_attr( get_option( 'webo_wordpress_mcp_hmac_secret', '' ) ) . '" class="regular-text" /></td></tr>';
-		echo '<tr><th scope="row"><label for="webo_wordpress_mcp_public_tool_allowlist">Public Tool Allowlist</label></th>';
-		echo '<td><input type="text" id="webo_wordpress_mcp_public_tool_allowlist" name="webo_wordpress_mcp_public_tool_allowlist" value="' . esc_attr( get_option( 'webo_wordpress_mcp_public_tool_allowlist', '' ) ) . '" class="regular-text" /> <small>Comma-separated tool names</small></td></tr>';
+		echo '<tr><th scope="row"><label for="webo_mcp_api_key">API Key</label></th>';
+		echo '<td><input type="text" id="webo_mcp_api_key" name="webo_mcp_api_key" value="' . esc_attr( get_option( 'webo_mcp_api_key', '' ) ) . '" class="regular-text" /></td></tr>';
+		echo '<tr><th scope="row"><label for="webo_mcp_hmac_secret">HMAC Secret</label></th>';
+		echo '<td><input type="text" id="webo_mcp_hmac_secret" name="webo_mcp_hmac_secret" value="' . esc_attr( get_option( 'webo_mcp_hmac_secret', '' ) ) . '" class="regular-text" /></td></tr>';
+		echo '<tr><th scope="row"><label for="webo_mcp_public_tool_allowlist">Public Tool Allowlist</label></th>';
+		echo '<td><input type="text" id="webo_mcp_public_tool_allowlist" name="webo_mcp_public_tool_allowlist" value="' . esc_attr( get_option( 'webo_mcp_public_tool_allowlist', '' ) ) . '" class="regular-text" /> <small>Comma-separated tool names</small></td></tr>';
 		echo '</table>';
 		submit_button();
 		echo '</form>';

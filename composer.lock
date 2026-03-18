@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7e4391ec6e6e4fb718ce0f941f831514",
+    "content-hash": "72ef5e48cfcca6e87718f08becd1729f",
     "packages": [
         {
             "name": "wordpress/abilities-api",

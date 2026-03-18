@@ -1,27 +1,27 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: WEBO WordPress MCP 1.1.1\n"
+"Project-Id-Version: WEBO MCP 2.0.0\n"
 "Report-Msgid-Bugs-To: https://webomcp.com\n"
 "POT-Creation-Date: 2026-03-08 00:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Handcrafted by AI\n"
-"X-Domain: webo-wordpress-mcp\n"
+"X-Domain: webo-mcp\n"
 
-#: webo-wordpress-mcp.php:48
+#: webo-mcp.php:48
 msgid "WEBO MCP Settings"
 msgstr ""
 
-#: webo-wordpress-mcp.php:96
+#: webo-mcp.php:96
 msgid "API Key"
 msgstr ""
 
-#: webo-wordpress-mcp.php:112
+#: webo-mcp.php:112
 msgid "HMAC Secret"
 msgstr ""
 
-#: webo-wordpress-mcp.php:134
+#: webo-mcp.php:134
 msgid ""
 "Configure the API key or HMAC secret here. If left empty, the plugin will "
 "not require authentication for MCP requests."

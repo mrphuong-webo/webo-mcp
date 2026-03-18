@@ -1,16 +1,16 @@
-=== WEBO WordPress MCP ===
+=== WEBO MCP ===
 Contributors: dinhwp
 Author URI: https://dinhwp.com
 Tags: mcp, ai, json-rpc, api, wordpress
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
-WEBO WordPress MCP acts as the primary standalone MCP gateway for WordPress.
+WEBO MCP acts as the primary standalone MCP gateway for WordPress.
 
 Supported AI Platforms: Use with any MCP-compatible client (e.g. Cursor, Claude Desktop, n8n, custom apps). The client can use any of these models: Claude (Anthropic), OpenAI (GPT-4, GPT-3.5), Google Gemini, Mistral AI, Perplexity, Groq, Cohere, Together AI, DeepSeek. This plugin exposes standard MCP JSON-RPC; compatibility depends on the client, not the LLM provider.
 
@@ -43,8 +43,8 @@ Excluded by default in standalone-safe mode:
 This plugin does not send any data to remote servers by itself. All MCP traffic is initiated by external MCP clients that you configure to call your site.
 
 The plugin stores the following options in the WordPress database when configured:
-- `webo_wordpress_mcp_api_key`: API key used to authenticate MCP requests.
-- `webo_wordpress_mcp_hmac_secret`: HMAC secret used to sign and validate MCP requests.
+- `webo_mcp_api_key`: API key used to authenticate MCP requests.
+- `webo_mcp_hmac_secret`: HMAC secret used to sign and validate MCP requests.
 
 These options are removed when the plugin is uninstalled via the WordPress Plugins screen.
 
@@ -54,31 +54,31 @@ The plugin exposes the following actions and filters for developers:
 
 === Actions ===
 
-- `webo_wordpress_mcp_register_tools`  
+- `webo_mcp_register_tools`  
   Fired during plugin bootstrap after standalone tools are registered. Use this to register custom MCP tools from other plugins.
 
 === Filters ===
 
-- `webo_wordpress_mcp_allow_internal_tools` (bool $allow_internal, WP_REST_Request $request)  
+- `webo_mcp_allow_internal_tools` (bool $allow_internal, WP_REST_Request $request)  
   Controls whether internal tools are included in tools/list responses. Defaults to false for public environments.
 
-- `webo_wordpress_mcp_public_categories` (array $categories, WP_REST_Request $request, array $tool)  
+- `webo_mcp_public_categories` (array $categories, WP_REST_Request $request, array $tool)  
   Filters which tool categories are exposed as public. Defaults to array( 'wordpress' ).
 
-- `webo_wordpress_mcp_public_tool_allowlist` (array $names, WP_REST_Request $request, array $tool)  
+- `webo_mcp_public_tool_allowlist` (array $names, WP_REST_Request $request, array $tool)  
   Optional allowlist of specific tool names that are always considered public.
 
-- `webo_wordpress_mcp_bridge_deny_patterns` (array $patterns)  
+- `webo_mcp_bridge_deny_patterns` (array $patterns)  
   Controls which abilities are excluded when auto-bridging abilities into MCP tools (e.g. bulk, plugins/, themes/, multisite/).
 
-- `webo_wordpress_mcp_auto_bridge_abilities` (bool $enabled)  
+- `webo_mcp_auto_bridge_abilities` (bool $enabled)  
   Enables or disables automatic bridging of registered abilities into MCP tools. Defaults to true.
 
-- `webo_wordpress_mcp_enable_adapter` (bool $enabled)  
+- `webo_mcp_enable_adapter` (bool $enabled)  
   Enables or disables the bundled WordPress MCP Adapter runtime. Defaults to true.
 
 == Installation ==
-1. Upload the plugin folder to /wp-content/plugins/webo-wordpress-mcp
+1. Upload the plugin folder to /wp-content/plugins/webo-mcp
 2. Run composer install inside the plugin folder
 3. Activate the plugin in WordPress Admin
 4. Send JSON-RPC requests to POST /wp-json/mcp/v1/router
@@ -91,13 +91,13 @@ For release packaging, use scripts/build-release.ps1 to create a clean zip with 
 POST /wp-json/mcp/v1/router
 
 = Can this run WordPress abilities by itself? =
-Yes. This plugin bundles Abilities API via Composer and auto-bridges registered abilities to MCP tools. You can disable auto-bridge with filter webo_wordpress_mcp_auto_bridge_abilities set to false.
+Yes. This plugin bundles Abilities API via Composer and auto-bridges registered abilities to MCP tools. You can disable auto-bridge with filter webo_mcp_auto_bridge_abilities set to false.
 
 = Can I expose internal tools? =
-Yes, via filter webo_wordpress_mcp_allow_internal_tools in private environments.
+Yes, via filter webo_mcp_allow_internal_tools in private environments.
 
 = Can I limit public tools by category? =
-Yes, via filter webo_wordpress_mcp_public_categories.
+Yes, via filter webo_mcp_public_categories.
 
 = Can I keep only WordPress.org-safe features? =
 Yes. Default bridge rules exclude patterns for bulk, plugins/themes, and multisite abilities.
@@ -111,6 +111,11 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.0 =
+* Plugin renamed to WEBO MCP; folder and main file: webo-mcp/webo-mcp.php.
+* Text domain, REST namespace webo-mcp/v1, hooks webo_mcp_* (breaking for custom code using old hook names).
+* Options and API-key usermeta migrate automatically from webo-wordpress-mcp keys on first load.
+
 = 1.1.1 =
 * Added empty input_schema definitions for core/get-user-info and core/get-environment-info.
 * Fixes MCP tools/call validation errors when invoking these no-input core tools.
@@ -130,6 +135,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.0 =
+Major rename: reinstall from folder webo-mcp (or deploy to new path), then activate WEBO MCP. Settings are preserved via migration.
+
 = 1.1.1 =
 Recommended update to fix tools/call validation for core tools with no input.
 
@@ -140,7 +148,7 @@ Recommended update to support active plugin verification via MCP tool.
 Recommended update to refresh plugin metadata and improve tools/list compatibility.
 
 = 1.0.0 =
-Initial public release of WEBO WordPress MCP.
+Initial public release of WEBO MCP (formerly WEBO WordPress MCP).
 
 == Credits ==
 Special thanks to the authors and open source projects that contributed to this plugin:

@@ -1,19 +1,19 @@
 <?php return array(
     'root' => array(
-        'name' => 'webo/wordpress-mcp',
+        'name' => 'webo/mcp',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '2534d021c681f07c0efec8fd7a286b2ed27becf7',
+        'reference' => '4b23547380e25ceb2033417645028425a1ab1b67',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        'webo/wordpress-mcp' => array(
+        'webo/mcp' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '2534d021c681f07c0efec8fd7a286b2ed27becf7',
+            'reference' => '4b23547380e25ceb2033417645028425a1ab1b67',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

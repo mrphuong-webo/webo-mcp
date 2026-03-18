@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: WEBO WordPress MCP
+ * Plugin Name: WEBO MCP
  * Description: Standalone MCP gateway and WordPress tools platform. Use with Claude, OpenAI, Gemini, Mistral, Perplexity, Groq, Cohere, Together AI, DeepSeek via any MCP-compatible client (Cursor, n8n, Claude Desktop, etc.).
- * Version: 1.1.1
+ * Version: 2.0.0
  * Author: Dinh WP
  * Author URI: https://dinhwp.com
  * Plugin URI: https://webomcp.com
@@ -10,44 +10,71 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 6.0
  * Requires PHP: 7.4
- * Text Domain: webo-wordpress-mcp
+ * Text Domain: webo-mcp
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'plugins_loaded', 'webo_wordpress_mcp_load_textdomain' );
+/**
+ * Migrates options and usermeta from pre-2.0 plugin slug (webo-wordpress-mcp).
+ *
+ * @return void
+ */
+function webo_mcp_migrate_legacy_storage() {
+	if ( get_option( 'webo_mcp_storage_migrated', '' ) === '1' ) {
+		return;
+	}
+	$pairs = array(
+		'webo_wordpress_mcp_api_key'               => 'webo_mcp_api_key',
+		'webo_wordpress_mcp_hmac_secret'         => 'webo_mcp_hmac_secret',
+		'webo_wordpress_mcp_public_tool_allowlist' => 'webo_mcp_public_tool_allowlist',
+	);
+	foreach ( $pairs as $old_key => $new_key ) {
+		$cur = get_option( $new_key, null );
+		if ( ( null === $cur || '' === $cur ) && '' !== (string) get_option( $old_key, '' ) ) {
+			update_option( $new_key, get_option( $old_key ) );
+		}
+	}
+	global $wpdb;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	$wpdb->query( "UPDATE {$wpdb->usermeta} SET meta_key = 'webo_mcp_api_key' WHERE meta_key = 'webo_wordpress_mcp_api_key'" );
+	update_option( 'webo_mcp_storage_migrated', '1', false );
+}
+add_action( 'plugins_loaded', 'webo_mcp_migrate_legacy_storage', 1 );
+
+add_action( 'plugins_loaded', 'webo_mcp_load_textdomain' );
 
 /**
  * Loads plugin textdomain.
  *
  * @return void
  */
-function webo_wordpress_mcp_load_textdomain() {
+function webo_mcp_load_textdomain() {
 	load_plugin_textdomain(
-		'webo-wordpress-mcp',
+		'webo-mcp',
 		false,
 		dirname( plugin_basename( __FILE__ ) ) . '/languages'
 	);
 }
 
 // Settings UI for the plugin.
-add_action( 'admin_menu', 'webo_wordpress_mcp_add_settings_menu' );
-add_action( 'admin_init', 'webo_wordpress_mcp_register_settings' );
+add_action( 'admin_menu', 'webo_mcp_add_settings_menu' );
+add_action( 'admin_init', 'webo_mcp_register_settings' );
 
 /**
  * Registers settings page under Settings menu.
  *
  * @return void
  */
-function webo_wordpress_mcp_add_settings_menu() {
+function webo_mcp_add_settings_menu() {
 	add_options_page(
-		__( 'WEBO MCP Settings', 'webo-wordpress-mcp' ),
+		__( 'WEBO MCP Settings', 'webo-mcp' ),
 		'WEBO MCP',
 		'manage_options',
-		'webo-wordpress-mcp-settings',
-		'webo_wordpress_mcp_render_settings_page'
+		'webo-mcp-settings',
+		'webo_mcp_render_settings_page'
 	);
 }
 
@@ -56,18 +83,18 @@ function webo_wordpress_mcp_add_settings_menu() {
  *
  * @return void
  */
-function webo_wordpress_mcp_register_settings() {
+function webo_mcp_register_settings() {
 	register_setting(
-		'webo_wordpress_mcp_settings',
-		'webo_wordpress_mcp_api_key',
+		'webo_mcp_settings',
+		'webo_mcp_api_key',
 		array(
 			'sanitize_callback' => 'sanitize_text_field',
 		)
 	);
 
 	register_setting(
-		'webo_wordpress_mcp_settings',
-		'webo_wordpress_mcp_hmac_secret',
+		'webo_mcp_settings',
+		'webo_mcp_hmac_secret',
 		array(
 			'sanitize_callback' => 'sanitize_text_field',
 		)
@@ -79,42 +106,42 @@ function webo_wordpress_mcp_register_settings() {
  *
  * @return void
  */
-function webo_wordpress_mcp_render_settings_page() {
+function webo_mcp_render_settings_page() {
 	?>
 	<div class="wrap">
-		<h1><?php echo esc_html( __( 'WEBO MCP Settings', 'webo-wordpress-mcp' ) ); ?></h1>
+		<h1><?php echo esc_html( __( 'WEBO MCP Settings', 'webo-mcp' ) ); ?></h1>
 		<form method="post" action="options.php">
-			<?php settings_fields( 'webo_wordpress_mcp_settings' ); ?>
-			<?php do_settings_sections( 'webo_wordpress_mcp_settings' ); ?>
+			<?php settings_fields( 'webo_mcp_settings' ); ?>
+			<?php do_settings_sections( 'webo_mcp_settings' ); ?>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
-						<label for="webo_wordpress_mcp_api_key">
-							<?php echo esc_html( __( 'API Key', 'webo-wordpress-mcp' ) ); ?>
+						<label for="webo_mcp_api_key">
+							<?php echo esc_html( __( 'API Key', 'webo-mcp' ) ); ?>
 						</label>
 					</th>
 					<td>
 						<input
 							type="text"
-							id="webo_wordpress_mcp_api_key"
-							name="webo_wordpress_mcp_api_key"
-							value="<?php echo esc_attr( get_option( 'webo_wordpress_mcp_api_key', '' ) ); ?>"
+							id="webo_mcp_api_key"
+							name="webo_mcp_api_key"
+							value="<?php echo esc_attr( get_option( 'webo_mcp_api_key', '' ) ); ?>"
 							class="regular-text"
 						/>
 					</td>
 				</tr>
 				<tr>
 					<th scope="row">
-						<label for="webo_wordpress_mcp_hmac_secret">
-							<?php echo esc_html( __( 'HMAC Secret', 'webo-wordpress-mcp' ) ); ?>
+						<label for="webo_mcp_hmac_secret">
+							<?php echo esc_html( __( 'HMAC Secret', 'webo-mcp' ) ); ?>
 						</label>
 					</th>
 					<td>
 						<input
 							type="text"
-							id="webo_wordpress_mcp_hmac_secret"
-							name="webo_wordpress_mcp_hmac_secret"
-							value="<?php echo esc_attr( get_option( 'webo_wordpress_mcp_hmac_secret', '' ) ); ?>"
+							id="webo_mcp_hmac_secret"
+							name="webo_mcp_hmac_secret"
+							value="<?php echo esc_attr( get_option( 'webo_mcp_hmac_secret', '' ) ); ?>"
 							class="regular-text"
 						/>
 					</td>
@@ -127,7 +154,7 @@ function webo_wordpress_mcp_render_settings_page() {
 				<?php
 				echo esc_html__(
 					'Configure the API key or HMAC secret here. If left empty, the plugin will not require authentication for MCP requests.',
-					'webo-wordpress-mcp'
+					'webo-mcp'
 				);
 				?>
 			</em>
@@ -136,14 +163,14 @@ function webo_wordpress_mcp_render_settings_page() {
 	<?php
 }
 
-$webo_wordpress_mcp_autoloader = __DIR__ . '/vendor/autoload.php';
-if ( file_exists( $webo_wordpress_mcp_autoloader ) ) {
-	require_once $webo_wordpress_mcp_autoloader;
+$webo_mcp_autoloader = __DIR__ . '/vendor/autoload.php';
+if ( file_exists( $webo_mcp_autoloader ) ) {
+	require_once $webo_mcp_autoloader;
 }
 
-$webo_wordpress_mcp_abilities_api = __DIR__ . '/vendor/wordpress/abilities-api/abilities-api.php';
-if ( file_exists( $webo_wordpress_mcp_abilities_api ) ) {
-	require_once $webo_wordpress_mcp_abilities_api;
+$webo_mcp_abilities_api = __DIR__ . '/vendor/wordpress/abilities-api/abilities-api.php';
+if ( file_exists( $webo_mcp_abilities_api ) ) {
+	require_once $webo_mcp_abilities_api;
 }
 
 require_once __DIR__ . '/inc/registry/class-tool-registry.php';
@@ -162,7 +189,7 @@ use WP\MCP\Core\McpAdapter;
  * @param array<string, mixed> $input_schema Ability input schema.
  * @return array<string, array<string, mixed>>
  */
-function webo_wordpress_mcp_convert_input_schema_to_tool_arguments( array $input_schema ) {
+function webo_mcp_convert_input_schema_to_tool_arguments( array $input_schema ) {
 	$arguments = array();
 
 	if ( ! isset( $input_schema['properties'] ) || ! is_array( $input_schema['properties'] ) ) {
@@ -211,7 +238,7 @@ function webo_wordpress_mcp_convert_input_schema_to_tool_arguments( array $input
  *
  * @return void
  */
-function webo_wordpress_mcp_register_wordpress_abilities() {
+function webo_mcp_register_wordpress_abilities() {
 	if ( ! function_exists( 'wp_get_abilities' ) || ! function_exists( 'wp_get_ability' ) ) {
 		return;
 	}
@@ -231,7 +258,7 @@ function webo_wordpress_mcp_register_wordpress_abilities() {
 			continue;
 		}
 
-		if ( ! webo_wordpress_mcp_should_bridge_ability( $ability_name ) ) {
+		if ( ! webo_mcp_should_bridge_ability( $ability_name ) ) {
 			continue;
 		}
 
@@ -253,11 +280,11 @@ function webo_wordpress_mcp_register_wordpress_abilities() {
 				'description' => '' !== $description ? $description : sprintf( 'Execute ability: %s', $ability_name ),
 				'category'    => '' !== $category ? $category : 'wordpress',
 				'visibility'  => $visibility,
-				'arguments'   => webo_wordpress_mcp_convert_input_schema_to_tool_arguments( is_array( $input_schema ) ? $input_schema : array() ),
+				'arguments'   => webo_mcp_convert_input_schema_to_tool_arguments( is_array( $input_schema ) ? $input_schema : array() ),
 				'callback'    => static function ( array $arguments ) use ( $ability_name ) {
 					$ability_instance = wp_get_ability( $ability_name );
 					if ( ! $ability_instance || ! method_exists( $ability_instance, 'execute' ) ) {
-						return new WP_Error( 'webo_wordpress_mcp_ability_not_found', sprintf( 'Ability not found: %s', $ability_name ) );
+						return new WP_Error( 'webo_mcp_ability_not_found', sprintf( 'Ability not found: %s', $ability_name ) );
 					}
 
 					return $ability_instance->execute( $arguments );
@@ -273,14 +300,14 @@ function webo_wordpress_mcp_register_wordpress_abilities() {
  * @param string $ability_name Ability name.
  * @return bool
  */
-function webo_wordpress_mcp_should_bridge_ability( string $ability_name ) {
+function webo_mcp_should_bridge_ability( string $ability_name ) {
 	$ability_name = trim( $ability_name );
 	if ( '' === $ability_name ) {
 		return false;
 	}
 
 	$deny_patterns = apply_filters(
-		'webo_wordpress_mcp_bridge_deny_patterns',
+		'webo_mcp_bridge_deny_patterns',
 		array(
 			'bulk',
 			'plugins/',
@@ -306,7 +333,7 @@ function webo_wordpress_mcp_should_bridge_ability( string $ability_name ) {
  *
  * @return void
  */
-function webo_wordpress_mcp_register_standalone_core_tools() {
+function webo_mcp_register_standalone_core_tools() {
 	$tools = array(
 		array(
 			'name'        => 'webo/get-site-info',
@@ -697,25 +724,25 @@ function webo_wordpress_mcp_register_standalone_core_tools() {
 	}
 }
 
-function webo_wordpress_mcp_bootstrap() {
-	webo_wordpress_mcp_register_standalone_core_tools();
+function webo_mcp_bootstrap() {
+	webo_mcp_register_standalone_core_tools();
 
-	do_action( 'webo_wordpress_mcp_register_tools' );
+	do_action( 'webo_mcp_register_tools' );
 
-	$auto_bridge = (bool) apply_filters( 'webo_wordpress_mcp_auto_bridge_abilities', true );
+	$auto_bridge = (bool) apply_filters( 'webo_mcp_auto_bridge_abilities', true );
 	if ( $auto_bridge ) {
-		webo_wordpress_mcp_register_wordpress_abilities();
+		webo_mcp_register_wordpress_abilities();
 	}
 }
-add_action( 'init', 'webo_wordpress_mcp_bootstrap', 20 );
+add_action( 'init', 'webo_mcp_bootstrap', 20 );
 
 /**
  * Bootstraps WordPress MCP Adapter runtime.
  *
  * @return void
  */
-function webo_wordpress_mcp_bootstrap_adapter() {
-	$enable_adapter = (bool) apply_filters( 'webo_wordpress_mcp_enable_adapter', true );
+function webo_mcp_bootstrap_adapter() {
+	$enable_adapter = (bool) apply_filters( 'webo_mcp_enable_adapter', true );
 	if ( ! $enable_adapter ) {
 		return;
 	}
@@ -724,27 +751,27 @@ function webo_wordpress_mcp_bootstrap_adapter() {
 		McpAdapter::instance();
 	}
 }
-add_action( 'plugins_loaded', 'webo_wordpress_mcp_bootstrap_adapter', 20 );
+add_action( 'plugins_loaded', 'webo_mcp_bootstrap_adapter', 20 );
 
 /**
  * Returns MCP-compatible tools/list response payload.
  *
  * @return array<string, array<int, array<string, string>>>
  */
-function webo_wordpress_mcp_list_tools() {
+function webo_mcp_list_tools() {
 	return ToolRegistry::list_tools();
 }
 
 /**
  * Optional REST discovery endpoint for diagnostics.
  *
- * GET /wp-json/webo-wordpress-mcp/v1/tools
+ * GET /wp-json/webo-mcp/v1/tools
  *
  * @return void
  */
-function webo_wordpress_mcp_register_rest_routes() {
+function webo_mcp_register_rest_routes() {
 	register_rest_route(
-		'webo-wordpress-mcp/v1',
+		'webo-mcp/v1',
 		'/tools',
 		array(
 			'methods'             => 'GET',
@@ -777,7 +804,7 @@ function webo_wordpress_mcp_register_rest_routes() {
 		)
 	);
 }
-add_action( 'rest_api_init', 'webo_wordpress_mcp_register_rest_routes' );
+add_action( 'rest_api_init', 'webo_mcp_register_rest_routes' );
 
 /**
  * Registers MCP JSON-RPC router endpoint.
@@ -786,7 +813,7 @@ add_action( 'rest_api_init', 'webo_wordpress_mcp_register_rest_routes' );
  *
  * @return void
  */
-function webo_wordpress_mcp_register_mcp_router() {
+function webo_mcp_register_mcp_router() {
 	McpRouter::register_rest_endpoint();
 }
-add_action( 'rest_api_init', 'webo_wordpress_mcp_register_mcp_router' );
+add_action( 'rest_api_init', 'webo_mcp_register_mcp_router' );

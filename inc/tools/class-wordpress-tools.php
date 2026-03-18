@@ -78,7 +78,7 @@ class WordPressTools {
 		$post    = get_post( $post_id );
 
 		if ( ! $post ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
 		return array(
@@ -133,7 +133,7 @@ class WordPressTools {
 	public static function find_content_by_url( array $arguments ) {
 		$url = isset( $arguments['url'] ) ? trim( (string) $arguments['url'] ) : '';
 		if ( '' === $url ) {
-			return new \WP_Error( 'webo_wordpress_mcp_url_required', 'url is required' );
+			return new \WP_Error( 'webo_mcp_url_required', 'url is required' );
 		}
 
 		// Normalize: if relative path, make it full URL for url_to_postid().
@@ -143,12 +143,12 @@ class WordPressTools {
 
 		$post_id = url_to_postid( $url );
 		if ( $post_id <= 0 ) {
-			return new \WP_Error( 'webo_wordpress_mcp_content_not_found', 'No content found for this URL', array( 'url' => $url ) );
+			return new \WP_Error( 'webo_mcp_content_not_found', 'No content found for this URL', array( 'url' => $url ) );
 		}
 
 		$post = get_post( $post_id );
 		if ( ! $post ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
 		$result = array(
@@ -210,13 +210,13 @@ class WordPressTools {
 		$post_type = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : '';
 
 		if ( '' === $slug ) {
-			return new \WP_Error( 'webo_wordpress_mcp_slug_required', 'slug is required' );
+			return new \WP_Error( 'webo_mcp_slug_required', 'slug is required' );
 		}
 
 		$types_to_search = array();
 		if ( '' !== $post_type ) {
 			if ( ! post_type_exists( $post_type ) ) {
-				return new \WP_Error( 'webo_wordpress_mcp_post_type_not_found', 'Post type not found', array( 'post_type' => $post_type ) );
+				return new \WP_Error( 'webo_mcp_post_type_not_found', 'Post type not found', array( 'post_type' => $post_type ) );
 			}
 			$types_to_search[] = $post_type;
 		} else {
@@ -252,7 +252,7 @@ class WordPressTools {
 			}
 		}
 
-		return new \WP_Error( 'webo_wordpress_mcp_content_not_found', 'No content found for slug', array( 'slug' => $slug ) );
+		return new \WP_Error( 'webo_mcp_content_not_found', 'No content found for slug', array( 'slug' => $slug ) );
 	}
 
 	/**
@@ -296,7 +296,7 @@ class WordPressTools {
 	public static function update_post( array $arguments ) {
 		$post_id = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
 		$payload = array(
@@ -337,12 +337,12 @@ class WordPressTools {
 		$force   = isset( $arguments['force'] ) ? (bool) $arguments['force'] : false;
 
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
 		$result = wp_delete_post( $post_id, $force );
 		if ( ! $result ) {
-			return new \WP_Error( 'webo_wordpress_mcp_delete_failed', 'Failed to delete post' );
+			return new \WP_Error( 'webo_mcp_delete_failed', 'Failed to delete post' );
 		}
 
 		return array(
@@ -467,7 +467,7 @@ class WordPressTools {
 		$per_page = isset( $arguments['per_page'] ) ? (int) $arguments['per_page'] : 50;
 
 		if ( ! taxonomy_exists( $taxonomy ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_taxonomy_not_found', 'Taxonomy not found' );
+			return new \WP_Error( 'webo_mcp_taxonomy_not_found', 'Taxonomy not found' );
 		}
 
 		$terms = get_terms(
@@ -585,7 +585,7 @@ class WordPressTools {
 	public static function get_options( array $arguments ) {
 		$names = isset( $arguments['names'] ) && is_array( $arguments['names'] ) ? $arguments['names'] : array();
 		if ( empty( $names ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_option_names_required', 'Option names are required' );
+			return new \WP_Error( 'webo_mcp_option_names_required', 'Option names are required' );
 		}
 
 		$allowed_option_names = array(
@@ -625,7 +625,7 @@ class WordPressTools {
 	public static function update_options( array $arguments ) {
 		$options = isset( $arguments['options'] ) && is_array( $arguments['options'] ) ? $arguments['options'] : array();
 		if ( empty( $options ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_options_required', 'Options payload is required' );
+			return new \WP_Error( 'webo_mcp_options_required', 'Options payload is required' );
 		}
 
 		$allowed_option_names = array(
@@ -667,10 +667,10 @@ class WordPressTools {
 		$post_ids = isset( $arguments['post_ids'] ) && is_array( $arguments['post_ids'] ) ? $arguments['post_ids'] : array();
 		$status   = isset( $arguments['status'] ) ? sanitize_key( (string) $arguments['status'] ) : 'draft';
 		if ( empty( $post_ids ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_missing_argument', 'post_ids array is required' );
+			return new \WP_Error( 'webo_mcp_missing_argument', 'post_ids array is required' );
 		}
 		if ( ! in_array( $status, array( 'draft', 'publish', 'pending', 'private', 'trash' ), true ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_invalid_status', 'Invalid status' );
+			return new \WP_Error( 'webo_mcp_invalid_status', 'Invalid status' );
 		}
 		$updated = 0;
 		foreach ( array_map( 'intval', $post_ids ) as $post_id ) {
@@ -694,7 +694,7 @@ class WordPressTools {
 	public static function list_revisions( array $arguments ) {
 		$post_id = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 		$revisions = wp_get_post_revisions( $post_id );
 		$items     = array();
@@ -719,15 +719,15 @@ class WordPressTools {
 		$revision_id = isset( $arguments['revision_id'] ) ? (int) $arguments['revision_id'] : 0;
 		$revision    = $revision_id > 0 ? get_post( $revision_id ) : null;
 		if ( ! $revision || 'revision' !== $revision->post_type ) {
-			return new \WP_Error( 'webo_wordpress_mcp_revision_not_found', 'Revision not found' );
+			return new \WP_Error( 'webo_mcp_revision_not_found', 'Revision not found' );
 		}
 		$post_id = (int) $revision->post_parent;
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Parent post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Parent post not found' );
 		}
 		$restored = wp_restore_post_revision( $revision_id );
 		if ( ! $restored ) {
-			return new \WP_Error( 'webo_wordpress_mcp_restore_failed', 'Failed to restore revision' );
+			return new \WP_Error( 'webo_mcp_restore_failed', 'Failed to restore revision' );
 		}
 		return array( 'post_id' => $post_id, 'revision_id' => $revision_id, 'restored' => true, 'tool' => 'webo/restore-revision' );
 	}
@@ -743,7 +743,7 @@ class WordPressTools {
 		$replace = isset( $arguments['replace'] ) ? (string) $arguments['replace'] : '';
 		$dry_run = isset( $arguments['dry_run'] ) ? (bool) $arguments['dry_run'] : true;
 		if ( '' === $search ) {
-			return new \WP_Error( 'webo_wordpress_mcp_missing_argument', 'search is required' );
+			return new \WP_Error( 'webo_mcp_missing_argument', 'search is required' );
 		}
 		$query = new \WP_Query(
 			array(
@@ -785,11 +785,11 @@ class WordPressTools {
 	public static function create_term( array $arguments ) {
 		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : 'category';
 		if ( ! in_array( $taxonomy, array( 'category', 'post_tag' ), true ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_invalid_taxonomy', 'taxonomy must be category or post_tag' );
+			return new \WP_Error( 'webo_mcp_invalid_taxonomy', 'taxonomy must be category or post_tag' );
 		}
 		$name = isset( $arguments['name'] ) ? sanitize_text_field( (string) $arguments['name'] ) : '';
 		if ( '' === $name ) {
-			return new \WP_Error( 'webo_wordpress_mcp_missing_argument', 'name is required' );
+			return new \WP_Error( 'webo_mcp_missing_argument', 'name is required' );
 		}
 		$slug        = isset( $arguments['slug'] ) ? sanitize_title( (string) $arguments['slug'] ) : '';
 		$description = isset( $arguments['description'] ) ? sanitize_textarea_field( (string) $arguments['description'] ) : '';
@@ -820,7 +820,7 @@ class WordPressTools {
 		$term_id  = isset( $arguments['term_id'] ) ? (int) $arguments['term_id'] : 0;
 		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : 'category';
 		if ( $term_id <= 0 || ! term_exists( $term_id, $taxonomy ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_term_not_found', 'Term not found' );
+			return new \WP_Error( 'webo_mcp_term_not_found', 'Term not found' );
 		}
 		$args = array();
 		if ( isset( $arguments['name'] ) ) {
@@ -836,7 +836,7 @@ class WordPressTools {
 			$args['parent'] = max( 0, (int) $arguments['parent_id'] );
 		}
 		if ( empty( $args ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_missing_argument', 'At least one of name, slug, description, parent_id is required' );
+			return new \WP_Error( 'webo_mcp_missing_argument', 'At least one of name, slug, description, parent_id is required' );
 		}
 		$result = wp_update_term( $term_id, $taxonomy, $args );
 		if ( is_wp_error( $result ) ) {
@@ -855,11 +855,11 @@ class WordPressTools {
 		$term_id  = isset( $arguments['term_id'] ) ? (int) $arguments['term_id'] : 0;
 		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : 'category';
 		if ( $term_id <= 0 || ! term_exists( $term_id, $taxonomy ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_term_not_found', 'Term not found' );
+			return new \WP_Error( 'webo_mcp_term_not_found', 'Term not found' );
 		}
 		$result = wp_delete_term( $term_id, $taxonomy );
 		if ( is_wp_error( $result ) || ! $result ) {
-			return new \WP_Error( 'webo_wordpress_mcp_delete_failed', 'Failed to delete term' );
+			return new \WP_Error( 'webo_mcp_delete_failed', 'Failed to delete term' );
 		}
 		return array( 'term_id' => $term_id, 'taxonomy' => $taxonomy, 'deleted' => true, 'tool' => 'webo/delete-term' );
 	}
@@ -904,16 +904,16 @@ class WordPressTools {
 		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : 'category';
 
 		if ( $term_id <= 0 ) {
-			return new \WP_Error( 'webo_wordpress_mcp_term_id_required', 'term_id is required' );
+			return new \WP_Error( 'webo_mcp_term_id_required', 'term_id is required' );
 		}
 
 		if ( ! taxonomy_exists( $taxonomy ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_taxonomy_not_found', 'Taxonomy not found' );
+			return new \WP_Error( 'webo_mcp_taxonomy_not_found', 'Taxonomy not found' );
 		}
 
 		$term = get_term( $term_id, $taxonomy );
 		if ( ! $term || is_wp_error( $term ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_term_not_found', 'Term not found' );
+			return new \WP_Error( 'webo_mcp_term_not_found', 'Term not found' );
 		}
 
 		return array(
@@ -940,11 +940,11 @@ class WordPressTools {
 		$term_ids  = isset( $arguments['term_ids'] ) && is_array( $arguments['term_ids'] ) ? $arguments['term_ids'] : array();
 
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
 		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_taxonomy_not_found', 'Taxonomy not found' );
+			return new \WP_Error( 'webo_mcp_taxonomy_not_found', 'Taxonomy not found' );
 		}
 
 		$term_ids = array_map( 'intval', $term_ids );
@@ -975,11 +975,11 @@ class WordPressTools {
 		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : '';
 
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_post_not_found', 'Post not found' );
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
 		if ( '' !== $taxonomy && ! taxonomy_exists( $taxonomy ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_taxonomy_not_found', 'Taxonomy not found' );
+			return new \WP_Error( 'webo_mcp_taxonomy_not_found', 'Taxonomy not found' );
 		}
 
 		$taxonomies = '' !== $taxonomy ? array( $taxonomy ) : get_object_taxonomies( get_post_type( $post_id ), 'names' );
@@ -1018,7 +1018,7 @@ class WordPressTools {
 	public static function upload_media_from_url( array $arguments ) {
 		$image_url = isset( $arguments['image_url'] ) ? esc_url_raw( (string) $arguments['image_url'] ) : '';
 		if ( '' === $image_url ) {
-			return new \WP_Error( 'webo_wordpress_mcp_missing_argument', 'image_url is required' );
+			return new \WP_Error( 'webo_mcp_missing_argument', 'image_url is required' );
 		}
 		require_once ABSPATH . 'wp-admin/includes/media.php';
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -1063,7 +1063,7 @@ class WordPressTools {
 		$attachment_id = isset( $arguments['attachment_id'] ) ? (int) $arguments['attachment_id'] : 0;
 		$post          = $attachment_id > 0 ? get_post( $attachment_id ) : null;
 		if ( ! $post || 'attachment' !== $post->post_type ) {
-			return new \WP_Error( 'webo_wordpress_mcp_attachment_not_found', 'Attachment not found' );
+			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
 		}
 		return array(
 			'attachment_id' => (int) $post->ID,
@@ -1085,7 +1085,7 @@ class WordPressTools {
 	public static function update_media( array $arguments ) {
 		$attachment_id = isset( $arguments['attachment_id'] ) ? (int) $arguments['attachment_id'] : 0;
 		if ( $attachment_id <= 0 || ! get_post( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_attachment_not_found', 'Attachment not found' );
+			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
 		}
 		$updated = array();
 		if ( array_key_exists( 'title', $arguments ) ) {
@@ -1112,11 +1112,11 @@ class WordPressTools {
 	public static function delete_media( array $arguments ) {
 		$attachment_id = isset( $arguments['attachment_id'] ) ? (int) $arguments['attachment_id'] : 0;
 		if ( $attachment_id <= 0 || ! get_post( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_attachment_not_found', 'Attachment not found' );
+			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
 		}
 		$result = wp_delete_attachment( $attachment_id, true );
 		if ( ! $result ) {
-			return new \WP_Error( 'webo_wordpress_mcp_delete_failed', 'Failed to delete attachment' );
+			return new \WP_Error( 'webo_mcp_delete_failed', 'Failed to delete attachment' );
 		}
 		return array( 'attachment_id' => $attachment_id, 'deleted' => true, 'tool' => 'webo/delete-media' );
 	}
@@ -1133,7 +1133,7 @@ class WordPressTools {
 		$comment_id = isset( $arguments['comment_id'] ) ? (int) $arguments['comment_id'] : 0;
 		$comment    = $comment_id > 0 ? get_comment( $comment_id ) : null;
 		if ( ! $comment ) {
-			return new \WP_Error( 'webo_wordpress_mcp_comment_not_found', 'Comment not found' );
+			return new \WP_Error( 'webo_mcp_comment_not_found', 'Comment not found' );
 		}
 		return array(
 			'comment_id'   => (int) $comment->comment_ID,
@@ -1156,7 +1156,7 @@ class WordPressTools {
 	public static function update_comment( array $arguments ) {
 		$comment_id = isset( $arguments['comment_id'] ) ? (int) $arguments['comment_id'] : 0;
 		if ( $comment_id <= 0 || ! get_comment( $comment_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_comment_not_found', 'Comment not found' );
+			return new \WP_Error( 'webo_mcp_comment_not_found', 'Comment not found' );
 		}
 		if ( array_key_exists( 'status', $arguments ) ) {
 			$status = sanitize_key( (string) $arguments['status'] );
@@ -1188,11 +1188,11 @@ class WordPressTools {
 	public static function delete_comment( array $arguments ) {
 		$comment_id = isset( $arguments['comment_id'] ) ? (int) $arguments['comment_id'] : 0;
 		if ( $comment_id <= 0 || ! get_comment( $comment_id ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_comment_not_found', 'Comment not found' );
+			return new \WP_Error( 'webo_mcp_comment_not_found', 'Comment not found' );
 		}
 		$result = wp_delete_comment( $comment_id, true );
 		if ( ! $result ) {
-			return new \WP_Error( 'webo_wordpress_mcp_delete_failed', 'Failed to delete comment' );
+			return new \WP_Error( 'webo_mcp_delete_failed', 'Failed to delete comment' );
 		}
 		return array( 'comment_id' => $comment_id, 'deleted' => true, 'tool' => 'webo/delete-comment' );
 	}
@@ -1207,10 +1207,10 @@ class WordPressTools {
 		$plugin = isset( $arguments['plugin'] ) ? sanitize_text_field( (string) $arguments['plugin'] ) : '';
 		$action = isset( $arguments['action'] ) ? sanitize_key( (string) $arguments['action'] ) : 'activate';
 		if ( '' === $plugin ) {
-			return new \WP_Error( 'webo_wordpress_mcp_missing_argument', 'plugin (plugin file path) is required' );
+			return new \WP_Error( 'webo_mcp_missing_argument', 'plugin (plugin file path) is required' );
 		}
 		if ( ! in_array( $action, array( 'activate', 'deactivate' ), true ) ) {
-			return new \WP_Error( 'webo_wordpress_mcp_invalid_action', 'action must be activate or deactivate' );
+			return new \WP_Error( 'webo_mcp_invalid_action', 'action must be activate or deactivate' );
 		}
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		if ( 'activate' === $action ) {

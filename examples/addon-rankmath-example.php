@@ -3,7 +3,7 @@
  * Example addon plugin snippet.
  *
  * This file demonstrates how third-party plugins register tools
- * without editing WEBO WordPress MCP plugin.
+ * without editing WEBO MCP plugin.
  */
 
 namespace WeboMCP\Addon\RankMath;
@@ -34,7 +34,7 @@ class RankMathTools {
 }
 
 add_action(
-	'webo_wordpress_mcp_register_tools',
+	'webo_mcp_register_tools',
 	static function () {
 		ToolRegistry::register(
 			array(

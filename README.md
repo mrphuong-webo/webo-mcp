@@ -1,4 +1,4 @@
-# WEBO WordPress MCP
+# WEBO MCP
 
 Standalone MCP gateway and WordPress tools platform.
 
@@ -28,7 +28,7 @@ If you use this plugin, please give credit to the authors of these libraries.
 - Windows PowerShell:
   - `cd scripts`
   - `./build-release.ps1`
-- Output zip: `dist/webo-wordpress-mcp-<version>.zip`
+- Output zip: `dist/webo-mcp-<version>.zip`
 - Exclusions are controlled by `.distignore`
 
 ## Quick MCP + n8n setup
@@ -42,9 +42,9 @@ If you use this plugin, please give credit to the authors of these libraries.
 
 - MCP method schema and examples: use this file + `examples/addon-rankmath-example.php`
 - Internal/public policy filters for training data:
-  - `webo_wordpress_mcp_allow_internal_tools`
-  - `webo_wordpress_mcp_public_categories`
-  - `webo_wordpress_mcp_public_tool_allowlist`
+  - `webo_mcp_allow_internal_tools`
+  - `webo_mcp_public_categories`
+  - `webo_mcp_public_tool_allowlist`
 
 ## Architecture
 
@@ -110,13 +110,13 @@ Example response:
 To allow internal tools (`visibility = internal`) in a private environment:
 
 ```php
-add_filter( 'webo_wordpress_mcp_allow_internal_tools', '__return_true' );
+add_filter( 'webo_mcp_allow_internal_tools', '__return_true' );
 ```
 
 To allow additional public categories beyond `wordpress`:
 
 ```php
-add_filter( 'webo_wordpress_mcp_public_categories', function () {
+add_filter( 'webo_mcp_public_categories', function () {
   return [ 'wordpress', 'custom-public' ];
 }, 10, 3 );
 ```
@@ -152,7 +152,7 @@ add_filter( 'webo_wordpress_mcp_public_categories', function () {
   - `includeInternal`
 
 - Diagnostics REST endpoint also supports admin query:
-  - `GET /wp-json/webo-wordpress-mcp/v1/tools?include_internal=1`
+  - `GET /wp-json/webo-mcp/v1/tools?include_internal=1`
 
 ### Error format
 
@@ -249,7 +249,7 @@ ToolRegistry::register([
 ## Register tools from addon plugin
 
 ```php
-add_action('webo_wordpress_mcp_register_tools', function () {
+add_action('webo_mcp_register_tools', function () {
     ToolRegistry::register([
         'name' => 'rankmath/get-keywords',
         'description' => 'Get RankMath focus keywords',
@@ -277,11 +277,11 @@ See full example: `examples/addon-rankmath-example.php`
 
 ## Optional diagnostics endpoint
 
-- `GET /wp-json/webo-wordpress-mcp/v1/tools`
+- `GET /wp-json/webo-mcp/v1/tools`
 
 ## WordPress.org packaging
 
-- Plugin header is in `webo-wordpress-mcp.php`
+- Plugin header is in `webo-mcp.php`
 - WordPress.org readme file is `readme.txt`
 - Keep stable version in sync between plugin header and `readme.txt`
 
@@ -290,3 +290,10 @@ See full example: `examples/addon-rankmath-example.php`
 - Tool not found: throws `Exception("Tool not registered")`
 - Invalid arguments: returns `WP_Error`
 - Permission denied: returns `WP_Error` with code `webo_mcp_permission_denied`
+
+## GitHub repository rename (webo-wordpress-mcp → webo-mcp)
+
+1. On GitHub: **Settings → General → Repository name** → `webo-mcp`.
+2. Local: `git remote set-url github git@github.com:mrphuong-webo/webo-mcp.git`
+3. Deploy target becomes `…/plugins/webo-mcp` (matches `github.event.repository.name`).
+4. On WordPress: old path `webo-wordpress-mcp` will show as missing; install/activate under `webo-mcp` (API key/HMAC migrate automatically).
