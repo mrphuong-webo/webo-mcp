@@ -26,8 +26,15 @@ if (Test-Path $distignorePath) {
     $excludePatterns = Get-Content $distignorePath | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith("#") }
 }
 
-$files = Get-ChildItem -Path $sourcePath -Recurse -File | Where-Object {
+$files = Get-ChildItem -Path $sourcePath -Recurse -File -Force | Where-Object {
     $relativePath = $_.FullName.Substring($sourcePath.Path.Length).TrimStart('\\') -replace '\\','/'
+    # WordPress.org: no dotfiles, no .github trees (workflows are not dot-prefixed).
+    if ($_.Name.StartsWith('.')) {
+        return $false
+    }
+    if ($relativePath -match '(?i)(^|/)\.github(/|$)') {
+        return $false
+    }
     foreach ($pattern in $excludePatterns) {
         $normalizedPattern = $pattern.TrimStart('./')
         if ($normalizedPattern.EndsWith('/')) {

@@ -1,5 +1,7 @@
 .git/
 .github/
+.gitignore
+.distignore
 .gitlab-ci.yml
 WPORG_RELEASE_CHECKLIST.md
 docs/

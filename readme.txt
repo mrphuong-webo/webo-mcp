@@ -3,9 +3,9 @@ Contributors: dinhwp
 Author URI: https://dinhwp.com
 Tags: mcp, ai, json-rpc, api, wordpress
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.2 =
+* WordPress.org packaging: release zip excludes dotfiles and all .github trees; readme Tested up to 6.9.
+
 = 2.0.1 =
 * Hardening: HMAC auth passes REST permission layer; SSRF guard for upload-media-from-url; paginated search-replace (max 500 posts per call); sanitized safe option updates; removed duplicate unused settings class.
 
@@ -141,6 +144,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.2 =
+Packaging and readme updates for WordPress.org review. Always upload the zip from scripts/build-release.ps1, not the raw git folder.
+
 = 2.0.0 =
 Major rename: reinstall from folder webo-mcp (or deploy to new path), then activate WEBO MCP. Settings are preserved via migration.
 

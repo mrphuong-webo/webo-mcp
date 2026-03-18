@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WEBO MCP
  * Description: Standalone MCP gateway and WordPress tools platform. Use with Claude, OpenAI, Gemini, Mistral, Perplexity, Groq, Cohere, Together AI, DeepSeek via any MCP-compatible client (Cursor, n8n, Claude Desktop, etc.).
- * Version: 2.0.1
+ * Version: 2.0.2
  * Author: Dinh WP
  * Author URI: https://dinhwp.com
  * Plugin URI: https://webomcp.com
