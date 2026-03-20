@@ -41,6 +41,9 @@ function Test-AllowedFile {
     $rel = $RelativePath -replace '\\', '/'
     if ($blockedPathRegex.IsMatch($rel)) { return $false }
 
+    # Plugin Check: vendor/ requires composer.json at plugin root
+    if ($rel -eq 'composer.json') { return $true }
+
     $ext = [System.IO.Path]::GetExtension($FileName)
     if ($ext.Length -gt 0) { $ext = $ext.TrimStart('.').ToLowerInvariant() } else { $ext = '' }
 

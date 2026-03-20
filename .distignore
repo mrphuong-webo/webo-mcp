@@ -7,7 +7,6 @@ dist/
 WPORG_RELEASE_CHECKLIST.md
 docs/
 examples/
-composer.json
 composer.lock
 n8n_ai_system_prompt.txt
 vendor/wordpress/abilities-api/.github/

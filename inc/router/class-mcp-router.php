@@ -212,10 +212,18 @@ class McpRouter {
 				// API key from Settings (option): set first admin as current user so capability checks pass.
 				$maybe_set_admin_user();
 			} else {
-				global $wpdb;
-				$user_id = $wpdb->get_var( $wpdb->prepare( "SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = 'webo_mcp_api_key' AND meta_value = %s LIMIT 1", trim( $provided_api_key ) ) );
-				if ( $user_id ) {
-					wp_set_current_user( (int) $user_id );
+				$key = trim( $provided_api_key );
+				$users = get_users(
+					array(
+						'meta_key'     => 'webo_mcp_api_key',
+						'meta_value'   => $key,
+						'meta_compare' => '=',
+						'number'       => 1,
+						'fields'       => 'ID',
+					)
+				);
+				if ( ! empty( $users ) && isset( $users[0] ) ) {
+					wp_set_current_user( (int) $users[0] );
 				}
 			}
 		}

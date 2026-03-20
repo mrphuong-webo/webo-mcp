@@ -1207,7 +1207,9 @@ class WordPressTools {
 		}
 		$id = media_handle_sideload( $file_array, 0, null, $post_data );
 		if ( is_wp_error( $id ) ) {
-			@unlink( $tmp );
+			if ( is_string( $tmp ) && $tmp !== '' && file_exists( $tmp ) ) {
+				wp_delete_file( $tmp );
+			}
 			return $id;
 		}
 		if ( ! empty( $post_data['post_excerpt'] ) ) {
