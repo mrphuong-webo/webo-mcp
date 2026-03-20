@@ -5,12 +5,12 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.5
+ * Version: 2.0.6
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
  * Author URI: https://dinhwp.com
- * License: GPLv2 or later
+ * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: webo-mcp
  * Domain Path: /languages
