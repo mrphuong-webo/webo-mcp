@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.4
+Stable tag: 2.0.5
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -116,6 +116,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.5 =
+* Plugin header: @wordpress-plugin marker for strict scanners; License line uses GPLv2 or later slug (Plugin Handbook).
+
 = 2.0.4 =
 * Plugin header: handbook field order, shorter Description line, License text "GPL v2 or later", Domain Path for translations.
 
@@ -152,6 +155,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.5 =
+Plugin header updates for Plugin Check and WordPress.org tooling (@wordpress-plugin, GPLv2 license slug).
+
 = 2.0.4 =
 Plugin header formatting for WordPress.org Plugin Check (Description, Version, License).
 
