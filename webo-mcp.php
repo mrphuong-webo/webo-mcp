@@ -1,16 +1,17 @@
 <?php
 /**
  * Plugin Name: WEBO MCP
- * Description: Standalone MCP gateway and WordPress tools platform. Use with Claude, OpenAI, Gemini, Mistral, Perplexity, Groq, Cohere, Together AI, DeepSeek via any MCP-compatible client (Cursor, n8n, Claude Desktop, etc.).
- * Version: 2.0.3
- * Author: Dinh WP
- * Author URI: https://dinhwp.com
  * Plugin URI: https://webomcp.com
- * License: GPLv2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
+ * Version: 2.0.4
  * Requires at least: 6.0
  * Requires PHP: 7.4
+ * Author: Dinh WP
+ * Author URI: https://dinhwp.com
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: webo-mcp
+ * Domain Path: /languages
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

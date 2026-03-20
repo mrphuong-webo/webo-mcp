@@ -5,8 +5,8 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.3
-License: GPLv2 or later
+Stable tag: 2.0.4
+License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Standalone MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools/list and tools/call over the REST API, with optional API key or HMAC auth.
@@ -116,6 +116,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.4 =
+* Plugin header: handbook field order, shorter Description line, License text "GPL v2 or later", Domain Path for translations.
+
 = 2.0.3 =
 * WordPress.org / Plugin Check: include composer.json when vendor is bundled; replace unlink with wp_delete_file for temp uploads; remove load_plugin_textdomain (core loads translations); resolve API key usermeta via get_users instead of direct $wpdb; readme short description, allowed Tags, Stable tag sync.
 
@@ -149,6 +152,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.4 =
+Plugin header formatting for WordPress.org Plugin Check (Description, Version, License).
+
 = 2.0.3 =
 Plugin Check and packaging fixes; upload the release zip from scripts/build-release.ps1 for WordPress.org.
 
