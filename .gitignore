@@ -1,6 +1,7 @@
 dist/
 
 # Local / maintainer-only (do not push to GitHub)
+scripts/
 docs/
 assets/README-logo.txt
 images/webo-mcp-logo.txt
