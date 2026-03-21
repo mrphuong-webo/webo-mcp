@@ -2,6 +2,10 @@
 
 Standalone MCP gateway and WordPress tools platform.
 
+**Website:** [webomcp.com](https://webomcp.com) — product overview, docs, and ecosystem updates.
+
+**n8n:** Community node on npm — [n8n-nodes-webo-mcp](https://www.npmjs.com/package/n8n-nodes-webo-mcp) — connect n8n workflows to your WordPress MCP endpoint without custom glue.
+
 **Author:** Dinh WP ([dinhwp.com](https://dinhwp.com))
 
 ## Credits
@@ -35,8 +39,10 @@ If you use this plugin, please give credit to the authors of these libraries.
 
 - MCP endpoint: `POST /wp-json/mcp/v1/router`
 - MCP flow: `initialize` -> `tools/list` -> `tools/call`
-- n8n remote MCP package: `@automattic/mcp-wordpress-remote`
-- n8n env `WP_API_URL`: `https://your-site.com/wp-json/mcp/v1/router`
+- **WEBO n8n node (npm):** [n8n-nodes-webo-mcp](https://www.npmjs.com/package/n8n-nodes-webo-mcp) — install in n8n and point at your router URL.
+- Alternative remote MCP package: `@automattic/mcp-wordpress-remote`
+- Example router URL for env/config: `https://your-site.com/wp-json/mcp/v1/router`
+- More context: [webomcp.com](https://webomcp.com)
 
 ## AI training references
 

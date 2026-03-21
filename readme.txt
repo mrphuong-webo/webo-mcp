@@ -5,14 +5,22 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Standalone MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools/list and tools/call over the REST API, with optional API key or HMAC auth.
+MCP for WordPress: REST tools/list and tools/call; optional API key or HMAC. Hub https://webomcp.com | n8n node https://www.npmjs.com/package/n8n-nodes-webo-mcp
 
 == Description ==
 WEBO MCP acts as the primary standalone MCP gateway for WordPress.
+
+= Official site: https://webomcp.com =
+
+Whether you are evaluating MCP for your stack or already run AI clients against WordPress, https://webomcp.com is the home for WEBO MCP: positioning, practical guidance, and a single place to follow what ships next. Open the site for a fuller picture than any plugin readme can offer.
+
+= n8n: https://www.npmjs.com/package/n8n-nodes-webo-mcp =
+
+Automate WordPress from n8n with the community node on npm. Install n8n-nodes-webo-mcp, configure your site URL and credentials, and call the same MCP router your desktop clients use: a strong fit for scheduled jobs, webhooks, and multi-step workflows without custom glue code.
 
 Supported AI Platforms: Use with any MCP-compatible client (e.g. Cursor, Claude Desktop, n8n, custom apps). The client can use any of these models: Claude (Anthropic), OpenAI (GPT-4, GPT-3.5), Google Gemini, Mistral AI, Perplexity, Groq, Cohere, Together AI, DeepSeek. This plugin exposes standard MCP JSON-RPC; compatibility depends on the client, not the LLM provider.
 
@@ -95,6 +103,9 @@ For release packaging, use scripts/build-release.ps1 to create a clean zip with 
 = Which endpoint should MCP clients use? =
 POST /wp-json/mcp/v1/router
 
+= Where is the official website and the n8n package? =
+The project hub is https://webomcp.com. For n8n, install the community node from npm: https://www.npmjs.com/package/n8n-nodes-webo-mcp
+
 = Can this run WordPress abilities by itself? =
 Yes. This plugin bundles Abilities API via Composer and auto-bridges registered abilities to MCP tools. You can disable auto-bridge with filter webo_mcp_auto_bridge_abilities set to false.
 
@@ -116,6 +127,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.7 =
+* Readme: highlight https://webomcp.com and n8n community node https://www.npmjs.com/package/n8n-nodes-webo-mcp; short description and FAQ; README.md aligned.
+
 = 2.0.6 =
 * License: plugin header uses the same wording as readme.txt ("GPL v2 or later") to satisfy WordPress.org declared-license checks.
 
@@ -158,6 +172,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.7 =
+Readme and GitHub README now link webomcp.com and the n8n-nodes-webo-mcp npm package.
+
 = 2.0.6 =
 License declaration aligned between readme and main plugin file for WordPress.org review.
 
