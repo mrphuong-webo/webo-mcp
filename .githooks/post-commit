@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# Sau moi commit: push nhanh hien tai len tat ca remote.
+# Bat: git config core.hooksPath .githooks  (trong thu muc repo)
+
+branch=$(git symbolic-ref -q --short HEAD) || exit 0
+status=0
+for remote in $(git remote); do
+	if ! git push "$remote" "$branch"; then
+		status=1
+	fi
+done
+exit "$status"
