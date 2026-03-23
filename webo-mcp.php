@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.7
+ * Version: 2.0.8
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -807,10 +807,15 @@ add_action( 'rest_api_init', 'webo_mcp_register_rest_routes' );
  * Registers MCP JSON-RPC router endpoint.
  *
  * POST /wp-json/mcp/v1/router
+ * POST /wp-json/mcp/mcp-adapter-default-server (alias; same handler as router)
+ *
+ * Priority 20 runs after WordPress MCP Adapter registers the default HTTP transport
+ * on rest_api_init priority 15–16; otherwise that route would be owned by the adapter
+ * and would not use WEBO secure_permission_callback (API key / HMAC / Application Password).
  *
  * @return void
  */
 function webo_mcp_register_mcp_router() {
 	McpRouter::register_rest_endpoint();
 }
-add_action( 'rest_api_init', 'webo_mcp_register_mcp_router' );
+add_action( 'rest_api_init', 'webo_mcp_register_mcp_router', 20 );

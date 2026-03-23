@@ -231,6 +231,15 @@ class McpRouter {
 		// If still not authenticated, try Basic Auth (username + Application Password).
 		if ( ! current_user_can( 'read' ) && function_exists( 'wp_authenticate_application_password' ) ) {
 			$auth_header = (string) $request->get_header( 'Authorization' );
+			// Apache / some FPM stacks pass Authorization only via $_SERVER (REST request header empty).
+			if ( '' === $auth_header ) {
+				foreach ( array( 'HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION' ) as $server_key ) {
+					if ( isset( $_SERVER[ $server_key ] ) && is_string( $_SERVER[ $server_key ] ) && $_SERVER[ $server_key ] !== '' ) {
+						$auth_header = (string) $_SERVER[ $server_key ];
+						break;
+					}
+				}
+			}
 			if ( strpos( $auth_header, 'Basic ' ) === 0 ) {
 				$encoded = trim( substr( $auth_header, 6 ) );
 				if ( $encoded !== '' ) {
