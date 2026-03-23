@@ -1,0 +1,9 @@
+(This is the source logo, transparent PNG, 512x512)
+Upload the PNG logo file to this folder for use by the plugin.
+Filename: webo-mcp-logo.png
+
+How to add the logo to README.md:
+
+![Logo](images/webo-mcp-logo.png)
+
+If you need SVG or JPG, provide the file or request conversion.
