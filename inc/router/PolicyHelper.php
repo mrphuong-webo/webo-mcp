@@ -22,7 +22,13 @@ class PolicyHelper {
 		if ( $visibility === 'internal' ) {
 			return true;
 		}
-		$allowed_categories = apply_filters( 'webo_mcp_public_categories', array( 'wordpress' ), $request, $tool );
+		// Include site/user so bridged core abilities (e.g. core/get-site-settings, category "site") are listable.
+		$allowed_categories = apply_filters(
+			'webo_mcp_public_categories',
+			array( 'wordpress', 'site', 'user' ),
+			$request,
+			$tool
+		);
 		if ( ! is_array( $allowed_categories ) ) {
 			$allowed_categories = array( 'wordpress' );
 		}
