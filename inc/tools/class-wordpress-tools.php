@@ -9,26 +9,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WordPressTools {
 
 	/**
-	 * Returns basic site diagnostics information.
-	 *
-	 * @param array<string, mixed> $arguments Tool arguments.
-	 * @return array<string, mixed>
-	 */
-	public static function get_site_info( array $arguments ) {
-		unset( $arguments );
-
-		return array(
-			'name'       => get_bloginfo( 'name' ),
-			'description'=> get_bloginfo( 'description' ),
-			'url'        => home_url( '/' ),
-			'language'   => get_bloginfo( 'language' ),
-			'version'    => get_bloginfo( 'version' ),
-			'timezone'   => wp_timezone_string(),
-			'tool'       => 'webo/get-site-info',
-		);
-	}
-
-	/**
 	 * Core tool: list WordPress posts.
 	 *
 	 * @param array<string, mixed> $arguments Tool arguments.

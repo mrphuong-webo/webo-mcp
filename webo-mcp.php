@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.8
+ * Version: 2.0.9
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -162,14 +162,18 @@ if ( file_exists( $webo_mcp_abilities_api ) ) {
 }
 
 require_once __DIR__ . '/inc/registry/class-tool-registry.php';
+require_once __DIR__ . '/inc/abilities/class-site-settings-ability.php';
 require_once __DIR__ . '/inc/tools/class-wordpress-tools.php';
 require_once __DIR__ . '/inc/session/class-session-manager.php';
 require_once __DIR__ . '/inc/router/class-mcp-router.php';
 
+use WeboMCP\Core\Abilities\Site_Settings_Ability;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Router\McpRouter;
 use WeboMCP\Core\Tools\WordPressTools;
 use WP\MCP\Core\McpAdapter;
+
+Site_Settings_Ability::hook();
 
 /**
  * Converts Abilities API input schema to ToolRegistry arguments schema.
@@ -323,13 +327,6 @@ function webo_mcp_should_bridge_ability( string $ability_name ) {
  */
 function webo_mcp_register_standalone_core_tools() {
 	$tools = array(
-		array(
-			'name'        => 'webo/get-site-info',
-			'description' => 'Get basic WordPress site diagnostics information',
-			'category'    => 'wordpress',
-			'permission'  => 'read',
-			'callback'    => array( WordPressTools::class, 'get_site_info' ),
-		),
 		array(
 			'name'        => 'webo/list-posts',
 			'description' => 'List WordPress posts',
