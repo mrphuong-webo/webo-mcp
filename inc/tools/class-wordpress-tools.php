@@ -69,7 +69,25 @@ class WordPressTools {
 			);
 		}
 
-		return array(
+		$expected_type = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : '';
+		if ( '' !== $expected_type && $post->post_type !== $expected_type ) {
+			return new \WP_Error(
+				'webo_mcp_post_type_mismatch',
+				sprintf(
+					'Post ID %d is type "%s", expected "%s"',
+					$post_id,
+					$post->post_type,
+					$expected_type
+				),
+				array(
+					'status'        => 400,
+					'actual_type'   => $post->post_type,
+					'expected_type' => $expected_type,
+				)
+			);
+		}
+
+		$out = array(
 			'id'      => $post->ID,
 			'title'   => get_the_title( $post ),
 			'content' => $post->post_content,
@@ -80,6 +98,20 @@ class WordPressTools {
 			'link'    => get_permalink( $post ),
 			'tool'    => 'webo/get-post',
 		);
+
+		if ( 'page' === $post->post_type ) {
+			$show_on_front = (string) get_option( 'show_on_front', 'posts' );
+			$page_on_front = (int) get_option( 'page_on_front', 0 );
+			$page_for_posts = (int) get_option( 'page_for_posts', 0 );
+			$out['reading'] = array(
+				'is_static_front_page' => ( 'page' === $show_on_front && $page_on_front === (int) $post->ID ),
+				'is_posts_page'        => ( $page_for_posts === (int) $post->ID ),
+				'page_on_front_id'     => $page_on_front,
+				'page_for_posts_id'    => $page_for_posts,
+			);
+		}
+
+		return $out;
 	}
 
 	/**
