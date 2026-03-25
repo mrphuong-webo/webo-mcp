@@ -597,6 +597,85 @@ class WordPressTools {
 	}
 
 	/**
+	 * Homepage / front page: Reading settings resolved to URLs and page objects.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>
+	 */
+	public static function get_homepage_info( array $arguments ) {
+		$include_excerpt = ! empty( $arguments['include_excerpt'] );
+
+		$show_on_front = (string) get_option( 'show_on_front', 'posts' );
+		$out           = array(
+			'tool'            => 'webo/get-homepage-info',
+			'home_url'        => home_url( '/' ),
+			'show_on_front'   => $show_on_front,
+			'posts_per_page'  => (int) get_option( 'posts_per_page', 10 ),
+			'is_posts_front'  => ( 'posts' === $show_on_front ),
+		);
+
+		if ( 'page' === $show_on_front ) {
+			$page_id = (int) get_option( 'page_on_front', 0 );
+			if ( $page_id > 0 ) {
+				$post = get_post( $page_id );
+				if ( $post instanceof \WP_Post ) {
+					$row = array(
+						'id'    => $page_id,
+						'title' => get_the_title( $post ),
+						'slug'  => (string) $post->post_name,
+						'type'  => (string) $post->post_type,
+						'link'  => get_permalink( $post ),
+						'status' => (string) $post->post_status,
+					);
+					if ( $include_excerpt ) {
+						$row['excerpt'] = wp_strip_all_tags( (string) get_the_excerpt( $post ) );
+					}
+					$thumb_id = (int) get_post_thumbnail_id( $post );
+					if ( $thumb_id > 0 ) {
+						$url = wp_get_attachment_image_url( $thumb_id, 'full' );
+						$row['featured_image'] = array(
+							'id'  => $thumb_id,
+							'url' => $url ? (string) $url : '',
+						);
+					}
+					$out['front_page'] = $row;
+				} else {
+					$out['front_page'] = null;
+					$out['front_page_missing'] = true;
+				}
+			} else {
+				$out['front_page'] = null;
+			}
+		} else {
+			$out['front_page'] = null;
+		}
+
+		$posts_page_id = (int) get_option( 'page_for_posts', 0 );
+		if ( $posts_page_id > 0 ) {
+			$posts_page = get_post( $posts_page_id );
+			if ( $posts_page instanceof \WP_Post ) {
+				$row = array(
+					'id'    => $posts_page_id,
+					'title' => get_the_title( $posts_page ),
+					'slug'  => (string) $posts_page->post_name,
+					'link'  => get_permalink( $posts_page ),
+				);
+				if ( $include_excerpt ) {
+					$row['excerpt'] = wp_strip_all_tags( (string) get_the_excerpt( $posts_page ) );
+				}
+				$out['posts_page'] = $row;
+			} else {
+				$out['posts_page'] = null;
+				$out['posts_page_missing'] = true;
+			}
+		} else {
+			$out['posts_page'] = null;
+		}
+
+		return $out;
+	}
+
+	/**
 	 * Update selected safe options.
 	 *
 	 * @param array<string, mixed> $arguments Tool arguments.

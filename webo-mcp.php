@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.10
+ * Version: 2.0.11
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -378,6 +378,16 @@ function webo_mcp_register_standalone_core_tools() {
 			),
 			'permission'  => 'read',
 			'callback'    => array( WordPressTools::class, 'get_content_by_slug' ),
+		),
+		array(
+			'name'        => 'webo/get-homepage-info',
+			'description' => 'Get homepage / front page: home URL, Reading settings (latest posts vs static page), front page and posts page IDs, titles, permalinks; optional excerpt and featured image for static front page',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'include_excerpt' => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
+			),
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'get_homepage_info' ),
 		),
 		array(
 			'name'        => 'webo/create-post',
