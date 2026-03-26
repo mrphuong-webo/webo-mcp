@@ -1574,7 +1574,57 @@ class WordPressTools {
 		return array(
 			'menus' => $items,
 			'tool'  => 'webo/list-nav-menus',
-			'note'  => 'Use term_id as menu_id for item tools. Create empty menu: webo/create-nav-menu. Create + assign location: webo/create-nav-menu-for-location. Assign existing menu: webo/assign-nav-menu-to-location.',
+			'note'  => 'Use term_id as menu_id for list-nav-menu-items. See list-nav-menu-locations for theme slot assignments. Menu create/assign/add-item tools require edit_theme_options.',
+		);
+	}
+
+	/**
+	 * List registered theme menu locations and current nav_menu_locations assignments.
+	 *
+	 * @param array<string, mixed> $arguments Ignored.
+	 * @return array<string, mixed>
+	 */
+	public static function list_nav_menu_locations( array $arguments ) {
+		unset( $arguments );
+
+		$registered = get_registered_nav_menus();
+		if ( ! is_array( $registered ) ) {
+			$registered = array();
+		}
+
+		$raw = get_nav_menu_locations();
+		if ( ! is_array( $raw ) ) {
+			$raw = array();
+		}
+
+		$assigned = array();
+		foreach ( $raw as $slug => $menu_id ) {
+			$slug    = sanitize_key( (string) $slug );
+			$menu_id = (int) $menu_id;
+			if ( '' === $slug || $menu_id <= 0 ) {
+				continue;
+			}
+			$menu    = wp_get_nav_menu_object( $menu_id );
+			$label   = isset( $registered[ $slug ] ) ? (string) $registered[ $slug ] : $slug;
+			$assigned[ $slug ] = array(
+				'location_label' => $label,
+				'menu_id'        => $menu_id,
+				'menu_name'      => $menu instanceof \WP_Term ? (string) $menu->name : '',
+				'menu_slug'      => $menu instanceof \WP_Term ? (string) $menu->slug : '',
+			);
+		}
+
+		// Include registered slots with no menu assigned.
+		$registered_out = array();
+		foreach ( $registered as $slug => $label ) {
+			$slug = sanitize_key( (string) $slug );
+			$registered_out[ $slug ] = (string) $label;
+		}
+
+		return array(
+			'registered_locations' => $registered_out,
+			'assigned'             => $assigned,
+			'tool'                 => 'webo/list-nav-menu-locations',
 		);
 	}
 

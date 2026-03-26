@@ -1,10 +1,9 @@
 ---
 name: webo-mcp-ability-menus
 description: >-
-  Documents WEBO MCP navigation menu tools: list menus; create empty menu (webo/create-nav-menu);
-  create menu and assign theme location (webo/create-nav-menu-for-location); assign existing
-  menu to a location (webo/assign-nav-menu-to-location); list items; add post or custom links.
-  Use for Appearance > Menus automation or when the theme header menu does not update.
+  Documents WEBO MCP navigation menu tools: read-only list menus, items, and theme locations
+  (edit_posts); create/assign/add items (edit_theme_options). Includes webo/list-nav-menu-locations
+  to see which menu is assigned to primary/header slots. Use for Appearance > Menus via MCP.
 ---
 
 # WEBO MCP — Navigation menus
@@ -12,11 +11,14 @@ description: >-
 ## Instructions
 
 1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
-2. **Tools & permissions:** All require **`edit_theme_options`**.
+2. **Tools & permissions:**
+   - **Read (view):** **`edit_posts`** — `webo/list-nav-menus`, `webo/list-nav-menu-locations`, `webo/list-nav-menu-items` (Editors/Authors and up can inspect menus; Subscribers cannot).
+   - **Write:** **`edit_theme_options`** — create menu, assign location, add menu items.
 
 | `name` | Arguments |
 |--------|-----------|
 | `webo/list-nav-menus` | None — use returned `term_id` as `menu_id` |
+| `webo/list-nav-menu-locations` | None — `registered_locations` (slug → label) + `assigned` (slug → menu_id, menu_name, …) |
 | `webo/create-nav-menu` | Optional **`menu_name`** (default localized “New Menu”) — empty menu only; **no** theme assignment |
 | `webo/create-nav-menu-for-location` | Optional **`menu_name`** (default “Primary Menu”), **`theme_location`** (default `primary`), **`replace`** (default `true`) |
 | `webo/assign-nav-menu-to-location` | **`menu_id`**, optional **`theme_location`** (default `primary`), **`replace`** (default `true`) |
@@ -24,7 +26,7 @@ description: >-
 | `webo/add-nav-menu-item-from-post` | `menu_id`, `post_id`, `post_type`, **`menu_order` ≥ 1**; optional `parent_db_id`, `menu_item_title` |
 | `webo/add-nav-menu-item-custom` | `menu_id`, **`url`** (http/https), **`title`**, **`menu_order` ≥ 1**; optional `parent_db_id` |
 
-3. **Rules:** Pick one flow: (a) **`webo/create-nav-menu`** then optionally **`webo/assign-nav-menu-to-location`**; (b) **`webo/create-nav-menu-for-location`** in one step (new menu + assign); (c) existing **`menu_id`** from **`webo/list-nav-menus`** + **`assign-nav-menu-to-location`**. Then use **`menu_id`** for **`list-nav-menu-items`** and add-item tools. Before adding items, call **`list-nav-menu-items`** to pick **`menu_order`** and **`parent_db_id`**. `post_type` must match `post_id`.
+3. **Rules:** To see **which menu is primary / header:** **`webo/list-nav-menu-locations`**, then **`webo/list-nav-menu-items`** for that `menu_id`. For **writes**, pick one flow: (a) **`webo/create-nav-menu`** then optionally **`webo/assign-nav-menu-to-location`**; (b) **`webo/create-nav-menu-for-location`** in one step (new menu + assign); (c) existing **`menu_id`** from **`webo/list-nav-menus`** + **`assign-nav-menu-to-location`**. Then use **`menu_id`** for **`list-nav-menu-items`** and add-item tools. Before adding items, call **`list-nav-menu-items`** to pick **`menu_order`** and **`parent_db_id`**. `post_type` must match `post_id`.
 
 4. **Theme menu locations (`primary`, `main`, `header`, …)** — Slugs come from `register_nav_menu()`. Invalid slugs return **`registered_locations`** in errors. **`assign-nav-menu-to-location`** and **`create-nav-menu-for-location`** update **`nav_menu_locations`**.
 

@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.18
+ * Version: 2.0.19
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -679,19 +679,26 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/list-nav-menus',
-			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items and add-nav-menu-item tools. Create empty menu: webo/create-nav-menu. Create + assign to theme location: webo/create-nav-menu-for-location. Assign existing menu to a location: webo/assign-nav-menu-to-location.',
+			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug, item count. Requires edit_posts (Editors and content roles can read menus; Administrators still qualify). Use term_id as menu_id for list-nav-menu-items. Mutations (create menu, assign location, add items) need edit_theme_options.',
 			'category'    => 'wordpress',
-			'permission'  => 'edit_theme_options',
+			'permission'  => 'edit_posts',
 			'callback'    => array( WordPressTools::class, 'list_nav_menus' ),
 		),
 		array(
+			'name'        => 'webo/list-nav-menu-locations',
+			'description' => 'List theme menu locations from the active theme: registered slug => label, and which menu_id is assigned to each slot (nav_menu_locations). Read-only; requires edit_posts. Use with list-nav-menus when users need to see which menu is "primary" / header without wp-admin.',
+			'category'    => 'wordpress',
+			'permission'  => 'edit_posts',
+			'callback'    => array( WordPressTools::class, 'list_nav_menu_locations' ),
+		),
+		array(
 			'name'        => 'webo/list-nav-menu-items',
-			'description' => 'List items in one menu: db_id, title, menu_order, parent_db_id, object_id, object (post type), type. Dev uses this to choose explicit menu_order and to see valid parent_db_id values before adding links.',
+			'description' => 'List items in one menu: db_id, title, menu_order, parent_db_id, object_id, object (post type), type. Requires edit_posts (same as list-nav-menus). Use to choose menu_order and parent_db_id before add-nav-menu-item tools (those mutations need edit_theme_options).',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_id' => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
 			),
-			'permission'  => 'edit_theme_options',
+			'permission'  => 'edit_posts',
 			'callback'    => array( WordPressTools::class, 'list_nav_menu_items' ),
 		),
 		array(
