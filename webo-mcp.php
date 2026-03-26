@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.14
+ * Version: 2.0.15
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -676,6 +676,38 @@ function webo_mcp_register_standalone_core_tools() {
 			),
 			'permission'  => 'read',
 			'callback'    => array( WordPressTools::class, 'get_content_terms' ),
+		),
+		array(
+			'name'        => 'webo/list-nav-menus',
+			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items and add-nav-menu-item-from-post.',
+			'category'    => 'wordpress',
+			'permission'  => 'edit_theme_options',
+			'callback'    => array( WordPressTools::class, 'list_nav_menus' ),
+		),
+		array(
+			'name'        => 'webo/list-nav-menu-items',
+			'description' => 'List items in one menu: db_id, title, menu_order, parent_db_id, object_id, object (post type), type. Dev uses this to choose explicit menu_order and to see valid parent_db_id values before adding links.',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'menu_id' => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+			),
+			'permission'  => 'edit_theme_options',
+			'callback'    => array( WordPressTools::class, 'list_nav_menu_items' ),
+		),
+		array(
+			'name'        => 'webo/add-nav-menu-item-from-post',
+			'description' => 'Add a page/post/CPT to a nav menu as a link. REQUIRED (no auto): menu_id (from list-nav-menus), post_id (content ID from list-posts/get-post/etc.), post_type (must match that post, e.g. page), menu_order (integer >= 1; position among siblings — inspect list-nav-menu-items and set deliberately). Optional parent_db_id (existing item db_id in same menu), menu_item_title (override label).',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'menu_id'            => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'post_id'            => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'post_type'          => array( 'type' => 'string', 'required' => true ),
+				'menu_order'         => array( 'type' => 'integer', 'required' => true, 'min' => 1, 'max' => 5000 ),
+				'parent_db_id'       => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
+				'menu_item_title'    => array( 'type' => 'string', 'required' => false, 'default' => '' ),
+			),
+			'permission'  => 'edit_theme_options',
+			'callback'    => array( WordPressTools::class, 'add_nav_menu_item_from_post' ),
 		),
 		array(
 			'name'        => 'webo/list-active-plugins',

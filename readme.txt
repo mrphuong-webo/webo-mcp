@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.14
+Stable tag: 2.0.15
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,7 @@ Standalone core tools included:
 - Media: list/get/upload-from-url/update/delete
 - Comments: list/get/update/delete
 - Terms: list/create/update/delete (category, tag)
+- Nav menus: list menus, list menu items (menu_order, db_id), add menu link from post (explicit post_id + menu_order required)
 - Plugins: list active status, toggle (activate/deactivate)
 - Options: get/update (safe allowlist only)
 
@@ -131,6 +132,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.15 =
+* Nav menus: list-nav-menus, list-nav-menu-items (db_id, menu_order, object_id, parent_db_id), add-nav-menu-item-from-post with required post_id, post_type, and menu_order (explicit developer values; no auto placement).
+
 = 2.0.14 =
 * Security: MCP JSON-RPC router, SecurityHelper, tools discovery, and internal-tool policy default to network Super Admin on multisite (`is_super_admin`). Single-site installs use WordPress core’s `is_super_admin()` behavior (typically full administrators). Global API key/HMAC elevates to the first Super Admin user on multisite.
 

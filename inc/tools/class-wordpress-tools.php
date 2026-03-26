@@ -1543,4 +1543,184 @@ class WordPressTools {
 		}
 		return array( 'plugin' => $plugin, 'action' => $action, 'success' => true, 'tool' => 'webo/toggle-plugin' );
 	}
+
+	/**
+	 * List navigation menus (nav_menu terms).
+	 *
+	 * @param array<string, mixed> $arguments Ignored.
+	 * @return array<string, mixed>
+	 */
+	public static function list_nav_menus( array $arguments ) {
+		unset( $arguments );
+
+		$menus = wp_get_nav_menus();
+		if ( ! is_array( $menus ) ) {
+			$menus = array();
+		}
+
+		$items = array();
+		foreach ( $menus as $menu ) {
+			if ( ! $menu instanceof \WP_Term ) {
+				continue;
+			}
+			$items[] = array(
+				'term_id' => (int) $menu->term_id,
+				'name'    => (string) $menu->name,
+				'slug'    => (string) $menu->slug,
+				'count'   => (int) $menu->count,
+			);
+		}
+
+		return array(
+			'menus' => $items,
+			'tool'  => 'webo/list-nav-menus',
+			'note'  => 'Use term_id as menu_id for other nav menu tools.',
+		);
+	}
+
+	/**
+	 * List items in one menu (db_id, menu_order, object_id, parent, etc.).
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function list_nav_menu_items( array $arguments ) {
+		$menu_id = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
+		if ( $menu_id <= 0 ) {
+			return new \WP_Error( 'webo_mcp_missing_argument', 'menu_id (nav menu term ID) is required' );
+		}
+
+		$menu = wp_get_nav_menu_object( $menu_id );
+		if ( ! $menu instanceof \WP_Term ) {
+			return new \WP_Error( 'webo_mcp_menu_not_found', 'Navigation menu not found' );
+		}
+
+		$raw = wp_get_nav_menu_items( $menu_id );
+		if ( ! is_array( $raw ) ) {
+			$raw = array();
+		}
+
+		$items = array();
+		foreach ( $raw as $row ) {
+			if ( ! $row instanceof \WP_Post ) {
+				continue;
+			}
+			$db_id = (int) $row->ID;
+			$items[] = array(
+				'db_id'         => $db_id,
+				'title'         => isset( $row->title ) && is_string( $row->title ) ? $row->title : (string) $row->post_title,
+				'menu_order'    => (int) $row->menu_order,
+				'parent_db_id'  => (int) get_post_meta( $db_id, '_menu_item_menu_item_parent', true ),
+				'object_id'     => (int) get_post_meta( $db_id, '_menu_item_object_id', true ),
+				'object'        => (string) get_post_meta( $db_id, '_menu_item_object', true ),
+				'type'          => (string) get_post_meta( $db_id, '_menu_item_type', true ),
+				'url'           => isset( $row->url ) && is_string( $row->url ) ? $row->url : '',
+			);
+		}
+
+		return array(
+			'menu_id'   => (int) $menu->term_id,
+			'menu_name' => (string) $menu->name,
+			'items'     => $items,
+			'tool'      => 'webo/list-nav-menu-items',
+			'note'      => 'Dev must assign menu_order (position) when adding items; use menu_order values here as reference. post_id for new links = object_id of the page/post to link, from list-posts/get-post/get-content-by-slug.',
+		);
+	}
+
+	/**
+	 * Add a post type object to a nav menu. post_id and menu_order are required — no auto numbering.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function add_nav_menu_item_from_post( array $arguments ) {
+		require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
+
+		$menu_id     = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
+		$post_id     = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
+		$menu_order  = isset( $arguments['menu_order'] ) ? (int) $arguments['menu_order'] : 0;
+		$post_type   = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : '';
+		$parent_id   = isset( $arguments['parent_db_id'] ) ? (int) $arguments['parent_db_id'] : 0;
+		$title       = isset( $arguments['menu_item_title'] ) ? sanitize_text_field( (string) $arguments['menu_item_title'] ) : '';
+
+		if ( $menu_id <= 0 ) {
+			return new \WP_Error( 'webo_mcp_missing_argument', 'menu_id (nav menu term ID from list-nav-menus) is required' );
+		}
+		if ( ! wp_get_nav_menu_object( $menu_id ) ) {
+			return new \WP_Error( 'webo_mcp_menu_not_found', 'Navigation menu not found' );
+		}
+		if ( $post_id <= 0 ) {
+			return new \WP_Error(
+				'webo_mcp_missing_argument',
+				'post_id is required: object ID of the page/post/CPT to link (from list-posts, get-post, etc.); MCP cannot infer this.'
+			);
+		}
+		if ( '' === $post_type ) {
+			return new \WP_Error(
+				'webo_mcp_missing_argument',
+				'post_type is required (e.g. page, post): must match the post being linked.'
+			);
+		}
+		if ( $menu_order < 1 ) {
+			return new \WP_Error(
+				'webo_mcp_missing_argument',
+				'menu_order is required (integer >= 1): position among siblings; WordPress cannot choose this for you — inspect list-nav-menu-items and assign explicitly.'
+			);
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post instanceof \WP_Post ) {
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found for post_id' );
+		}
+		if ( (string) $post->post_type !== $post_type ) {
+			return new \WP_Error(
+				'webo_mcp_post_type_mismatch',
+				sprintf( 'post_id %d is type "%s", not "%s"', $post_id, $post->post_type, $post_type )
+			);
+		}
+
+		$existing = wp_get_nav_menu_items( $menu_id );
+		$valid_db = array();
+		if ( is_array( $existing ) ) {
+			foreach ( $existing as $row ) {
+				if ( $row instanceof \WP_Post ) {
+					$valid_db[ (int) $row->ID ] = true;
+				}
+			}
+		}
+		if ( $parent_id > 0 && ! isset( $valid_db[ $parent_id ] ) ) {
+			return new \WP_Error(
+				'webo_mcp_invalid_menu_parent',
+				'parent_db_id must be a menu item already in this menu (see list-nav-menu-items db_id).'
+			);
+		}
+
+		$args = array(
+			'menu-item-object-id'  => $post_id,
+			'menu-item-object'     => $post_type,
+			'menu-item-type'       => 'post_type',
+			'menu-item-status'     => 'publish',
+			'menu-item-position'   => $menu_order,
+			'menu-item-parent-id'  => max( 0, $parent_id ),
+		);
+		if ( '' !== $title ) {
+			$args['menu-item-title'] = $title;
+		}
+
+		$item_id = wp_update_nav_menu_item( $menu_id, 0, $args );
+		if ( is_wp_error( $item_id ) ) {
+			return $item_id;
+		}
+		if ( ! is_numeric( $item_id ) || (int) $item_id <= 0 ) {
+			return new \WP_Error( 'webo_mcp_menu_item_failed', 'Failed to create menu item' );
+		}
+
+		return array(
+			'menu_item_db_id' => (int) $item_id,
+			'menu_id'         => $menu_id,
+			'post_id'         => $post_id,
+			'menu_order'      => $menu_order,
+			'tool'            => 'webo/add-nav-menu-item-from-post',
+		);
+	}
 }
