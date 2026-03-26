@@ -71,7 +71,7 @@ Nếu thiếu `title` nhưng có `keyword`: suy ra tiêu đề hợp lệ từ k
 # TOOL USAGE LOGIC
 
 1. **Chọn tool:** `webo/create-post`.
-2. **Schema:** lấy từ collection schema (Qdrant) nếu pipeline có; không thì dùng `tools/list` trên MCP hoặc [`skills/webo-mcp-wordpress-content/SKILL.md`](../webo-mcp-wordpress-content/SKILL.md) (mục `webo/create-post`).
+2. **Schema:** lấy từ collection schema (Qdrant) nếu pipeline có; không thì `tools/list`, [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md), [`webo-mcp-ability-posts`](../webo-mcp-ability-posts/SKILL.md), hoặc [`webo-mcp-wordpress-content/SKILL.md`](../webo-mcp-wordpress-content/SKILL.md) (mục `webo/create-post`).
 3. **Validate trước call:**
 
    - `title`: required (string không rỗng)

@@ -12,6 +12,8 @@ description: >-
 
 # WEBO MCP — WordPress content
 
+**Modular skills:** Bắt đầu từ [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md) (hướng dẫn chung), rồi mở đúng nhóm — [`webo-mcp-ability-posts`](../webo-mcp-ability-posts/SKILL.md), [`-media`](../webo-mcp-ability-media/SKILL.md), [`-taxonomy`](../webo-mcp-ability-taxonomy/SKILL.md), [`-comments`](../webo-mcp-ability-comments/SKILL.md), [`-menus`](../webo-mcp-ability-menus/SKILL.md), [`-users`](../webo-mcp-ability-users/SKILL.md), [`-site`](../webo-mcp-ability-site/SKILL.md). File này giữ **một bản tham chiếu đầy đủ** (bảng + schema) cho agent thích một tài liệu gộp.
+
 Manage live WordPress content over **MCP** using the **webo-mcp** plugin. Same operational discipline as [wordpress-content (jezweb/claude-skills)](https://skills.sh/jezweb/claude-skills/wordpress-content): draft first, verify, exercise caution on bulk operations; **transport** is JSON-RPC to the MCP router, not WP-CLI over SSH.
 
 ## Prerequisites

@@ -1,56 +1,57 @@
 # Public agent skills (WEBO MCP)
 
-Skills in this folder are **versioned in git** and safe to share (unlike `.cursor/*`, which this repo ignores by default).
+Skills trong thư mục này được **version trong git** và có thể chia sẻ an toàn (khác `.cursor/*` thường bị ignore).
 
-## `webo-mcp-wordpress-content`
+## Cấu trúc
 
-Teaches coding agents how to manage WordPress **posts, pages, media, taxonomies, menus, and comments** via the MCP router and `webo/*` tools. Inspired by the workflow in [wordpress-content (jezweb/claude-skills)](https://skills.sh/jezweb/claude-skills/wordpress-content).
+| Skill | Mục đích |
+|-------|----------|
+| **[webo-mcp-guide](webo-mcp-guide/SKILL.md)** | Hướng dẫn **chung**: MCP flow, auth, Abilities bridge, chọn skill con. **Đọc trước.** |
+| [webo-mcp-ability-posts](webo-mcp-ability-posts/SKILL.md) | Bài viết, trang, CPT, revision, search-replace, homepage, … |
+| [webo-mcp-ability-media](webo-mcp-ability-media/SKILL.md) | Media library, upload URL |
+| [webo-mcp-ability-taxonomy](webo-mcp-ability-taxonomy/SKILL.md) | Taxonomy, term, gán term |
+| [webo-mcp-ability-comments](webo-mcp-ability-comments/SKILL.md) | Comment |
+| [webo-mcp-ability-menus](webo-mcp-ability-menus/SKILL.md) | Menu điều hướng |
+| [webo-mcp-ability-users](webo-mcp-ability-users/SKILL.md) | List user |
+| [webo-mcp-ability-site](webo-mcp-ability-site/SKILL.md) | Plugin, options an toàn |
+| [webo-mcp-wordpress-content](webo-mcp-wordpress-content/SKILL.md) | **Một file** đầy đủ bảng tool + schema (tiếng Anh, tham chiếu nhanh) |
+| [webo-write-post-instruction](webo-write-post-instruction/SKILL.md) | Workflow viết bài SEO + `webo/create-post` (tiếng Việt) |
 
-- **Skill file:** [webo-mcp-wordpress-content/SKILL.md](webo-mcp-wordpress-content/SKILL.md)
-- **On skills.sh ecosystem:** this repo follows the layout expected by the open [skills CLI](https://github.com/vercel-labs/skills) (`skills/` + `SKILL.md`). Install with `npx skills add` (see below). The [skills.sh](https://skills.sh) leaderboard ranks skills from **anonymous install telemetry** over time; there is no separate “apply to list” form—sharing the install command helps people discover it.
+Layout tương thích [skills CLI](https://github.com/vercel-labs/skills) (`skills/*/SKILL.md`).
 
-- **Raw (GitHub):**  
-  `https://raw.githubusercontent.com/mrphuong-webo/webo-mcp/main/skills/webo-mcp-wordpress-content/SKILL.md`  
-  (replace branch name if you use another default branch.)
+## Cài bằng `npx skills`
 
-### One-line install ([skills CLI](https://www.npmjs.com/package/skills))
-
-List skills in this repo (no install):
+Liệt kê skill trong repo:
 
 ```bash
 npx skills add https://github.com/mrphuong-webo/webo-mcp --list
 ```
 
-Install **only** this skill for **Cursor** (global, non-interactive):
+Cài **một** skill (ví dụ guide chung) vào Cursor global:
 
 ```bash
-npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-wordpress-content -a cursor -g -y
+npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-guide -a cursor -g -y
 ```
 
-Other agents: swap `-a cursor` for e.g. `claude-code`, `codex`, `github-copilot` (see `npx skills --help`).
+Đổi `--skill` thành `webo-mcp-ability-posts`, `webo-mcp-wordpress-content`, v.v.
 
-### Cursor (manual)
+## Cursor (thủ công)
 
-1. Clone or download this repository.
-2. Copy the folder into your skills directory, keeping the `SKILL.md` name:
-   - **Project-only:** `<your-clone>/skills/webo-mcp-wordpress-content` → `<project>/.cursor/skills/webo-mcp-wordpress-content`
-   - **All projects:** `~/.cursor/skills/webo-mcp-wordpress-content` (macOS/Linux) or `%USERPROFILE%\.cursor\skills\webo-mcp-wordpress-content` (Windows)
-3. Restart Cursor so the skill is picked up.
+Sao chép thư mục skill (giữ `SKILL.md`) vào:
 
-### OpenAI Codex (install from GitHub)
+- Project: `<project>/.cursor/skills/<tên-skill>`
+- Global: `~/.cursor/skills/<tên-skill>` hoặc `%USERPROFILE%\.cursor\skills\<tên-skill>`
 
-If you use the Codex skill installer helper:
+## OpenAI Codex (từ GitHub)
 
 ```bash
 python /path/to/codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo mrphuong-webo/webo-mcp \
-  --path skills/webo-mcp-wordpress-content
+  --path skills/webo-mcp-guide
 ```
 
-Adjust the script path to your Codex install. Then restart Codex.
+## Raw GitHub
 
-### Other CLIs
+Thay branch nếu cần:
 
-Any tool that can pull a directory from GitHub (sparse checkout, tarball, or `npx skills add` with a `--path` to this folder) should point at:
-
-`skills/webo-mcp-wordpress-content`
+`https://raw.githubusercontent.com/mrphuong-webo/webo-mcp/main/skills/webo-mcp-guide/SKILL.md`
