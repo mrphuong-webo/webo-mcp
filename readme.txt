@@ -132,6 +132,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.24 =
+* Nav menus: list-nav-menu-locations response includes note explaining slug vs label; MCP descriptions tell models to call this tool first to discover theme_location keys.
+
 = 2.0.23 =
 * Nav menus: list-nav-menus response includes menu_id (same as term_id) and clearer MCP tool descriptions so clients list menus without asking users for menu_id first.
 

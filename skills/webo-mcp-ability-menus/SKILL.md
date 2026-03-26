@@ -23,7 +23,7 @@ description: >-
 | `name` | Arguments |
 |--------|-----------|
 | `webo/list-nav-menus` | None — use returned `term_id` as `menu_id` |
-| `webo/list-nav-menu-locations` | None — `registered_locations` (slug → label) + `assigned` (slug → menu_id, menu_name, …) |
+| `webo/list-nav-menu-locations` | **None** — **call this first** to learn theme slots: `registered_locations` keys = valid `theme_location` values; values = admin labels (“Main Menu”). Also `assigned` (what menu fills each slot). |
 | `webo/create-nav-menu` | Optional **`menu_name`** (default localized “New Menu”) — empty menu only; **no** theme assignment |
 | `webo/create-nav-menu-for-location` | Optional **`menu_name`** (default “Primary Menu”), **`theme_location`** (default `primary`), **`replace`** (default `true`) |
 | `webo/assign-nav-menu-to-location` | **`menu_id`** *or* **`menu_name`** (if no ID), optional **`theme_location`**, **`replace`** |

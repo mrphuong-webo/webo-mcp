@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.23
+ * Version: 2.0.24
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -686,7 +686,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/list-nav-menu-locations',
-			'description' => 'List theme menu locations from the active theme: registered slug => label, and which menu_id is assigned to each slot (nav_menu_locations). Read-only; requires edit_posts. Use with list-nav-menus when users need to see which menu is "primary" / header without wp-admin.',
+			'description' => 'DISCOVER theme menu slots: call this with no arguments BEFORE assign-nav-menu-to-location or create-nav-menu-for-location when you need real slugs. Returns registered_locations (object: slug KEY = value to pass as theme_location, value = human label like "Main Menu") and assigned (which menu_id fills each slot). Block themes may return empty registered_locations — then use Site Editor, not classic menus. Requires edit_posts.',
 			'category'    => 'wordpress',
 			'permission'  => 'edit_posts',
 			'callback'    => array( WordPressTools::class, 'list_nav_menu_locations' ),
@@ -703,7 +703,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/create-nav-menu-for-location',
-			'description' => 'Create a NEW navigation menu and assign it to a theme menu location (default slug primary). If primary is not registered, uses the only menu slot the theme exposes or matches common slugs (main, header, primary-menu, menu-1, navigation). If the menu name already exists, reuses that menu and assigns it (reused_existing_menu in response). Optional menu_name (default localized Primary Menu). replace false blocks when slot occupied; default true replaces assignment.',
+			'description' => 'Create a NEW navigation menu and assign it to a theme location. theme_location must be a SLUG key from webo/list-nav-menu-locations registered_locations (not the label text). If unsure, call list-nav-menu-locations first. Default primary may auto-resolve. Optional menu_name (default Primary Menu), replace (default true). menu_exists reuses term (reused_existing_menu). Requires edit_theme_options.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_name'       => array( 'type' => 'string', 'required' => false, 'default' => '' ),
@@ -725,7 +725,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/assign-nav-menu-to-location',
-			'description' => 'Assign an existing menu to a theme location (default primary). Provide menu_id (term_id from list-nav-menus) or menu_name (exact menu title as in Appearance > Menus). Same slug resolution as create-nav-menu-for-location when primary is missing. replace true overwrites the slot by default.',
+			'description' => 'Assign an existing menu to a theme location. theme_location = slug key from webo/list-nav-menu-locations registered_locations; call that tool first if the user did not specify a slot. menu_id from list-nav-menus OR menu_name (exact title). Same primary fallback as create-nav-menu-for-location. replace default true. Requires edit_theme_options.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_id'        => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0, 'max' => 2147483647 ),

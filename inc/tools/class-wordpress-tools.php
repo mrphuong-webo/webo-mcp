@@ -1627,6 +1627,7 @@ class WordPressTools {
 			'registered_locations' => $registered_out,
 			'assigned'             => $assigned,
 			'tool'                 => 'webo/list-nav-menu-locations',
+			'note'                 => 'Use each KEY of registered_locations as theme_location in create-nav-menu-for-location and assign-nav-menu-to-location (keys are slugs; values are admin labels). assigned lists slots that already have a menu.',
 		);
 	}
 
