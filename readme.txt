@@ -32,7 +32,7 @@ Supported AI Platforms: Use with any MCP-compatible client (e.g. Cursor, Claude 
 - Public tools policy with category and allowlist filters
 - Optional API key and HMAC authentication for tools/call
 - Session lifecycle for MCP clients
-- Multisite: MCP router and GET /webo-mcp/v1/tools require network Super Admin (`is_super_admin`); global API key/HMAC run as the first Super Admin login
+- MCP access (router + GET /webo-mcp/v1/tools): default users with `is_super_admin`, `manage_options`, or `edit_posts`; global API key/HMAC impersonate first network Super Admin on multisite or first site Administrator on the current blog if none; single site unchanged fallback to first Administrator
 
 Standalone core tools included:
 - Site info
@@ -72,7 +72,7 @@ The plugin exposes the following actions and filters for developers:
 === Filters ===
 
 - `webo_mcp_current_user_can_use_mcp` (bool $allowed, int $user_id)  
-  Gate for all MCP REST access. Default: `is_super_admin( $user_id )`. Use from companion plugins (e.g. WP Ultimo) only if you must extend who may call MCP.
+  Gate for all MCP REST access. Default: super admin OR `manage_options` OR `edit_posts`. Override to tighten (e.g. super-admin only) in hardened installs.
 
 - `webo_mcp_allow_internal_tools` (bool $allow_internal, WP_REST_Request $request)  
   Controls whether internal tools are included in tools/list responses. Defaults to false for public environments.
@@ -132,6 +132,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.20 =
+* Access: MCP router gate allows `manage_options` and `edit_posts` (Editors, site admins on multisite), not only `is_super_admin`; fixes list-nav-menus / tools/call failing for non-administrator users. Multisite API key/HMAC falls back to first site Administrator if no Super Admin login exists. Error code `webo_mcp_access_denied` replaces misleading super-admin-only message.
+
 = 2.0.15 =
 * Nav menus: list-nav-menus, list-nav-menu-items (db_id, menu_order, object_id, parent_db_id), add-nav-menu-item-from-post with required post_id, post_type, and menu_order (explicit developer values; no auto placement).
 

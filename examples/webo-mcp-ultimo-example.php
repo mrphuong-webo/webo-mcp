@@ -2,8 +2,8 @@
 /**
  * Example: keep webo-mcp-ultimo aligned with WEBO MCP core + WP Ultimo.
  *
- * Core (2.0.14+): MCP router and /webo-mcp/v1/tools require {@see is_super_admin()}
- * unless you filter `webo_mcp_current_user_can_use_mcp`.
+ * Core (2.0.20+): default MCP access is super admin OR manage_options OR edit_posts.
+ * Use filter `webo_mcp_current_user_can_use_mcp` to tighten (e.g. customers: super admin only).
  *
  * Recommended for webo-mcp-ultimo:
  * - Require this file after webo-mcp loads; depend on webo-mcp + wp-ultimo.

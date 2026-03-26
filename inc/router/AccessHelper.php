@@ -1,6 +1,6 @@
 <?php
 /**
- * Network-level access gate for WEBO MCP (multisite super admin).
+ * Access gate for WEBO MCP REST routes (session, tools/list, tools/call).
  *
  * @package WeboMCP
  */
@@ -12,12 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * MCP may only be used by users who pass {@see is_super_admin()} by default.
- * On multisite that is the network “Super Admin” list; on single site, WordPress maps this
- * to users who satisfy core’s non-multisite super-admin check (typically full administrators).
+ * Default: network super admins, site Administrators (`manage_options`), or content roles (`edit_posts`).
+ * The REST layer still requires {@see current_user_can}( 'read' ). Each tool enforces its own capability
+ * (e.g. list-nav-menus uses edit_posts; menu mutations use edit_theme_options).
  *
- * Add-ons (e.g. webo-mcp-ultimo + WP Ultimo) should use filter `webo_mcp_current_user_can_use_mcp`
- * only if they must layer extra rules; keep core default strict for security.
+ * Tighten with {@see apply_filters}( 'webo_mcp_current_user_can_use_mcp', … ).
  */
 class AccessHelper {
 
@@ -32,7 +31,9 @@ class AccessHelper {
 			return false;
 		}
 
-		$allowed = is_super_admin( $user_id );
+		$allowed = is_super_admin( $user_id )
+			|| user_can( $user_id, 'manage_options' )
+			|| user_can( $user_id, 'edit_posts' );
 
 		return (bool) apply_filters( 'webo_mcp_current_user_can_use_mcp', $allowed, $user_id );
 	}
@@ -43,8 +44,8 @@ class AccessHelper {
 	public static function require_mcp_access_or_error() {
 		if ( ! self::current_user_can_use_mcp() ) {
 			return new \WP_Error(
-				'webo_mcp_super_admin_required',
-				__( 'MCP is only available to network administrators.', 'webo-mcp' ),
+				'webo_mcp_access_denied',
+				__( 'You do not have permission to use MCP. Sign in as a user with edit_posts or higher, or use a configured API key / HMAC.', 'webo-mcp' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -77,6 +78,18 @@ class AccessHelper {
 						return;
 					}
 				}
+			}
+
+			$admins = get_users(
+				array(
+					'blog_id' => get_current_blog_id(),
+					'role'    => 'administrator',
+					'number'  => 1,
+					'orderby' => 'ID',
+				)
+			);
+			if ( ! empty( $admins ) && $admins[0] instanceof \WP_User ) {
+				wp_set_current_user( (int) $admins[0]->ID );
 			}
 
 			return;
