@@ -132,6 +132,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.23 =
+* Nav menus: list-nav-menus response includes menu_id (same as term_id) and clearer MCP tool descriptions so clients list menus without asking users for menu_id first.
+
 = 2.0.22 =
 * Nav menus: if create-nav-menu / create-nav-menu-for-location targets a name that already exists, reuse the existing menu term and continue (reused_existing_menu in JSON). Return a clear error if core nav-menu.php cannot be loaded. Expanded primary fallback slugs (primary-menu, header-menu, mobile). assign-nav-menu-to-location accepts menu_name when menu_id is omitted (assigned_via_menu_name in response).
 

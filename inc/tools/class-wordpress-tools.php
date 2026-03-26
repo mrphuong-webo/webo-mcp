@@ -1563,8 +1563,10 @@ class WordPressTools {
 			if ( ! $menu instanceof \WP_Term ) {
 				continue;
 			}
+			$tid     = (int) $menu->term_id;
 			$items[] = array(
-				'term_id' => (int) $menu->term_id,
+				'term_id' => $tid,
+				'menu_id' => $tid,
 				'name'    => (string) $menu->name,
 				'slug'    => (string) $menu->slug,
 				'count'   => (int) $menu->count,
@@ -1574,7 +1576,7 @@ class WordPressTools {
 		return array(
 			'menus' => $items,
 			'tool'  => 'webo/list-nav-menus',
-			'note'  => 'Use term_id as menu_id for list-nav-menu-items. See list-nav-menu-locations for theme slot assignments. Menu create/assign/add-item tools require edit_theme_options.',
+			'note'  => 'No arguments and no user input needed. Each row: menu_id equals term_id (nav_menu taxonomy ID). Use that menu_id only for webo/list-nav-menu-items (links inside one menu). To list menus themselves, this response is enough — do not ask the user for menu_id first. Theme slots: webo/list-nav-menu-locations. Writes need edit_theme_options.',
 		);
 	}
 

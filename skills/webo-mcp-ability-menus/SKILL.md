@@ -10,6 +10,11 @@ description: >-
 
 ## Instructions
 
+### Listing menus vs listing items inside a menu
+
+- **User asks “list menus” / “danh sách menu” / “what menus exist”:** call **`webo/list-nav-menus`** with **no arguments**. Do **not** ask the user for `menu_id`. The response includes each menu’s **`menu_id`** and **`term_id`** (the same number — WordPress `nav_menu` term ID).
+- **User asks for links/items inside a specific menu:** call **`webo/list-nav-menu-items`** with **`menu_id`** taken from **`webo/list-nav-menus`** (or from **`webo/list-nav-menu-locations`** → `assigned` → `menu_id`).
+
 1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
 2. **Tools & permissions:**
    - **Read (view):** **`edit_posts`** — `webo/list-nav-menus`, `webo/list-nav-menu-locations`, `webo/list-nav-menu-items` (Editors/Authors and up can inspect menus; Subscribers cannot).
@@ -21,7 +26,7 @@ description: >-
 | `webo/list-nav-menu-locations` | None — `registered_locations` (slug → label) + `assigned` (slug → menu_id, menu_name, …) |
 | `webo/create-nav-menu` | Optional **`menu_name`** (default localized “New Menu”) — empty menu only; **no** theme assignment |
 | `webo/create-nav-menu-for-location` | Optional **`menu_name`** (default “Primary Menu”), **`theme_location`** (default `primary`), **`replace`** (default `true`) |
-| `webo/assign-nav-menu-to-location` | **`menu_id`**, optional **`theme_location`** (default `primary`), **`replace`** (default `true`) |
+| `webo/assign-nav-menu-to-location` | **`menu_id`** *or* **`menu_name`** (if no ID), optional **`theme_location`**, **`replace`** |
 | `webo/list-nav-menu-items` | `menu_id` (required) |
 | `webo/add-nav-menu-item-from-post` | `menu_id`, `post_id`, `post_type`, **`menu_order` ≥ 1**; optional `parent_db_id`, `menu_item_title` |
 | `webo/add-nav-menu-item-custom` | `menu_id`, **`url`** (http/https), **`title`**, **`menu_order` ≥ 1**; optional `parent_db_id` |

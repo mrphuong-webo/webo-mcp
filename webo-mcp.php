@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.22
+ * Version: 2.0.23
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -693,7 +693,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/list-nav-menu-items',
-			'description' => 'List items in one menu: db_id, title, menu_order, parent_db_id, object_id, object (post type), type. Requires edit_posts (same as list-nav-menus). Use to choose menu_order and parent_db_id before add-nav-menu-item tools (those mutations need edit_theme_options).',
+			'description' => 'List LINKS inside a single menu (not the list of menus). Requires menu_id: the integer from webo/list-nav-menus (same as term_id). If the user asks only to list menus, call webo/list-nav-menus first without asking for menu_id. Returns db_id, title, menu_order, parent_db_id, object_id, object, type. Use before add-nav-menu-item tools. Requires edit_posts.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_id' => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
