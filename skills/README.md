@@ -7,11 +7,29 @@ Skills in this folder are **versioned in git** and safe to share (unlike `.curso
 Teaches coding agents how to manage WordPress **posts, pages, media, taxonomies, menus, and comments** via the MCP router and `webo/*` tools. Inspired by the workflow in [wordpress-content (jezweb/claude-skills)](https://skills.sh/jezweb/claude-skills/wordpress-content).
 
 - **Skill file:** [webo-mcp-wordpress-content/SKILL.md](webo-mcp-wordpress-content/SKILL.md)
+- **On skills.sh ecosystem:** this repo follows the layout expected by the open [skills CLI](https://github.com/vercel-labs/skills) (`skills/` + `SKILL.md`). Install with `npx skills add` (see below). The [skills.sh](https://skills.sh) leaderboard ranks skills from **anonymous install telemetry** over time; there is no separate “apply to list” form—sharing the install command helps people discover it.
+
 - **Raw (GitHub):**  
   `https://raw.githubusercontent.com/mrphuong-webo/webo-mcp/main/skills/webo-mcp-wordpress-content/SKILL.md`  
   (replace branch name if you use another default branch.)
 
-### Cursor
+### One-line install ([skills CLI](https://www.npmjs.com/package/skills))
+
+List skills in this repo (no install):
+
+```bash
+npx skills add https://github.com/mrphuong-webo/webo-mcp --list
+```
+
+Install **only** this skill for **Cursor** (global, non-interactive):
+
+```bash
+npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-wordpress-content -a cursor -g -y
+```
+
+Other agents: swap `-a cursor` for e.g. `claude-code`, `codex`, `github-copilot` (see `npx skills --help`).
+
+### Cursor (manual)
 
 1. Clone or download this repository.
 2. Copy the folder into your skills directory, keeping the `SKILL.md` name:

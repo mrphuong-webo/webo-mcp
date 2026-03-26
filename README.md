@@ -50,6 +50,9 @@ For **Cursor**, **Codex**, or other agents that support project skills: a mainta
 
 - **Documentation:** [skills/README.md](skills/README.md)
 - **Skill:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md)
+- **Install via [skills](https://github.com/vercel-labs/skills) CLI:**  
+  `npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-wordpress-content -a cursor -g -y`  
+  (change `-a cursor` for your agent; use `--list` to preview.)
 
 ## AI training references
 
