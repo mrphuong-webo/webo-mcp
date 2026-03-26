@@ -44,6 +44,13 @@ If you use this plugin, please give credit to the authors of these libraries.
 - Example router URL for env/config: `https://your-site.com/wp-json/mcp/v1/router`
 - More context: [webomcp.com](https://webomcp.com)
 
+## Public agent skill (WordPress content over MCP)
+
+For **Cursor**, **Codex**, or other agents that support project skills: a maintained skill maps content-editing workflows (like the [wordpress-content](https://skills.sh/jezweb/claude-skills/wordpress-content) pattern) to **`webo/*` MCP tools**.
+
+- **Documentation:** [skills/README.md](skills/README.md)
+- **Skill:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md)
+
 ## AI training references
 
 - MCP method schema and examples: use this file + `examples/addon-rankmath-example.php`
