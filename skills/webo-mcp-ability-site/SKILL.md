@@ -1,24 +1,34 @@
 ---
 name: webo-mcp-ability-site
 description: >-
-  WEBO MCP: site — plugin active/list, activate/deactivate, đọc/ghi tập option được phép
-  (whitelist trong code). Dùng khi bật tắt plugin hoặc đọc cấu hình an toàn.
+  Documents WEBO MCP site tools: list/activate/deactivate plugins and read/update
+  allowlisted options. Use when toggling plugins, auditing installed plugins, or
+  changing safe site options via tools/call (webo/list-active-plugins, webo/toggle-plugin,
+  webo/get-options, webo/update-options).
 ---
 
-# Ability — Site (plugins & options) (webo/*)
+# WEBO MCP — Site (plugins & options)
 
-**Điều kiện:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+## Instructions
 
-## Tool và quyền
+1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+2. **Tools & permissions**
 
 | `name` | `permission` | Arguments |
 |--------|--------------|-----------|
-| `webo/list-active-plugins` | `activate_plugins` | `include_inactive` bool (default false) |
-| `webo/toggle-plugin` | `activate_plugins` | `plugin` (đường dẫn file plugin); `action` `activate` / deactivate |
-| `webo/get-options` | `manage_options` | `names` array các key option |
-| `webo/update-options` | `manage_options` | `options` array key => value |
+| `webo/list-active-plugins` | `activate_plugins` | `include_inactive` (default false) |
+| `webo/toggle-plugin` | `activate_plugins` | `plugin` (plugin file path); `action` `activate` / `deactivate` |
+| `webo/get-options` | `manage_options` | `names` (array of option keys) |
+| `webo/update-options` | `manage_options` | `options` (key => value) |
 
-## Quy tắc
+3. **Rules:** Only options whitelisted in `WordPressTools::get_options` / `update_options` are returned or updated. Confirm with the user before `toggle-plugin` on production.
 
-- Chỉ đọc/ghi option nằm trong **danh sách an toàn** do PHP `WordPressTools` kiểm tra — không giả định mọi `option` đều cho phép.
-- Bật/tắt plugin có thể gây lỗi site; xác nhận với user trên môi trường production.
+## Examples
+
+```json
+{
+  "session_id": "<…>",
+  "name": "webo/get-options",
+  "arguments": { "names": [ "blogname", "posts_per_page" ] }
+}
+```

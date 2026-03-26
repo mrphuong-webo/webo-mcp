@@ -1,33 +1,35 @@
 ---
 name: webo-mcp-ability-taxonomy
 description: >-
-  WEBO MCP: taxonomy & term — discover, list, get, create/update/delete term, gán term
-  cho bài, đọc term của bài. Dùng khi category, tag, hoặc taxonomy tùy biến (public).
+  Documents WEBO MCP taxonomy tools: discover taxonomies, list/get/create/update/delete
+  terms (category/post_tag in core paths), assign terms to posts, read post terms.
+  Use for categories, tags, or public taxonomies via tools/call (webo/discover-taxonomies,
+  webo/list-terms, webo/assign-terms-to-content, etc.).
 ---
 
-# Ability — Taxonomy (webo/*)
+# WEBO MCP — Taxonomy
 
-**Điều kiện:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+## Instructions
 
-## Tool và quyền
+1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+2. **Tools & permissions**
 
-| `name` | `permission` | Ghi chú |
-|--------|--------------|---------|
-| `webo/discover-taxonomies` | read | Không arguments |
-| `webo/list-terms` | manage_categories | `taxonomy` (default category), `per_page` 1–100 |
+| `name` | `permission` | Notes |
+|--------|--------------|-------|
+| `webo/discover-taxonomies` | read | No arguments |
+| `webo/list-terms` | manage_categories | `taxonomy` (default `category`); `per_page` 1–100 |
 | `webo/get-term` | read | `term_id`; `taxonomy` |
-| `webo/create-term` | manage_categories | `name` bắt buộc; `taxonomy`, `slug`, `description`, `parent_id` |
-| `webo/update-term` | manage_categories | `term_id` bắt buộc; các field còn lại tùy chọn |
+| `webo/create-term` | manage_categories | `name` required; `taxonomy`, `slug`, `description`, `parent_id` |
+| `webo/update-term` | manage_categories | `term_id` required |
 | `webo/delete-term` | manage_categories | `term_id`; `taxonomy` |
-| `webo/assign-terms-to-content` | manage_categories | `post_id`, `taxonomy`, `term_ids` (**thay thế** toàn bộ term của taxonomy đó trên bài) |
-| `webo/get-content-terms` | read | `post_id`; `taxonomy` filter tùy chọn |
+| `webo/assign-terms-to-content` | manage_categories | Replaces all terms for that taxonomy on the post |
+| `webo/get-content-terms` | read | `post_id`; optional `taxonomy` filter |
 
-## Quy tắc
+3. **Rules:** Resolve `term_ids` with `list-terms` or `get-term` before assigning. Core create/update/delete paths target **category** / **post_tag** as implemented in `WordPressTools`.
 
-- Create/update/delete term qua tool core: thực tế **category** / **post_tag** (và logic PHP cho phép); không fabricate slug trùng mà không kiểm tra.
-- Trước khi gán: `list-terms` hoặc `get-term` để có **`term_ids`** đúng.
+## Examples
 
-## Payload mẫu — gán category
+Assign categories to a post:
 
 ```json
 {
@@ -36,7 +38,7 @@ description: >-
   "arguments": {
     "post_id": 1,
     "taxonomy": "category",
-    "term_ids": [2, 3]
+    "term_ids": [ 2, 3 ]
   }
 }
 ```

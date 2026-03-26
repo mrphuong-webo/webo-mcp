@@ -1,25 +1,36 @@
 ---
 name: webo-mcp-ability-comments
 description: >-
-  WEBO MCP: comment — list, get, update (status/reply), delete. Dùng khi duyệt, trả lời,
-  hoặc xóa bình luận.
+  Documents WEBO MCP comment tools: list, get, update (status or reply), delete.
+  Use when moderating WordPress comments via tools/call (webo/list-comments,
+  webo/get-comment, webo/update-comment, webo/delete-comment).
 ---
 
-# Ability — Comments (webo/*)
+# WEBO MCP — Comments
 
-**Điều kiện:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+## Instructions
 
-## Tool và quyền
+1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+2. **Tools & permissions:** All require **`moderate_comments`**.
 
-Tất cả: `permission` **`moderate_comments`**.
-
-| `name` | Arguments chính |
-|--------|------------------|
+| `name` | Arguments |
+|--------|-----------|
 | `webo/list-comments` | `per_page` 1–100; `status` (default `approve`) |
 | `webo/get-comment` | `comment_id` |
-| `webo/update-comment` | `comment_id`; `status`, `reply` (string) tùy chọn |
+| `webo/update-comment` | `comment_id`; optional `status`, `reply` |
 | `webo/delete-comment` | `comment_id` |
 
-## Quy tắc
+3. **Rules:** There is no bulk-delete tool in core; process comments individually.
 
-- Xóa hay đổi trạng thái hàng loạt: xử lý từng bài một qua tool (không có bulk xóa comment riêng trong bảng core này).
+## Examples
+
+```json
+{
+  "session_id": "<…>",
+  "name": "webo/update-comment",
+  "arguments": {
+    "comment_id": 12,
+    "status": "approve"
+  }
+}
+```

@@ -19,6 +19,10 @@ Skills trong thư mục này được **version trong git** và có thể chia s
 
 Layout tương thích [skills CLI](https://github.com/vercel-labs/skills) (`skills/*/SKILL.md`).
 
+## Chuẩn authoring (Cursor / Agent Skills)
+
+Mỗi `SKILL.md` gồm **YAML frontmatter** bắt buộc: `name` (chữ thường, gạch ngang, ≤64 ký tự), `description` (≤1024 ký tự, **ngôi thứ ba**, đủ **WHAT** + **WHEN**, có từ khóa trigger như `webo-mcp`, `tools/call`). Phần thân dùng **`## Instructions`** (bước, quy tắc, bảng tool) và **`## Examples`** (JSON mẫu). Chi tiết: [Creating Skills in Cursor](https://cursor.com/docs/context/skills) và skill `create-skill` trong editor.
+
 ## Cài bằng `npx skills`
 
 Liệt kê skill trong repo:

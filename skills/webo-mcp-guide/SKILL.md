@@ -1,70 +1,57 @@
 ---
 name: webo-mcp-guide
 description: >-
-  Hướng dẫn chung WEBO MCP: luồng JSON-RPC, auth, session, cách chọn skill theo nhóm
-  tool webo/*. Dùng trước mọi thao tác WordPress qua MCP hoặc khi cần định hướng
-  giữa các skill con (posts, media, taxonomy, comments, menus, users, site).
+  Covers WEBO MCP JSON-RPC flow (initialize, tools/list, tools/call), authentication,
+  session handling, and choosing modular webo-mcp-ability-* skills. Use before any
+  WordPress change via webo-mcp, the MCP router, n8n WEBO MCP node, or when routing
+  tasks to posts, media, taxonomy, comments, menus, users, or site configuration tools.
 ---
 
-# WEBO MCP — Hướng dẫn chung
+# WEBO MCP guide
 
-Skill này là **điểm vào**: nắm transport MCP, quyền, và **skill nào** mở cho từng loại việc. Chi tiết từng nhóm tool nằm trong **`webo-mcp-ability-*`** tương ứng.
+## Instructions
 
-## Luồng bắt buộc
+1. **Entry point:** Read this skill first. Detailed tool tables live in **`webo-mcp-ability-*`** or the combined **`webo-mcp-wordpress-content`** reference.
+2. **Required flow**
 
-| Bước | Việc |
-|------|------|
-| 1 | `POST` router MCP (thường `/wp-json/mcp/v1/router`) — xem `README.md` repo |
-| 2 | `initialize` → lưu **`session_id`** |
-| 3 | `tools/list` → đối chiếu tên & tham số đúng với site |
-| 4 | `tools/call` → mỗi lần gửi `session_id`, `name` (vd. `webo/create-post`), `arguments` |
+| Step | Action |
+|------|--------|
+| 1 | `POST` MCP router (usually `/wp-json/mcp/v1/router`) — see repo `README.md` |
+| 2 | `initialize` → store **`session_id`** |
+| 3 | `tools/list` → match `webo/*` names and arguments to the site |
+| 4 | `tools/call` → send `session_id`, `name`, `arguments` each time |
 
-**Luôn** dùng đúng slug `webo/*` như `tools/list` trả về. Tham số chi tiết: `webo-mcp.php` (`webo_mcp_register_standalone_core_tools`) + callback `WordPressTools`.
+3. **Auth:** Cookie, API key, or **HMAC** (`webo-hmac-auth`) per site. Missing capability → **`403`** from `ToolRegistry`; failures may return `WP_Error` shape in results.
+4. **Abilities bridge:** Plugins may expose Abilities API tools via `webo_mcp_auto_bridge_abilities`. Core tools are still **`webo/*`** registered in `webo-mcp.php`.
+5. **Pick a modular skill**
 
-## Auth & lỗi thường gặp
+| Task area | Skill directory |
+|-----------|-----------------|
+| Posts, pages, CPT, revisions, search-replace, homepage | `webo-mcp-ability-posts` |
+| Media, upload from URL | `webo-mcp-ability-media` |
+| Taxonomies and terms | `webo-mcp-ability-taxonomy` |
+| Comments | `webo-mcp-ability-comments` |
+| Nav menus | `webo-mcp-ability-menus` |
+| User list | `webo-mcp-ability-users` |
+| Plugins, safe options | `webo-mcp-ability-site` |
+| SEO-style post workflow + `webo/create-post` | `webo-write-post-instruction` |
+| Single-file full tool table | `webo-mcp-wordpress-content` |
 
-- Site có thể dùng cookie, API key, hoặc **HMAC** (`webo-hmac-auth`).
-- Thiếu quyền: **`403`** từ `ToolRegistry`.
-- Mỗi tool có **`permission`** (vd. `read`, `edit_posts`, `upload_files`) — thất bại trả `WP_Error`.
+6. **Safety (all skills):** Prefer **`draft`** for new content unless the user asks to publish. **`webo/search-replace-posts`:** always **`dry_run: true`** first, then `false` only after user confirmation. **`webo/upload-media-from-url`:** public **http(s)** only (SSRF-hardened). **Menus:** **`menu_order` ≥ 1**; always inspect **`webo/list-nav-menu-items`** before adding items.
 
-## WordPress Abilities API
+## Examples
 
-Plugin có thể **auto-bridge** ability đăng ký trên site thành tool MCP (filter `webo_mcp_auto_bridge_abilities`, deny pattern `webo_mcp_bridge_deny_patterns`). Tool **mặc định** trong repo là các **`webo/*`** core; ability từ plugin khác xuất hiện thêm sau `tools/list` — vẫn cùng luồng `tools/call`.
-
-## Chọn skill theo việc
-
-| Nhu cầu | Skill (thư mục trong `skills/`) |
-|---------|----------------------------------|
-| Bài viết, trang, CPT, revision, tìm-thay thế nội dung, homepage | **webo-mcp-ability-posts** |
-| Thư viện media, upload từ URL | **webo-mcp-ability-media** |
-| Taxonomy, term, gán term cho bài | **webo-mcp-ability-taxonomy** |
-| Comment | **webo-mcp-ability-comments** |
-| Menu điều hướng | **webo-mcp-ability-menus** |
-| Danh sách user | **webo-mcp-ability-users** |
-| Plugin bật/tắt, đọc/ghi option an toàn | **webo-mcp-ability-site** |
-| Viết bài SEO + tạo draft/publish qua MCP | **webo-write-post-instruction** |
-| Một file tham chiếu đầy đủ (bảng tool tổng) | **webo-mcp-wordpress-content** |
-
-## Nguyên tắc an toàn (mọi skill)
-
-- Nội dung mới: ưu tiên **`draft`** trừ khi user bảo đăng ngay.
-- **`webo/search-replace-posts`**: luôn **`dry_run: true`** trước, rồi mới `false` sau khi user đồng ý.
-- **`webo/upload-media-from-url`**: chỉ URL **http(s)** công khai (chặn SSRF).
-- Menu: **`menu_order` ≥ 1**, xem `list-nav-menu-items` trước khi thêm item.
-
-## Ví dụ `tools/call` (khung)
+Minimal `tools/call` envelope:
 
 ```json
 {
   "jsonrpc": "2.0",
   "method": "tools/call",
   "params": {
-    "session_id": "<từ initialize>",
-    "name": "webo/<tên-tool>",
-    "arguments": {}
+    "session_id": "<from initialize>",
+    "name": "webo/list-posts",
+    "arguments": { "per_page": 10 }
   },
   "id": 1
 }
 ```
-
-Sau khi đọc skill chung, mở **`webo-mcp-ability-*`** phù hợp cho schema đầy đủ từng tool.

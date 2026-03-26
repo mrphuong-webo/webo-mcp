@@ -1,48 +1,48 @@
 ---
 name: webo-mcp-ability-posts
 description: >-
-  WEBO MCP: post, page, CPT — list/get/discover, URL/slug, homepage, create/update/delete,
-  bulk status, revisions, search-replace, featured image. Dùng khi task liên quan nội dung bài viết hoặc
-  thay thế hàng loạt trong HTML bài.
+  Documents WEBO MCP post/page/CPT tools: list, read, discover types, resolve by URL
+  or slug, homepage info, create/update/delete, bulk status, revisions, search-replace,
+  featured image. Use for WordPress content or HTML bulk edits via tools/call
+  (webo/create-post, webo/update-post, webo/search-replace-posts, etc.).
 ---
 
-# Ability — Posts & nội dung (webo/*)
+# WEBO MCP — Posts & content
 
-**Điều kiện:** đã đọc [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md) (session, `tools/list`).
+## Instructions
 
-## Tool và quyền
+1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+2. **Tools & permissions**
 
-| `name` | `permission` | Ghi chú ngắn |
-|--------|--------------|--------------|
+| `name` | `permission` | Notes |
+|--------|--------------|-------|
 | `webo/list-posts` | read | `per_page` 1–100, `post_type`, `search`, `status` |
-| `webo/get-post` | read | `post_id` bắt buộc; `post_type` tùy chọn để validate |
-| `webo/discover-content-types` | read | Không arguments |
-| `webo/find-content-by-url` | read | `url` bắt buộc; `update` array tùy chọn |
-| `webo/get-content-by-slug` | read | `slug` bắt buộc; `post_type` tùy chọn |
-| `webo/get-homepage-info` | read | `post_id`, `include_excerpt`, `include_content` tùy chọn |
-| `webo/create-post` | edit_posts | `title` bắt buộc; `content`, `post_type`, `status` |
-| `webo/update-post` | edit_posts | `post_id` bắt buộc; `title`, `content`, `status` |
-| `webo/delete-post` | delete_posts | `post_id`; `force` bool |
-| `webo/bulk-update-post-status` | edit_posts | `post_ids` array; `status` |
+| `webo/get-post` | read | `post_id`; optional `post_type` validation |
+| `webo/discover-content-types` | read | No arguments |
+| `webo/find-content-by-url` | read | `url`; optional `update` array |
+| `webo/get-content-by-slug` | read | `slug`; optional `post_type` |
+| `webo/get-homepage-info` | read | Optional `post_id`, `include_excerpt`, `include_content` |
+| `webo/create-post` | edit_posts | `title` required; `content`, `post_type`, `status` |
+| `webo/update-post` | edit_posts | `post_id` required |
+| `webo/delete-post` | delete_posts | `post_id`; `force` |
+| `webo/bulk-update-post-status` | edit_posts | `post_ids`, `status` |
 | `webo/list-revisions` | edit_posts | `post_id` |
 | `webo/restore-revision` | edit_posts | `revision_id` |
 | `webo/search-replace-posts` | edit_posts | `search`; `replace`, `dry_run` (default true), `offset`, `max_scan_posts` 1–500 |
-| `webo/set-post-featured-image` | edit_posts | `post_id`; `attachment_id` **hoặc** `remove: true` để gỡ ảnh đại diện |
+| `webo/set-post-featured-image` | edit_posts | `post_id` + `attachment_id`, or `remove: true` |
 
-## Quy tắc
+3. **Rules:** `content` is stored after **`wp_kses_post`**. Never set **`dry_run: false`** on search-replace without a prior dry run and user confirmation. Spot-check `post_ids` before bulk status changes.
 
-- HTML trong `content` qua **`wp_kses_post`** khi create/update.
-- **Search-replace:** không bao giờ `dry_run: false` nếu chưa preview và chưa được user xác nhận.
-- **Bulk:** kiểm tra mẫu `post_id` trước khi đổi trạng thái hàng loạt.
+## Examples
 
-## Payload mẫu — tạo bài
+Create a draft:
 
 ```json
 {
   "session_id": "<…>",
   "name": "webo/create-post",
   "arguments": {
-    "title": "Tiêu đề",
+    "title": "Title",
     "content": "<p>…</p>",
     "post_type": "post",
     "status": "draft"
@@ -50,17 +50,14 @@ description: >-
 }
 ```
 
-## Payload mẫu — ảnh đại diện (sau khi có `attachment_id`, vd từ upload-media-from-url)
+Set featured image:
 
 ```json
 {
   "session_id": "<…>",
   "name": "webo/set-post-featured-image",
-  "arguments": {
-    "post_id": 42,
-    "attachment_id": 100
-  }
+  "arguments": { "post_id": 42, "attachment_id": 100 }
 }
 ```
 
-Gỡ ảnh đại diện: `"arguments": { "post_id": 42, "remove": true }`.
+Clear featured image: `"arguments": { "post_id": 42, "remove": true }`.

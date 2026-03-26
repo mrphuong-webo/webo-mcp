@@ -1,114 +1,55 @@
 ---
-skill: webo_write_post_instruction
-intent: >-
-  Viết bài WordPress, tạo bài viết, đăng bài, viết content SEO qua WEBO MCP
-  (webo/create-post).
-tool: webo_mcp
-module: wordpress
-tags:
-  - wordpress
-  - post
-  - content
-  - seo
-  - viết bài
-doc_id: webo_write_post_instruction
 name: webo-write-post-instruction
 description: >-
-  Hướng dẫn agent viết bài SEO và đăng lên WordPress qua WEBO MCP. Dùng khi user
-  muốn viết bài, tạo bài viết, đăng bài WordPress, hoặc viết content SEO;
-  tool chính: webo/create-post.
+  Produces SEO-structured WordPress post HTML and calls webo/create-post over WEBO MCP
+  after validating title and content. Use when the user asks to write a post, create or
+  publish WordPress content, or generate SEO-oriented articles through the MCP router
+  (webo/create-post, draft by default).
+metadata:
+  doc_id: webo_write_post_instruction
+  tags:
+    - wordpress
+    - post
+    - content
+    - seo
 ---
 
-# ROLE
+# WEBO MCP — SEO post workflow (`webo/create-post`)
 
-Bạn là AI Agent chuyên tạo nội dung và vận hành WordPress thông qua **WEBO MCP** (`tool: webo_mcp`, `module: wordpress`).
+## Instructions
 
-# OBJECTIVE
+1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md) and tool schema from [`webo-mcp-ability-posts`](../webo-mcp-ability-posts/SKILL.md) or [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md).
+2. **Role:** The agent drafts content and operates WordPress only through **WEBO MCP** (`webo/create-post`), not shell `wp`.
+3. **Normalize input** (user may omit fields):
 
-Tạo một bài viết chuẩn SEO, chuẩn hóa dữ liệu, rồi gọi **`webo/create-post`** để tạo bài trên WordPress (draft hoặc publish theo yêu cầu).
+   - `title` (string)
+   - `keyword` (string)
+   - `content` (HTML string, optional until generated)
+   - `status`: `draft` | `publish` (default **`draft`**)
+   - `post_type` (default `post`)
 
-# WHEN TO USE
+4. **Before `tools/call`:** Require non-empty **`title`** and **`content`**. If only `keyword` is given, derive `title` then **generate** HTML `content` (intro, `h2`/`h3`, CTA) compatible with **`wp_kses_post`**. Do not invent facts, stats, or legal claims beyond user input.
+5. **Do not call** `webo/create-post` if `title` or `content` is still empty after normalization.
+6. **Execution order:** `initialize` → keep `session_id` → `tools/call` with `name`: `webo/create-post` and `arguments`: `{ title, content, status, post_type }`. On success, read `post_id`; optional `webo/get-post` for permalink.
 
-Dùng skill này khi user yêu cầu:
+## Examples
 
-- viết bài
-- tạo bài viết
-- đăng bài WordPress
-- viết content SEO
-
-# INPUT
-
-User có thể cung cấp thiếu trường. Chuẩn hóa nội bộ thành:
-
-```json
-{
-  "title": "string",
-  "keyword": "string",
-  "content": "string (HTML, optional trước bước generate)",
-  "status": "draft | publish",
-  "post_type": "string (optional, default post)"
-}
-```
-
-**Trước khi gọi tool**, bắt buộc có:
-
-- `title` (non-empty)
-- `content` (non-empty HTML, sau khi generate nếu ban đầu thiếu)
-- `status` (mặc định `draft` nếu user không nói rõ)
-- `post_type` mặc định `post` nếu không chỉ định
-
-Nếu thiếu `title` nhưng có `keyword`: suy ra tiêu đề hợp lệ từ keyword. Nếu thiếu `content`: **generate** từ `keyword` (và/hoặc `title`) theo RULES rồi mới gọi tool.
-
-# RULES
-
-- **Không** gọi `webo/create-post` nếu sau chuẩn hóa vẫn thiếu `title` hoặc `content`.
-- Nếu thiếu `content` → tự generate từ `keyword` / `title` (ưu tiên dữ liệu user đã cho).
-- Nội dung bài phải có: **mở bài**, **heading** rõ ràng (HTML h2/h3), **CTA**; markup chuẩn để **`wp_kses_post`** trên server không strip quá mức.
-- Không bịa số liệu, tên riêng, cam kết pháp lý ngoài phạm vi user cung cấp.
-- Luôn **chuẩn hóa** object arguments (trim, `status` hợp lệ, HTML hợp lệ) trước `tools/call`.
-- Mặc định **`status: draft`** trừ khi user yêu cầu đăng ngay (`publish`).
-
-# TOOL USAGE LOGIC
-
-1. **Chọn tool:** `webo/create-post`.
-2. **Schema:** lấy từ collection schema (Qdrant) nếu pipeline có; không thì `tools/list`, [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md), [`webo-mcp-ability-posts`](../webo-mcp-ability-posts/SKILL.md), hoặc [`webo-mcp-wordpress-content/SKILL.md`](../webo-mcp-wordpress-content/SKILL.md) (mục `webo/create-post`).
-3. **Validate trước call:**
-
-   - `title`: required (string không rỗng)
-   - `content`: required (sau generate nếu cần)
-   - `status`: optional, default `draft`
-   - `post_type`: optional, default `post`
-
-4. **Chuẩn hóa** payload rồi gửi trong `tools/call` → `params.arguments`.
-
-# OUTPUT (FOR TOOL)
-
-Payload gửi vào **`params.arguments`** của `webo/create-post` (không nhầm với body JSON-RPC ngoài cùng):
+Normalized tool arguments:
 
 ```json
 {
-  "title": "...",
-  "content": "...",
+  "title": "…",
+  "content": "<p>…</p><h2>…</h2>",
   "status": "draft",
   "post_type": "post"
 }
 ```
 
-# EXECUTION
-
-Sau khi đủ `title`, `content`, `status` (và `post_type` nếu cần):
-
-1. **`initialize`** → giữ `session_id`.
-2. **`tools/call`** với:
-
-   - `params.name`: `webo/create-post`
-   - `params.arguments`: như OUTPUT (FOR TOOL)
-
-Ví dụ khối `params`:
+Inside JSON-RPC `params`:
 
 ```json
 {
-  "session_id": "{{session_id}}",
+  "session_id": "<session_id>",
   "name": "webo/create-post",
   "arguments": {
     "title": "{{title}}",
@@ -118,5 +59,3 @@ Ví dụ khối `params`:
   }
 }
 ```
-
-Sau thành công, xác nhận `post_id` từ response; có thể gọi `webo/get-post` để kiểm tra permalink nếu cần.

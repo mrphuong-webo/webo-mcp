@@ -1,33 +1,31 @@
 ---
 name: webo-mcp-ability-media
 description: >-
-  WEBO MCP: thư viện media — list, get, update metadata, delete, upload từ URL.
-  Dùng khi task là ảnh/tập tin đính kèm, sideload URL.
+  Documents WEBO MCP media library tools: list, get, update metadata, delete, and
+  sideload from URL. Use for attachments or remote imports via tools/call
+  (webo/list-media, webo/upload-media-from-url, etc.). Featured images on posts use
+  webo/set-post-featured-image in webo-mcp-ability-posts after upload.
 ---
 
-# Ability — Media (webo/*)
+# WEBO MCP — Media
 
-**Điều kiện:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+## Instructions
 
-## Tool và quyền
+1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).
+2. **Tools & permissions:** All below require **`upload_files`**.
 
-Tất cả dưới đây: `permission` **`upload_files`**.
-
-| `name` | Arguments chính |
-|--------|------------------|
+| `name` | Arguments |
+|--------|-----------|
 | `webo/list-media` | `per_page` 1–100 (default 20) |
-| `webo/upload-media-from-url` | `image_url` bắt buộc; `filename`, `title`, `alt_text` |
+| `webo/upload-media-from-url` | `image_url` required; optional `filename`, `title`, `alt_text` |
 | `webo/get-media` | `attachment_id` |
-| `webo/update-media` | `attachment_id`; `title`, `alt_text`, `caption` tùy chọn |
+| `webo/update-media` | `attachment_id`; optional `title`, `alt_text`, `caption` |
 | `webo/delete-media` | `attachment_id` |
 
-Gán ảnh đại diện cho bài (sau khi upload): dùng **`webo/set-post-featured-image`** (`post_id` + `attachment_id`) — xem [`webo-mcp-ability-posts`](../webo-mcp-ability-posts/SKILL.md).
+3. **Featured image:** After upload, call **`webo/set-post-featured-image`** with `post_id` and `attachment_id` — see [`webo-mcp-ability-posts`](../webo-mcp-ability-posts/SKILL.md).
+4. **Rules:** **`webo/upload-media-from-url`** accepts public **http(s)** only; loopback/private targets are blocked (SSRF hardening).
 
-## Quy tắc
-
-- **`webo/upload-media-from-url`:** chỉ URL http(s) hợp lệ, công khai; plugin chặn loopback/private (SSRF).
-
-## Payload mẫu — upload từ URL
+## Examples
 
 ```json
 {
