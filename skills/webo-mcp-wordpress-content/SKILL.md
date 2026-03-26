@@ -42,13 +42,13 @@ description: >-
 | Terms / tax | `webo/discover-taxonomies`, `webo/list-terms`, term CRUD, `webo/assign-terms-to-content`, `webo/get-content-terms` | category/post_tag paths per PHP |
 | Media | `webo/list-media`, get/update/delete, `webo/upload-media-from-url` | http(s) public URLs only |
 | Featured | `webo/set-post-featured-image` | or `remove: true` |
-| Menus | `webo/list-nav-menus`, **`webo/create-nav-menu-for-location`**, `webo/list-nav-menu-items`, `webo/add-nav-menu-item-from-post`, `webo/add-nav-menu-item-custom` | New menu + **theme location** (e.g. `primary`) without `menu_id`; `menu_order` ≥ 1 for items |
+| Menus | `webo/list-nav-menus`, **`webo/create-nav-menu`**, **`webo/create-nav-menu-for-location`**, **`webo/assign-nav-menu-to-location`**, `webo/list-nav-menu-items`, `webo/add-nav-menu-item-from-post`, `webo/add-nav-menu-item-custom` | Create empty menu; or create+assign; or assign existing `menu_id`; `menu_order` ≥ 1 for items |
 | Comments | list/get/update/delete `webo/*` | |
 | Reading / front | `webo/get-homepage-info` | |
 
 4. **Workflow (summary):** Discover types/tax → locate content → create **draft** by default → taxonomy/media/menu as needed → risky ops only after dry-run / confirmation → verify with `webo/get-post` or `link`. Same spirit as [wordpress-content (jezweb)](https://skills.sh/jezweb/claude-skills/wordpress-content).
 
-5. **Menus vs theme locations:** Use **`webo/create-nav-menu-for-location`** to create a **new** menu and assign it to a theme slug (default **`primary`**); response includes **`menu_id`** for `add-nav-menu-item-*` / `list-nav-menu-items`. Reassigning an **existing** menu to a location (without creating a new one) is still **admin** or **`wp menu assign`**. If you only add items to a `menu_id` that is not hooked to the header location, the front may not change. Full detail: [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md).
+5. **Menus vs theme locations:** **`webo/create-nav-menu`** creates an **empty** menu (no location). **`webo/create-nav-menu-for-location`** creates and assigns (default **`primary`**). **`webo/assign-nav-menu-to-location`** assigns an **existing** `menu_id` to a slug. Use returned **`menu_id`** for add-item tools. Full detail: [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md).
 
 6. **WP-CLI analogues**
 
@@ -58,8 +58,9 @@ description: >-
 | `wp media import URL` | `webo/upload-media-from-url` |
 | `wp menu item add-post` | `webo/add-nav-menu-item-from-post` |
 | `wp menu item add-custom` | `webo/add-nav-menu-item-custom` |
+| `wp menu create` (empty) | `webo/create-nav-menu` |
 | New menu + assign location | `webo/create-nav-menu-for-location` |
-| `wp menu assign` (existing menu → location) | Admin or WP-CLI — no dedicated `webo/*` |
+| `wp menu assign` (existing menu → location) | `webo/assign-nav-menu-to-location` |
 | Featured | `webo/set-post-featured-image` |
 | Heavy ACF/meta | Abilities bridge or REST/WP-CLI |
 

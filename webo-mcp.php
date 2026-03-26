@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.17
+ * Version: 2.0.18
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -679,7 +679,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/list-nav-menus',
-			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items, add-nav-menu-item-from-post, and add-nav-menu-item-custom. To create a new menu and assign a theme location (e.g. primary) without knowing menu_id, use webo/create-nav-menu-for-location.',
+			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items and add-nav-menu-item tools. Create empty menu: webo/create-nav-menu. Create + assign to theme location: webo/create-nav-menu-for-location. Assign existing menu to a location: webo/assign-nav-menu-to-location.',
 			'category'    => 'wordpress',
 			'permission'  => 'edit_theme_options',
 			'callback'    => array( WordPressTools::class, 'list_nav_menus' ),
@@ -707,8 +707,30 @@ function webo_mcp_register_standalone_core_tools() {
 			'callback'    => array( WordPressTools::class, 'create_nav_menu_for_location' ),
 		),
 		array(
+			'name'        => 'webo/create-nav-menu',
+			'description' => 'Create a new empty navigation menu (Appearance > Menus) and return menu_id. Does not assign a theme location — use webo/assign-nav-menu-to-location or webo/create-nav-menu-for-location if the menu must appear in the theme. Optional menu_name (default localized "New Menu").',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'menu_name' => array( 'type' => 'string', 'required' => false, 'default' => '' ),
+			),
+			'permission'  => 'edit_theme_options',
+			'callback'    => array( WordPressTools::class, 'create_nav_menu' ),
+		),
+		array(
+			'name'        => 'webo/assign-nav-menu-to-location',
+			'description' => 'Assign an existing menu (menu_id from list-nav-menus or create-nav-menu) to a theme menu location slug (default primary). Overwrites that location by default (replace: true). Fails if theme_location is not registered or if replace is false and the slot is already taken.',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'menu_id'        => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'theme_location' => array( 'type' => 'string', 'required' => false, 'default' => 'primary' ),
+				'replace'        => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
+			),
+			'permission'  => 'edit_theme_options',
+			'callback'    => array( WordPressTools::class, 'assign_nav_menu_to_location' ),
+		),
+		array(
 			'name'        => 'webo/add-nav-menu-item-from-post',
-			'description' => 'Add a page/post/CPT to a nav menu as a link. REQUIRED (no auto): menu_id (from list-nav-menus), post_id (content ID from list-posts/get-post/etc.), post_type (must match that post, e.g. page), menu_order (integer >= 1; position among siblings — inspect list-nav-menu-items and set deliberately). Optional parent_db_id (existing item db_id in same menu), menu_item_title (override label).',
+			'description' => 'Add a page/post/CPT to a nav menu as a link. REQUIRED (no auto): menu_id (from list-nav-menus, webo/create-nav-menu, or webo/create-nav-menu-for-location), post_id (content ID from list-posts/get-post/etc.), post_type (must match that post, e.g. page), menu_order (integer >= 1; position among siblings — inspect list-nav-menu-items and set deliberately). Optional parent_db_id (existing item db_id in same menu), menu_item_title (override label).',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_id'            => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
@@ -723,7 +745,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/add-nav-menu-item-custom',
-			'description' => 'Add a custom URL to a nav menu (Custom link). REQUIRED: menu_id, url (http/https), title (visible label), menu_order (>= 1). Optional parent_db_id. Inspect list-nav-menu-items before setting menu_order and parent.',
+			'description' => 'Add a custom URL to a nav menu (Custom link). REQUIRED: menu_id (from list-nav-menus or create-nav-menu tools), url (http/https), title (visible label), menu_order (>= 1). Optional parent_db_id. Inspect list-nav-menu-items before setting menu_order and parent.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_id'         => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),

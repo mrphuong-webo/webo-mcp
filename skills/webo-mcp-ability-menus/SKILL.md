@@ -1,10 +1,10 @@
 ---
 name: webo-mcp-ability-menus
 description: >-
-  Documents WEBO MCP navigation menu tools: list menus and items; create a new menu and
-  assign a theme location (e.g. primary) without menu_id via webo/create-nav-menu-for-location;
-  add post or custom links to a menu. Use when editing Appearance > Menus via MCP or when
-  the header menu does not show after changes.
+  Documents WEBO MCP navigation menu tools: list menus; create empty menu (webo/create-nav-menu);
+  create menu and assign theme location (webo/create-nav-menu-for-location); assign existing
+  menu to a location (webo/assign-nav-menu-to-location); list items; add post or custom links.
+  Use for Appearance > Menus automation or when the theme header menu does not update.
 ---
 
 # WEBO MCP — Navigation menus
@@ -17,18 +17,20 @@ description: >-
 | `name` | Arguments |
 |--------|-----------|
 | `webo/list-nav-menus` | None — use returned `term_id` as `menu_id` |
-| `webo/create-nav-menu-for-location` | Optional **`menu_name`** (default localized “Primary Menu”), **`theme_location`** (default `primary` — must match `register_nav_menus` slug), **`replace`** (default `true`: overwrite existing assignment for that location) |
+| `webo/create-nav-menu` | Optional **`menu_name`** (default localized “New Menu”) — empty menu only; **no** theme assignment |
+| `webo/create-nav-menu-for-location` | Optional **`menu_name`** (default “Primary Menu”), **`theme_location`** (default `primary`), **`replace`** (default `true`) |
+| `webo/assign-nav-menu-to-location` | **`menu_id`**, optional **`theme_location`** (default `primary`), **`replace`** (default `true`) |
 | `webo/list-nav-menu-items` | `menu_id` (required) |
 | `webo/add-nav-menu-item-from-post` | `menu_id`, `post_id`, `post_type`, **`menu_order` ≥ 1**; optional `parent_db_id`, `menu_item_title` |
 | `webo/add-nav-menu-item-custom` | `menu_id`, **`url`** (http/https), **`title`**, **`menu_order` ≥ 1**; optional `parent_db_id` |
 
-3. **Rules:** For **new** primary/header flow with **no** `menu_id`: call **`webo/create-nav-menu-for-location`** first; use returned **`menu_id`** for `list-nav-menu-items` and add-item tools. When adding items, call **`webo/list-nav-menu-items`** first to pick valid **`menu_order`** and **`parent_db_id`**. `post_type` must match the real type of `post_id`.
+3. **Rules:** Pick one flow: (a) **`webo/create-nav-menu`** then optionally **`webo/assign-nav-menu-to-location`**; (b) **`webo/create-nav-menu-for-location`** in one step (new menu + assign); (c) existing **`menu_id`** from **`webo/list-nav-menus`** + **`assign-nav-menu-to-location`**. Then use **`menu_id`** for **`list-nav-menu-items`** and add-item tools. Before adding items, call **`list-nav-menu-items`** to pick **`menu_order`** and **`parent_db_id`**. `post_type` must match `post_id`.
 
-4. **Theme menu locations (`primary`, `main`, `header`, …)** — The active theme exposes **location slugs** via `register_nav_menu()`. **`webo/create-nav-menu-for-location`** creates a **new** nav menu and sets **`nav_menu_locations`** for one slug (default `primary`). If that slug is not registered (e.g. theme uses only `main`), the tool errors and returns **`registered_locations`** for debugging.
+4. **Theme menu locations (`primary`, `main`, `header`, …)** — Slugs come from `register_nav_menu()`. Invalid slugs return **`registered_locations`** in errors. **`assign-nav-menu-to-location`** and **`create-nav-menu-for-location`** update **`nav_menu_locations`**.
 
-   - **Assigning an *existing* menu** to a location (without creating a new one) is still **not** a `webo/*` tool — use **Appearance → Menus** (Manage Locations) or **`wp menu assign`**.
-   - **If add-item tools run but the front shows nothing:** you may be editing a different `menu_id` than the one assigned to the header location — use **`create-nav-menu-for-location`** or re-check locations in admin.
-   - **After changes:** clear page/cache/CDN if a plugin caches menus.
+   - **Empty menu only (no theme slot):** use **`create-nav-menu`**.
+   - **If the front shows nothing after adding items:** confirm this **`menu_id`** is assigned to the header location.
+   - **After changes:** clear cache/CDN if needed.
 
 ## Examples
 
@@ -41,6 +43,24 @@ Create menu and assign to `primary` (no `menu_id` needed; then use returned `men
   "arguments": {
     "theme_location": "primary"
   }
+}
+```
+
+Create empty menu, then assign to `primary` (two calls):
+
+```json
+{
+  "session_id": "<…>",
+  "name": "webo/create-nav-menu",
+  "arguments": { "menu_name": "Footer links" }
+}
+```
+
+```json
+{
+  "session_id": "<…>",
+  "name": "webo/assign-nav-menu-to-location",
+  "arguments": { "menu_id": 5, "theme_location": "primary" }
 }
 ```
 
