@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.21
+ * Version: 2.0.22
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -703,7 +703,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/create-nav-menu-for-location',
-			'description' => 'Create a NEW navigation menu and assign it to a theme menu location (default slug primary). If primary is not registered, uses the only menu slot the theme exposes or matches common slugs (main, header, menu-1, navigation). Optional menu_name (default localized Primary Menu). replace false blocks when slot occupied; default true replaces assignment.',
+			'description' => 'Create a NEW navigation menu and assign it to a theme menu location (default slug primary). If primary is not registered, uses the only menu slot the theme exposes or matches common slugs (main, header, primary-menu, menu-1, navigation). If the menu name already exists, reuses that menu and assigns it (reused_existing_menu in response). Optional menu_name (default localized Primary Menu). replace false blocks when slot occupied; default true replaces assignment.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_name'       => array( 'type' => 'string', 'required' => false, 'default' => '' ),
@@ -715,7 +715,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/create-nav-menu',
-			'description' => 'Create a new empty navigation menu (Appearance > Menus) and return menu_id. Does not assign a theme location — use webo/assign-nav-menu-to-location or webo/create-nav-menu-for-location if the menu must appear in the theme. Optional menu_name (default localized "New Menu").',
+			'description' => 'Create a new empty navigation menu (Appearance > Menus) and return menu_id. If menu_name already exists, returns that menu term_id and sets reused_existing_menu. Does not assign a theme location — use webo/assign-nav-menu-to-location or webo/create-nav-menu-for-location if the menu must appear in the theme. Optional menu_name (default localized "New Menu").',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_name' => array( 'type' => 'string', 'required' => false, 'default' => '' ),
@@ -725,10 +725,11 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/assign-nav-menu-to-location',
-			'description' => 'Assign an existing menu to a theme location (default primary). Same slug resolution as create-nav-menu-for-location when primary is missing. replace true overwrites the slot by default.',
+			'description' => 'Assign an existing menu to a theme location (default primary). Provide menu_id (term_id from list-nav-menus) or menu_name (exact menu title as in Appearance > Menus). Same slug resolution as create-nav-menu-for-location when primary is missing. replace true overwrites the slot by default.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
-				'menu_id'        => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'menu_id'        => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0, 'max' => 2147483647 ),
+				'menu_name'      => array( 'type' => 'string', 'required' => false, 'default' => '' ),
 				'theme_location' => array( 'type' => 'string', 'required' => false, 'default' => 'primary' ),
 				'replace'        => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
 			),

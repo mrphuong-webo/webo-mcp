@@ -1631,16 +1631,49 @@ class WordPressTools {
 	/**
 	 * Load core nav menu API when running outside wp-admin (e.g. REST MCP call).
 	 *
-	 * @return void
+	 * @return bool True when wp_create_nav_menu is available.
 	 */
 	private static function ensure_nav_menu_api_loaded() {
 		if ( function_exists( 'wp_create_nav_menu' ) ) {
-			return;
+			return true;
 		}
 		$file = ABSPATH . WPINC . '/nav-menu.php';
 		if ( is_readable( $file ) ) {
 			require_once $file;
 		}
+
+		return function_exists( 'wp_create_nav_menu' );
+	}
+
+	/**
+	 * Create a nav_menu term or reuse the existing one when the name already exists.
+	 *
+	 * @param string $menu_name Menu name (already sanitized for storage).
+	 * @return array{0: int, 1: bool}|\WP_Error First element is term ID; second is true when an existing menu was reused.
+	 */
+	private static function create_nav_menu_term_or_reuse( string $menu_name ) {
+		if ( ! self::ensure_nav_menu_api_loaded() ) {
+			return new \WP_Error(
+				'webo_mcp_nav_menu_api_unavailable',
+				__( 'The navigation menu API could not be loaded. Check that WordPress core files are intact.', 'webo-mcp' )
+			);
+		}
+
+		$created = wp_create_nav_menu( $menu_name );
+		if ( ! is_wp_error( $created ) ) {
+			return array( (int) $created, false );
+		}
+
+		if ( 'menu_exists' !== $created->get_error_code() ) {
+			return $created;
+		}
+
+		$existing = wp_get_nav_menu_object( $menu_name );
+		if ( ! $existing instanceof \WP_Term ) {
+			return $created;
+		}
+
+		return array( (int) $existing->term_id, true );
 	}
 
 	/**
@@ -1680,7 +1713,19 @@ class WordPressTools {
 		}
 
 		if ( 'primary' === $requested ) {
-			$common = array( 'primary', 'main', 'header', 'menu-1', 'navigation', 'footer', 'top', 'social' );
+			$common = array(
+				'primary',
+				'main',
+				'header',
+				'primary-menu',
+				'header-menu',
+				'menu-1',
+				'navigation',
+				'mobile',
+				'footer',
+				'top',
+				'social',
+			);
 			foreach ( $common as $slug ) {
 				if ( isset( $registered[ $slug ] ) ) {
 					return array(
@@ -1719,25 +1764,30 @@ class WordPressTools {
 			$menu_name = __( 'New Menu', 'webo-mcp' );
 		}
 
-		self::ensure_nav_menu_api_loaded();
-
-		$menu_id = wp_create_nav_menu( $menu_name );
-		if ( is_wp_error( $menu_id ) ) {
-			return $menu_id;
+		$result = self::create_nav_menu_term_or_reuse( $menu_name );
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
-		$menu_id = (int) $menu_id;
+
+		$menu_id = (int) $result[0];
+		$reused  = (bool) $result[1];
 		if ( $menu_id <= 0 ) {
 			return new \WP_Error( 'webo_mcp_menu_create_failed', __( 'Failed to create navigation menu', 'webo-mcp' ) );
 		}
 
 		$menu = wp_get_nav_menu_object( $menu_id );
 
-		return array(
+		$out = array(
 			'menu_id'   => $menu_id,
 			'menu_name' => $menu_name,
 			'slug'      => $menu instanceof \WP_Term ? (string) $menu->slug : '',
 			'tool'      => 'webo/create-nav-menu',
 		);
+		if ( $reused ) {
+			$out['reused_existing_menu'] = true;
+		}
+
+		return $out;
 	}
 
 	/**
@@ -1748,7 +1798,29 @@ class WordPressTools {
 	 */
 	public static function assign_nav_menu_to_location( array $arguments ) {
 		$menu_id = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
-		if ( $menu_id <= 0 || ! wp_get_nav_menu_object( $menu_id ) ) {
+		$by_name = isset( $arguments['menu_name'] ) ? sanitize_text_field( trim( (string) $arguments['menu_name'] ) ) : '';
+		$assigned_via_menu_name = false;
+
+		if ( $menu_id <= 0 ) {
+			if ( '' === $by_name ) {
+				return new \WP_Error(
+					'webo_mcp_missing_argument',
+					__( 'Provide menu_id (nav menu term ID) or menu_name (exact name shown in Appearance > Menus).', 'webo-mcp' )
+				);
+			}
+			if ( ! self::ensure_nav_menu_api_loaded() ) {
+				return new \WP_Error(
+					'webo_mcp_nav_menu_api_unavailable',
+					__( 'The navigation menu API could not be loaded. Check that WordPress core files are intact.', 'webo-mcp' )
+				);
+			}
+			$resolved_menu = wp_get_nav_menu_object( $by_name );
+			if ( ! $resolved_menu instanceof \WP_Term ) {
+				return new \WP_Error( 'webo_mcp_menu_not_found', __( 'Navigation menu not found for the given menu_name', 'webo-mcp' ) );
+			}
+			$menu_id                  = (int) $resolved_menu->term_id;
+			$assigned_via_menu_name   = true;
+		} elseif ( ! wp_get_nav_menu_object( $menu_id ) ) {
 			return new \WP_Error( 'webo_mcp_menu_not_found', __( 'Navigation menu not found', 'webo-mcp' ) );
 		}
 
@@ -1799,14 +1871,19 @@ class WordPressTools {
 
 		$location_label = isset( $registered[ $theme_location ] ) ? (string) $registered[ $theme_location ] : $theme_location;
 
-		return array(
-			'menu_id'                    => $menu_id,
-			'theme_location'             => $theme_location,
-			'theme_location_label'       => $location_label,
-			'theme_location_resolution'  => $resolution,
-			'replaced_previous_menu_id'  => $previous_menu_id > 0 ? $previous_menu_id : null,
-			'tool'                       => 'webo/assign-nav-menu-to-location',
+		$out = array(
+			'menu_id'                   => $menu_id,
+			'theme_location'            => $theme_location,
+			'theme_location_label'      => $location_label,
+			'theme_location_resolution' => $resolution,
+			'replaced_previous_menu_id' => $previous_menu_id > 0 ? $previous_menu_id : null,
+			'tool'                      => 'webo/assign-nav-menu-to-location',
 		);
+		if ( $assigned_via_menu_name ) {
+			$out['assigned_via_menu_name'] = true;
+		}
+
+		return $out;
 	}
 
 	/**
@@ -1864,13 +1941,13 @@ class WordPressTools {
 			);
 		}
 
-		self::ensure_nav_menu_api_loaded();
-
-		$menu_id = wp_create_nav_menu( $menu_name );
-		if ( is_wp_error( $menu_id ) ) {
-			return $menu_id;
+		$result = self::create_nav_menu_term_or_reuse( $menu_name );
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
-		$menu_id = (int) $menu_id;
+
+		$menu_id = (int) $result[0];
+		$reused  = (bool) $result[1];
 		if ( $menu_id <= 0 ) {
 			return new \WP_Error( 'webo_mcp_menu_create_failed', __( 'Failed to create navigation menu', 'webo-mcp' ) );
 		}
@@ -1880,7 +1957,7 @@ class WordPressTools {
 
 		$location_label = isset( $registered[ $theme_location ] ) ? (string) $registered[ $theme_location ] : $theme_location;
 
-		return array(
+		$out = array(
 			'menu_id'                   => $menu_id,
 			'menu_name'                 => $menu_name,
 			'theme_location'            => $theme_location,
@@ -1889,6 +1966,11 @@ class WordPressTools {
 			'replaced_previous_menu_id' => $previous_menu_id > 0 ? $previous_menu_id : null,
 			'tool'                      => 'webo/create-nav-menu-for-location',
 		);
+		if ( $reused ) {
+			$out['reused_existing_menu'] = true;
+		}
+
+		return $out;
 	}
 
 	/**
