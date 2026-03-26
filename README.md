@@ -49,7 +49,7 @@ If you use this plugin, please give credit to the authors of these libraries.
 For **Cursor**, **Codex**, or other agents that support project skills: a maintained skill maps content-editing workflows (like the [wordpress-content](https://skills.sh/jezweb/claude-skills/wordpress-content) pattern) to **`webo/*` MCP tools**.
 
 - **Documentation:** [skills/README.md](skills/README.md)
-- **Skill:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md)
+- **Skills:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md) (full map), [skills/webo-mcp-menu-creation/SKILL.md](skills/webo-mcp-menu-creation/SKILL.md) (create & assign menus)
 - **Install via [skills](https://github.com/vercel-labs/skills) CLI:**  
   `npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-wordpress-content -a cursor -g -y`  
   (change `-a cursor` for your agent; use `--list` to preview.)

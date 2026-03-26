@@ -11,7 +11,8 @@ Skills trong thư mục này được **version trong git** và có thể chia s
 | [webo-mcp-ability-media](webo-mcp-ability-media/SKILL.md) | Media library, upload URL |
 | [webo-mcp-ability-taxonomy](webo-mcp-ability-taxonomy/SKILL.md) | Taxonomy, term, gán term |
 | [webo-mcp-ability-comments](webo-mcp-ability-comments/SKILL.md) | Comment |
-| [webo-mcp-ability-menus](webo-mcp-ability-menus/SKILL.md) | Menu điều hướng |
+| [webo-mcp-ability-menus](webo-mcp-ability-menus/SKILL.md) | Menu điều hướng (bảng tool) |
+| [webo-mcp-menu-creation](webo-mcp-menu-creation/SKILL.md) | **Tạo / gán menu** — nhiều luồng, discover `theme_location`, ví dụ `tools/call` |
 | [webo-mcp-ability-users](webo-mcp-ability-users/SKILL.md) | List user |
 | [webo-mcp-ability-site](webo-mcp-ability-site/SKILL.md) | Plugin, options an toàn |
 | [webo-mcp-wordpress-content](webo-mcp-wordpress-content/SKILL.md) | **Một file** đầy đủ bảng tool + schema (tiếng Anh, tham chiếu nhanh) |

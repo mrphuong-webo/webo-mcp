@@ -8,6 +8,8 @@ description: >-
 
 # WEBO MCP — Navigation menus
 
+**Workflow đa bước (tạo menu, gán vị trí, ví dụ nhiều cách):** xem [`webo-mcp-menu-creation`](../webo-mcp-menu-creation/SKILL.md).
+
 ## Instructions
 
 ### Listing menus vs listing items inside a menu

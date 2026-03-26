@@ -31,7 +31,8 @@ description: >-
 | Media, upload from URL | `webo-mcp-ability-media` |
 | Taxonomies and terms | `webo-mcp-ability-taxonomy` |
 | Comments | `webo-mcp-ability-comments` |
-| Nav menus | `webo-mcp-ability-menus` |
+| Nav menus (tool table) | `webo-mcp-ability-menus` |
+| Nav menus (create / assign workflows) | `webo-mcp-menu-creation` |
 | User list | `webo-mcp-ability-users` |
 | Plugins, safe options | `webo-mcp-ability-site` |
 | SEO-style post workflow + `webo/create-post` | `webo-write-post-instruction` |

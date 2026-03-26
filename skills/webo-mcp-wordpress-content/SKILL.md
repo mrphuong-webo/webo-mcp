@@ -48,7 +48,7 @@ description: >-
 
 4. **Workflow (summary):** Discover types/tax → locate content → create **draft** by default → taxonomy/media/menu as needed → risky ops only after dry-run / confirmation → verify with `webo/get-post` or `link`. Same spirit as [wordpress-content (jezweb)](https://skills.sh/jezweb/claude-skills/wordpress-content).
 
-5. **Menus vs theme locations:** **`webo/list-nav-menu-locations`** shows which **`menu_id`** is tied to each theme slot (e.g. `primary`). **`webo/create-nav-menu`** creates an **empty** menu. **`webo/create-nav-menu-for-location`** creates and assigns. **`webo/assign-nav-menu-to-location`** assigns an existing menu. Mutations require **`edit_theme_options`**; listing menus/items/locations requires **`edit_posts`** only. Full detail: [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md).
+5. **Menus vs theme locations:** **`webo/list-nav-menu-locations`** shows which **`menu_id`** is tied to each theme slot (e.g. `primary`). **`webo/create-nav-menu`** creates an **empty** menu. **`webo/create-nav-menu-for-location`** creates and assigns. **`webo/assign-nav-menu-to-location`** assigns an existing menu. Mutations require **`edit_theme_options`**; listing menus/items/locations requires **`edit_posts`** only. Tool table: [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md). Step-by-step creation/assign flows: [`webo-mcp-menu-creation`](../webo-mcp-menu-creation/SKILL.md).
 
 6. **WP-CLI analogues**
 
