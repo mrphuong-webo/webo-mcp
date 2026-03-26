@@ -1723,4 +1723,144 @@ class WordPressTools {
 			'tool'            => 'webo/add-nav-menu-item-from-post',
 		);
 	}
+
+	/**
+	 * Add a custom URL (Custom link) to a nav menu.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function add_nav_menu_item_custom( array $arguments ) {
+		require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
+
+		$menu_id    = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
+		$url_raw    = isset( $arguments['url'] ) ? trim( (string) $arguments['url'] ) : '';
+		$title      = isset( $arguments['title'] ) ? sanitize_text_field( (string) $arguments['title'] ) : '';
+		$menu_order = isset( $arguments['menu_order'] ) ? (int) $arguments['menu_order'] : 0;
+		$parent_id  = isset( $arguments['parent_db_id'] ) ? (int) $arguments['parent_db_id'] : 0;
+
+		if ( $menu_id <= 0 || ! wp_get_nav_menu_object( $menu_id ) ) {
+			return new \WP_Error( 'webo_mcp_menu_not_found', 'Navigation menu not found' );
+		}
+		if ( '' === $url_raw ) {
+			return new \WP_Error( 'webo_mcp_missing_argument', 'url is required' );
+		}
+		if ( '' === $title ) {
+			return new \WP_Error( 'webo_mcp_missing_argument', 'title (link text) is required' );
+		}
+		if ( $menu_order < 1 ) {
+			return new \WP_Error(
+				'webo_mcp_missing_argument',
+				'menu_order is required (integer >= 1): inspect list-nav-menu-items and assign explicitly.'
+			);
+		}
+
+		$url = esc_url_raw( $url_raw );
+		if ( '' === $url ) {
+			return new \WP_Error( 'webo_mcp_invalid_url', 'url is not a valid URL' );
+		}
+		$parsed = wp_parse_url( $url );
+		$scheme = isset( $parsed['scheme'] ) ? strtolower( (string) $parsed['scheme'] ) : '';
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
+			return new \WP_Error( 'webo_mcp_invalid_url', 'url must use http or https' );
+		}
+
+		$existing = wp_get_nav_menu_items( $menu_id );
+		$valid_db = array();
+		if ( is_array( $existing ) ) {
+			foreach ( $existing as $row ) {
+				if ( $row instanceof \WP_Post ) {
+					$valid_db[ (int) $row->ID ] = true;
+				}
+			}
+		}
+		if ( $parent_id > 0 && ! isset( $valid_db[ $parent_id ] ) ) {
+			return new \WP_Error(
+				'webo_mcp_invalid_menu_parent',
+				'parent_db_id must be a menu item already in this menu (see list-nav-menu-items db_id).'
+			);
+		}
+
+		$args = array(
+			'menu-item-type'      => 'custom',
+			'menu-item-url'       => $url,
+			'menu-item-title'     => $title,
+			'menu-item-status'    => 'publish',
+			'menu-item-position'  => $menu_order,
+			'menu-item-parent-id' => max( 0, $parent_id ),
+		);
+
+		$item_id = wp_update_nav_menu_item( $menu_id, 0, $args );
+		if ( is_wp_error( $item_id ) ) {
+			return $item_id;
+		}
+		if ( ! is_numeric( $item_id ) || (int) $item_id <= 0 ) {
+			return new \WP_Error( 'webo_mcp_menu_item_failed', 'Failed to create menu item' );
+		}
+
+		return array(
+			'menu_item_db_id' => (int) $item_id,
+			'menu_id'         => $menu_id,
+			'url'             => $url,
+			'menu_order'      => $menu_order,
+			'tool'            => 'webo/add-nav-menu-item-custom',
+		);
+	}
+
+	/**
+	 * Set or remove the featured image for a post, page, or CPT.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function set_post_featured_image( array $arguments ) {
+		$post_id       = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
+		$remove        = ! empty( $arguments['remove'] );
+		$attachment_id = isset( $arguments['attachment_id'] ) ? (int) $arguments['attachment_id'] : 0;
+
+		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
+			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
+		}
+		if ( 'attachment' === get_post_type( $post_id ) ) {
+			return new \WP_Error( 'webo_mcp_invalid_post', 'Cannot set featured image on an attachment' );
+		}
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new \WP_Error(
+				'webo_mcp_permission_denied',
+				'Cannot edit this post',
+				array( 'status' => 403 )
+			);
+		}
+
+		if ( $remove ) {
+			delete_post_thumbnail( $post_id );
+			return array(
+				'post_id'          => $post_id,
+				'featured_removed' => true,
+				'tool'             => 'webo/set-post-featured-image',
+			);
+		}
+
+		if ( $attachment_id <= 0 ) {
+			return new \WP_Error(
+				'webo_mcp_missing_argument',
+				'attachment_id is required (or set remove: true to delete featured image)'
+			);
+		}
+
+		$att = get_post( $attachment_id );
+		if ( ! $att || 'attachment' !== $att->post_type ) {
+			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
+		}
+
+		if ( ! set_post_thumbnail( $post_id, $attachment_id ) ) {
+			return new \WP_Error( 'webo_mcp_featured_image_failed', 'Failed to set featured image' );
+		}
+
+		return array(
+			'post_id'       => $post_id,
+			'attachment_id' => $attachment_id,
+			'tool'          => 'webo/set-post-featured-image',
+		);
+	}
 }

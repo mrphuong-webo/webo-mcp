@@ -21,10 +21,11 @@ Tất cả dưới đây: `permission` **`upload_files`**.
 | `webo/update-media` | `attachment_id`; `title`, `alt_text`, `caption` tùy chọn |
 | `webo/delete-media` | `attachment_id` |
 
+Gán ảnh đại diện cho bài (sau khi upload): dùng **`webo/set-post-featured-image`** (`post_id` + `attachment_id`) — xem [`webo-mcp-ability-posts`](../webo-mcp-ability-posts/SKILL.md).
+
 ## Quy tắc
 
 - **`webo/upload-media-from-url`:** chỉ URL http(s) hợp lệ, công khai; plugin chặn loopback/private (SSRF).
-- **Ảnh đại diện bài:** core không có `webo/set-featured-image`; cần `_thumbnail_id` qua REST/admin/ability tùy chỉnh sau khi có `attachment_id`.
 
 ## Payload mẫu — upload từ URL
 

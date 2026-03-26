@@ -49,7 +49,8 @@ Manage live WordPress content over **MCP** using the **webo-mcp** plugin. Same o
 | Read post terms | `webo/get-content-terms` | |
 | Media | `webo/list-media`, `webo/get-media`, `webo/update-media`, `webo/delete-media` | |
 | Media from URL | `webo/upload-media-from-url` | **Public http(s) only**; SSRF rules block loopback/private IPs |
-| Menus | `webo/list-nav-menus`, `webo/list-nav-menu-items`, `webo/add-nav-menu-item-from-post` | **`menu_order` ≥ 1**; `parent_db_id` from existing item |
+| Featured image | `webo/set-post-featured-image` | `post_id` + `attachment_id`; or **`remove: true`** to clear |
+| Menus | `webo/list-nav-menus`, `webo/list-nav-menu-items`, `webo/add-nav-menu-item-from-post`, **`webo/add-nav-menu-item-custom`** | **`menu_order` ≥ 1**; custom link needs **`url`** (http/https) + **`title`** |
 | Comments | `webo/list-comments`, `webo/get-comment`, `webo/update-comment`, `webo/delete-comment` | |
 | Homepage / Reading | `webo/get-homepage-info` | Optional `include_content`, `include_excerpt`, `post_id` |
 
@@ -139,13 +140,14 @@ Prefer short titles in tools; put large HTML in `content`. Server runs **`wp_kse
 ### 4. Media
 
 - Import remote file: `webo/upload-media-from-url` (`image_url`, optional `title`, `filename`, `alt_text`).
-- **Featured image:** there is **no** dedicated `webo/set-featured-image` in core `WordPressTools`; after upload, set `_thumbnail_id` via WP admin, REST, WP-CLI, or a custom ability. Use `attachment_id` from upload response.
+- **Featured image:** `webo/set-post-featured-image` with `post_id` and `attachment_id` from upload (or media list). **`remove: true`** clears the thumbnail.
 
 ### 5. Menus
 
 1. `webo/list-nav-menus` → `menu_id` (= term_id).
 2. `webo/list-nav-menu-items` → choose **`menu_order`** and optional **`parent_db_id`**.
-3. `webo/add-nav-menu-item-from-post` with **`post_id`**, **`post_type`**, **`menu_order`**, **`menu_id`**.
+3. **Link to a post/page/CPT:** `webo/add-nav-menu-item-from-post` (`post_id`, `post_type`, `menu_order`, `menu_id`, …).
+4. **Custom URL** (external or not yet a post): `webo/add-nav-menu-item-custom` (`menu_id`, **`url`** http/https, **`title`**, `menu_order`, optional `parent_db_id`).
 
 ### 6. Bulk / risky operations
 
@@ -163,6 +165,8 @@ Prefer short titles in tools; put large HTML in `content`. Server runs **`wp_kse
 | `wp post create` / file | `webo/create-post` + `content` string |
 | `wp media import URL` | `webo/upload-media-from-url` (SSRF-hardened) |
 | `wp menu item add-post` | `webo/add-nav-menu-item-from-post` (**explicit `menu_order`**) |
+| `wp menu item add-custom` | `webo/add-nav-menu-item-custom` (`url` + `title`) |
+| Featured image meta | `webo/set-post-featured-image` |
 | ACF / meta | Not covered here unless exposed via **Abilities API** or extra tools |
 
 When MCP is unsuitable (heavy ACF, custom tables), use **REST** or **WP-CLI** per the [wordpress-content workflow reference](https://skills.sh/jezweb/claude-skills/wordpress-content).

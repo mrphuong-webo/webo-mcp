@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.15
+ * Version: 2.0.16
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -679,7 +679,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/list-nav-menus',
-			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items and add-nav-menu-item-from-post.',
+			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items, add-nav-menu-item-from-post, and add-nav-menu-item-custom.',
 			'category'    => 'wordpress',
 			'permission'  => 'edit_theme_options',
 			'callback'    => array( WordPressTools::class, 'list_nav_menus' ),
@@ -708,6 +708,32 @@ function webo_mcp_register_standalone_core_tools() {
 			),
 			'permission'  => 'edit_theme_options',
 			'callback'    => array( WordPressTools::class, 'add_nav_menu_item_from_post' ),
+		),
+		array(
+			'name'        => 'webo/add-nav-menu-item-custom',
+			'description' => 'Add a custom URL to a nav menu (Custom link). REQUIRED: menu_id, url (http/https), title (visible label), menu_order (>= 1). Optional parent_db_id. Inspect list-nav-menu-items before setting menu_order and parent.',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'menu_id'         => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'url'             => array( 'type' => 'string', 'required' => true ),
+				'title'           => array( 'type' => 'string', 'required' => true ),
+				'menu_order'      => array( 'type' => 'integer', 'required' => true, 'min' => 1, 'max' => 5000 ),
+				'parent_db_id'    => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
+			),
+			'permission'  => 'edit_theme_options',
+			'callback'    => array( WordPressTools::class, 'add_nav_menu_item_custom' ),
+		),
+		array(
+			'name'        => 'webo/set-post-featured-image',
+			'description' => 'Set featured image for a post/page/CPT from an attachment_id, or remove it (remove: true). Requires edit permission on the post.',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'post_id'         => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
+				'attachment_id'   => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
+				'remove'          => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
+			),
+			'permission'  => 'edit_posts',
+			'callback'    => array( WordPressTools::class, 'set_post_featured_image' ),
 		),
 		array(
 			'name'        => 'webo/list-active-plugins',

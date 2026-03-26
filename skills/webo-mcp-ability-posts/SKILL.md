@@ -2,7 +2,7 @@
 name: webo-mcp-ability-posts
 description: >-
   WEBO MCP: post, page, CPT — list/get/discover, URL/slug, homepage, create/update/delete,
-  bulk status, revisions, search-replace. Dùng khi task liên quan nội dung bài viết hoặc
+  bulk status, revisions, search-replace, featured image. Dùng khi task liên quan nội dung bài viết hoặc
   thay thế hàng loạt trong HTML bài.
 ---
 
@@ -27,6 +27,7 @@ description: >-
 | `webo/list-revisions` | edit_posts | `post_id` |
 | `webo/restore-revision` | edit_posts | `revision_id` |
 | `webo/search-replace-posts` | edit_posts | `search`; `replace`, `dry_run` (default true), `offset`, `max_scan_posts` 1–500 |
+| `webo/set-post-featured-image` | edit_posts | `post_id`; `attachment_id` **hoặc** `remove: true` để gỡ ảnh đại diện |
 
 ## Quy tắc
 
@@ -48,3 +49,18 @@ description: >-
   }
 }
 ```
+
+## Payload mẫu — ảnh đại diện (sau khi có `attachment_id`, vd từ upload-media-from-url)
+
+```json
+{
+  "session_id": "<…>",
+  "name": "webo/set-post-featured-image",
+  "arguments": {
+    "post_id": 42,
+    "attachment_id": 100
+  }
+}
+```
+
+Gỡ ảnh đại diện: `"arguments": { "post_id": 42, "remove": true }`.
