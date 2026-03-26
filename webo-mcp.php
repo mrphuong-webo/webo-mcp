@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.16
+ * Version: 2.0.17
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -679,7 +679,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/list-nav-menus',
-			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items, add-nav-menu-item-from-post, and add-nav-menu-item-custom.',
+			'description' => 'List navigation menus (Appearance > Menus): term_id, name, slug. Use term_id as menu_id for list-nav-menu-items, add-nav-menu-item-from-post, and add-nav-menu-item-custom. To create a new menu and assign a theme location (e.g. primary) without knowing menu_id, use webo/create-nav-menu-for-location.',
 			'category'    => 'wordpress',
 			'permission'  => 'edit_theme_options',
 			'callback'    => array( WordPressTools::class, 'list_nav_menus' ),
@@ -693,6 +693,18 @@ function webo_mcp_register_standalone_core_tools() {
 			),
 			'permission'  => 'edit_theme_options',
 			'callback'    => array( WordPressTools::class, 'list_nav_menu_items' ),
+		),
+		array(
+			'name'        => 'webo/create-nav-menu-for-location',
+			'description' => 'Create a NEW navigation menu and assign it to a theme menu location (slug from register_nav_menus, default primary). No menu_id required. Returns menu_id for add-nav-menu-item-* tools. Optional menu_name (default "Primary Menu"). If replace is false and the location already has a menu, fails with existing_menu_id; default replace true overwrites the location assignment.',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'menu_name'       => array( 'type' => 'string', 'required' => false, 'default' => '' ),
+				'theme_location'  => array( 'type' => 'string', 'required' => false, 'default' => 'primary' ),
+				'replace'         => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
+			),
+			'permission'  => 'edit_theme_options',
+			'callback'    => array( WordPressTools::class, 'create_nav_menu_for_location' ),
 		),
 		array(
 			'name'        => 'webo/add-nav-menu-item-from-post',
