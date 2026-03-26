@@ -8,9 +8,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/AccessHelper.php';
+
 class PolicyHelper {
 	public static function is_internal_allowed( WP_REST_Request $request ) {
-		$default_allowed = is_user_logged_in() && current_user_can( 'manage_options' );
+		$default_allowed = AccessHelper::current_user_can_use_mcp();
 		return (bool) apply_filters( 'webo_mcp_allow_internal_tools', $default_allowed, $request );
 	}
 

@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.7
+Stable tag: 2.0.14
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,6 +32,7 @@ Supported AI Platforms: Use with any MCP-compatible client (e.g. Cursor, Claude 
 - Public tools policy with category and allowlist filters
 - Optional API key and HMAC authentication for tools/call
 - Session lifecycle for MCP clients
+- Multisite: MCP router and GET /webo-mcp/v1/tools require network Super Admin (`is_super_admin`); global API key/HMAC run as the first Super Admin login
 
 Standalone core tools included:
 - Site info
@@ -68,6 +69,9 @@ The plugin exposes the following actions and filters for developers:
   Fired during plugin bootstrap after standalone tools are registered. Use this to register custom MCP tools from other plugins.
 
 === Filters ===
+
+- `webo_mcp_current_user_can_use_mcp` (bool $allowed, int $user_id)  
+  Gate for all MCP REST access. Default: `is_super_admin( $user_id )`. Use from companion plugins (e.g. WP Ultimo) only if you must extend who may call MCP.
 
 - `webo_mcp_allow_internal_tools` (bool $allow_internal, WP_REST_Request $request)  
   Controls whether internal tools are included in tools/list responses. Defaults to false for public environments.
@@ -127,6 +131,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.14 =
+* Security: MCP JSON-RPC router, SecurityHelper, tools discovery, and internal-tool policy default to network Super Admin on multisite (`is_super_admin`). Single-site installs use WordPress core’s `is_super_admin()` behavior (typically full administrators). Global API key/HMAC elevates to the first Super Admin user on multisite.
+
 = 2.0.7 =
 * Readme: highlight https://webomcp.com and n8n community node https://www.npmjs.com/package/n8n-nodes-webo-mcp; short description and FAQ; README.md aligned.
 

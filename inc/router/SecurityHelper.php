@@ -6,15 +6,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/AccessHelper.php';
+
 class SecurityHelper {
 	public static function validate( \WP_REST_Request $request ) {
 		if ( is_user_logged_in() && current_user_can( 'read' ) ) {
-			return true;
+			return AccessHelper::require_mcp_access_or_error();
 		}
 		$configured_api_key = (string) get_option( 'webo_mcp_api_key', '' );
 		$provided_api_key   = (string) $request->get_header( 'X-WEBO-API-KEY' );
 		if ( $configured_api_key !== '' && $provided_api_key !== '' && hash_equals( $configured_api_key, trim( $provided_api_key ) ) ) {
-			return true;
+			return AccessHelper::require_mcp_access_or_error();
 		}
 		$configured_hmac_secret = (string) get_option( 'webo_mcp_hmac_secret', '' );
 		$signature              = (string) $request->get_header( 'X-WEBO-SIGNATURE' );
@@ -26,7 +28,7 @@ class SecurityHelper {
 				$payload           = $timestamp . '.' . (string) $request->get_body();
 				$expected_signature = 'sha256=' . hash_hmac( 'sha256', $payload, $configured_hmac_secret );
 				if ( hash_equals( $expected_signature, trim( $signature ) ) ) {
-					return true;
+					return AccessHelper::require_mcp_access_or_error();
 				}
 			}
 		}

@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.13
+ * Version: 2.0.14
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -169,6 +169,7 @@ require_once __DIR__ . '/inc/router/class-mcp-router.php';
 
 use WeboMCP\Core\Abilities\Site_Settings_Ability;
 use WeboMCP\Core\Registry\ToolRegistry;
+use WeboMCP\Core\Router\AccessHelper;
 use WeboMCP\Core\Router\McpRouter;
 use WeboMCP\Core\Tools\WordPressTools;
 use WP\MCP\Core\McpAdapter;
@@ -785,7 +786,7 @@ function webo_mcp_register_rest_routes() {
 			'callback'            => static function ( \WP_REST_Request $request ) {
 				$include_internal = false;
 
-				if ( current_user_can( 'manage_options' ) ) {
+				if ( AccessHelper::current_user_can_use_mcp() ) {
 					$include_internal = filter_var( $request->get_param( 'include_internal' ), FILTER_VALIDATE_BOOLEAN );
 				}
 
@@ -806,7 +807,7 @@ function webo_mcp_register_rest_routes() {
 				);
 			},
 			'permission_callback' => static function () {
-				return current_user_can( 'read' );
+				return AccessHelper::current_user_can_use_mcp();
 			},
 		)
 	);

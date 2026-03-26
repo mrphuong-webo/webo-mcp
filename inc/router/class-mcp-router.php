@@ -10,6 +10,7 @@ use WP_REST_Request;
 require_once __DIR__ . '/JsonRpcHelper.php';
 require_once __DIR__ . '/SecurityHelper.php';
 require_once __DIR__ . '/PolicyHelper.php';
+require_once __DIR__ . '/AccessHelper.php';
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -90,7 +91,7 @@ class McpRouter {
 				break;
 			}
 		}
-		if ( $requested_include_internal && current_user_can( 'manage_options' ) ) {
+		if ( $requested_include_internal && AccessHelper::current_user_can_use_mcp() ) {
 			$include_internal = true;
 		}
 		$category = '';
@@ -168,25 +169,6 @@ class McpRouter {
 	}
 
 	public static function secure_permission_callback( WP_REST_Request $request ) {
-		$maybe_set_admin_user = static function () {
-			static $admin_id = null;
-			if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
-				if ( null === $admin_id ) {
-					$admin = get_users(
-						array(
-							'role'    => 'administrator',
-							'number'  => 1,
-							'orderby' => 'ID',
-						)
-					);
-					$admin_id = ! empty( $admin ) ? (int) $admin[0]->ID : 0;
-				}
-				if ( $admin_id > 0 ) {
-					wp_set_current_user( $admin_id );
-				}
-			}
-		};
-
 		// Allow HMAC-signed requests through the REST permission callback.
 		// The router will still enforce per-method security and tool policy.
 		$configured_hmac_secret = (string) get_option( 'webo_mcp_hmac_secret', '' );
@@ -199,8 +181,9 @@ class McpRouter {
 				$payload            = $timestamp . '.' . (string) $request->get_body();
 				$expected_signature = 'sha256=' . hash_hmac( 'sha256', $payload, $configured_hmac_secret );
 				if ( hash_equals( $expected_signature, trim( $signature ) ) ) {
-					$maybe_set_admin_user();
-					return true;
+					AccessHelper::bootstrap_current_user_for_signed_request();
+					$gate = AccessHelper::require_mcp_access_or_error();
+					return is_wp_error( $gate ) ? $gate : true;
 				}
 			}
 		}
@@ -209,8 +192,7 @@ class McpRouter {
 		if ( $provided_api_key !== '' ) {
 			$configured_key = (string) get_option( 'webo_mcp_api_key', '' );
 			if ( $configured_key !== '' && hash_equals( $configured_key, trim( $provided_api_key ) ) ) {
-				// API key from Settings (option): set first admin as current user so capability checks pass.
-				$maybe_set_admin_user();
+				AccessHelper::bootstrap_current_user_for_signed_request();
 			} else {
 				$key = trim( $provided_api_key );
 				$users = get_users(
@@ -261,9 +243,11 @@ class McpRouter {
 			}
 		}
 
-		if ( current_user_can( 'read' ) ) {
-			return true;
+		if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
+			return new WP_Error( 'webo_mcp_permission_denied', 'User does not have required capability.' );
 		}
-		return new WP_Error( 'webo_mcp_permission_denied', 'User does not have required capability.' );
+
+		$gate = AccessHelper::require_mcp_access_or_error();
+		return is_wp_error( $gate ) ? $gate : true;
 	}
 }
