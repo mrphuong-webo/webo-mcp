@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.20
+ * Version: 2.0.21
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -703,7 +703,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/create-nav-menu-for-location',
-			'description' => 'Create a NEW navigation menu and assign it to a theme menu location (slug from register_nav_menus, default primary). No menu_id required. Returns menu_id for add-nav-menu-item-* tools. Optional menu_name (default "Primary Menu"). If replace is false and the location already has a menu, fails with existing_menu_id; default replace true overwrites the location assignment.',
+			'description' => 'Create a NEW navigation menu and assign it to a theme menu location (default slug primary). If primary is not registered, uses the only menu slot the theme exposes or matches common slugs (main, header, menu-1, navigation). Optional menu_name (default localized Primary Menu). replace false blocks when slot occupied; default true replaces assignment.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_name'       => array( 'type' => 'string', 'required' => false, 'default' => '' ),
@@ -725,7 +725,7 @@ function webo_mcp_register_standalone_core_tools() {
 		),
 		array(
 			'name'        => 'webo/assign-nav-menu-to-location',
-			'description' => 'Assign an existing menu (menu_id from list-nav-menus or create-nav-menu) to a theme menu location slug (default primary). Overwrites that location by default (replace: true). Fails if theme_location is not registered or if replace is false and the slot is already taken.',
+			'description' => 'Assign an existing menu to a theme location (default primary). Same slug resolution as create-nav-menu-for-location when primary is missing. replace true overwrites the slot by default.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'menu_id'        => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),

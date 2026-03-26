@@ -132,6 +132,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.21 =
+* Nav menus: resolve theme location when slug primary is missing (single registered slot, or common slugs main/header/menu-1/navigation). Load wp-includes/nav-menu.php before wp_create_nav_menu in REST context. Response field theme_location_resolution indicates how the slug was chosen.
+
 = 2.0.20 =
 * Access: MCP router gate allows `manage_options` and `edit_posts` (Editors, site admins on multisite), not only `is_super_admin`; fixes list-nav-menus / tools/call failing for non-administrator users. Multisite API key/HMAC falls back to first site Administrator if no Super Admin login exists. Error code `webo_mcp_access_denied` replaces misleading super-admin-only message.
 

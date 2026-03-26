@@ -28,7 +28,7 @@ description: >-
 
 3. **Rules:** To see **which menu is primary / header:** **`webo/list-nav-menu-locations`**, then **`webo/list-nav-menu-items`** for that `menu_id`. For **writes**, pick one flow: (a) **`webo/create-nav-menu`** then optionally **`webo/assign-nav-menu-to-location`**; (b) **`webo/create-nav-menu-for-location`** in one step (new menu + assign); (c) existing **`menu_id`** from **`webo/list-nav-menus`** + **`assign-nav-menu-to-location`**. Then use **`menu_id`** for **`list-nav-menu-items`** and add-item tools. Before adding items, call **`list-nav-menu-items`** to pick **`menu_order`** and **`parent_db_id`**. `post_type` must match `post_id`.
 
-4. **Theme menu locations (`primary`, `main`, `header`, …)** — Slugs come from `register_nav_menu()`. Invalid slugs return **`registered_locations`** in errors. **`assign-nav-menu-to-location`** and **`create-nav-menu-for-location`** update **`nav_menu_locations`**.
+4. **Theme menu locations (`primary`, `main`, `header`, …)** — Slugs come from `register_nav_menu()`. **`create-nav-menu-for-location`** / **`assign-nav-menu-to-location`** resolve `primary` to the theme’s only slot or a common slug (`main`, `header`, `menu-1`, …) when needed; responses include **`theme_location_resolution`** (`exact`, `single_registered_location`, `common_slug_fallback`). Zero registered slots returns a clear error (block theme / no classic menus).
 
    - **Empty menu only (no theme slot):** use **`create-nav-menu`**.
    - **If the front shows nothing after adding items:** confirm this **`menu_id`** is assigned to the header location.

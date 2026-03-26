@@ -1629,6 +1629,84 @@ class WordPressTools {
 	}
 
 	/**
+	 * Load core nav menu API when running outside wp-admin (e.g. REST MCP call).
+	 *
+	 * @return void
+	 */
+	private static function ensure_nav_menu_api_loaded() {
+		if ( function_exists( 'wp_create_nav_menu' ) ) {
+			return;
+		}
+		$file = ABSPATH . WPINC . '/nav-menu.php';
+		if ( is_readable( $file ) ) {
+			require_once $file;
+		}
+	}
+
+	/**
+	 * Resolve a theme menu location slug against register_nav_menus(), with fallbacks when "primary" does not exist.
+	 *
+	 * @param string               $requested  Requested slug (will be sanitize_key internally).
+	 * @param array<string, string> $registered Slug => label from get_registered_nav_menus().
+	 * @return array{slug: string, resolution: string}|\WP_Error
+	 */
+	private static function resolve_registered_nav_menu_location( string $requested, array $registered ) {
+		if ( ! is_array( $registered ) || array() === $registered ) {
+			return new \WP_Error(
+				'webo_mcp_no_menu_locations',
+				__( 'The active theme did not register any classic menu locations. Use a block theme Site Editor or a theme that registers navigation menus.', 'webo-mcp' ),
+				array( 'registered_locations' => array() )
+			);
+		}
+
+		$requested = sanitize_key( $requested );
+		if ( '' === $requested ) {
+			$requested = 'primary';
+		}
+
+		if ( isset( $registered[ $requested ] ) ) {
+			return array(
+				'slug'       => $requested,
+				'resolution' => 'exact',
+			);
+		}
+
+		$keys = array_keys( $registered );
+		if ( 1 === count( $keys ) ) {
+			return array(
+				'slug'       => (string) $keys[0],
+				'resolution' => 'single_registered_location',
+			);
+		}
+
+		if ( 'primary' === $requested ) {
+			$common = array( 'primary', 'main', 'header', 'menu-1', 'navigation', 'footer', 'top', 'social' );
+			foreach ( $common as $slug ) {
+				if ( isset( $registered[ $slug ] ) ) {
+					return array(
+						'slug'       => $slug,
+						'resolution' => 'common_slug_fallback',
+					);
+				}
+			}
+		}
+
+		return new \WP_Error(
+			'webo_mcp_invalid_menu_location',
+			sprintf(
+				/* translators: %1$s: requested slug, %2$s: comma-separated registered slugs */
+				__( 'Theme location "%1$s" is not registered. Registered slugs: %2$s', 'webo-mcp' ),
+				$requested,
+				implode( ', ', $keys )
+			),
+			array(
+				'theme_location'       => $requested,
+				'registered_locations' => $keys,
+			)
+		);
+	}
+
+	/**
 	 * Create an empty navigation menu (no theme location assignment).
 	 *
 	 * @param array<string, mixed> $arguments Tool arguments.
@@ -1640,6 +1718,8 @@ class WordPressTools {
 		if ( '' === $menu_name ) {
 			$menu_name = __( 'New Menu', 'webo-mcp' );
 		}
+
+		self::ensure_nav_menu_api_loaded();
 
 		$menu_id = wp_create_nav_menu( $menu_name );
 		if ( is_wp_error( $menu_id ) ) {
@@ -1680,22 +1760,16 @@ class WordPressTools {
 		$replace = array_key_exists( 'replace', $arguments ) ? (bool) $arguments['replace'] : true;
 
 		$registered = get_registered_nav_menus();
-		if ( ! is_array( $registered ) || ! isset( $registered[ $theme_location ] ) ) {
-			$slugs = is_array( $registered ) ? array_keys( $registered ) : array();
-			return new \WP_Error(
-				'webo_mcp_invalid_menu_location',
-				sprintf(
-					/* translators: %1$s: location slug, %2$s: comma-separated list of registered slugs */
-					__( 'Theme location "%1$s" is not registered by the active theme. Registered slugs: %2$s', 'webo-mcp' ),
-					$theme_location,
-					implode( ', ', $slugs )
-				),
-				array(
-					'theme_location'       => $theme_location,
-					'registered_locations' => $slugs,
-				)
-			);
+		if ( ! is_array( $registered ) ) {
+			$registered = array();
 		}
+
+		$resolved = self::resolve_registered_nav_menu_location( $theme_location, $registered );
+		if ( is_wp_error( $resolved ) ) {
+			return $resolved;
+		}
+		$theme_location = $resolved['slug'];
+		$resolution     = $resolved['resolution'];
 
 		$locations = get_nav_menu_locations();
 		if ( ! is_array( $locations ) ) {
@@ -1726,11 +1800,12 @@ class WordPressTools {
 		$location_label = isset( $registered[ $theme_location ] ) ? (string) $registered[ $theme_location ] : $theme_location;
 
 		return array(
-			'menu_id'                   => $menu_id,
-			'theme_location'            => $theme_location,
-			'theme_location_label'      => $location_label,
-			'replaced_previous_menu_id' => $previous_menu_id > 0 ? $previous_menu_id : null,
-			'tool'                      => 'webo/assign-nav-menu-to-location',
+			'menu_id'                    => $menu_id,
+			'theme_location'             => $theme_location,
+			'theme_location_label'       => $location_label,
+			'theme_location_resolution'  => $resolution,
+			'replaced_previous_menu_id'  => $previous_menu_id > 0 ? $previous_menu_id : null,
+			'tool'                       => 'webo/assign-nav-menu-to-location',
 		);
 	}
 
@@ -1755,22 +1830,16 @@ class WordPressTools {
 		$replace = array_key_exists( 'replace', $arguments ) ? (bool) $arguments['replace'] : true;
 
 		$registered = get_registered_nav_menus();
-		if ( ! is_array( $registered ) || ! isset( $registered[ $theme_location ] ) ) {
-			$slugs = is_array( $registered ) ? array_keys( $registered ) : array();
-			return new \WP_Error(
-				'webo_mcp_invalid_menu_location',
-				sprintf(
-					/* translators: %1$s: location slug, %2$s: comma-separated list of registered slugs */
-					__( 'Theme location "%1$s" is not registered by the active theme. Registered slugs: %2$s', 'webo-mcp' ),
-					$theme_location,
-					implode( ', ', $slugs )
-				),
-				array(
-					'theme_location'          => $theme_location,
-					'registered_locations'    => $slugs,
-				)
-			);
+		if ( ! is_array( $registered ) ) {
+			$registered = array();
 		}
+
+		$resolved = self::resolve_registered_nav_menu_location( $theme_location, $registered );
+		if ( is_wp_error( $resolved ) ) {
+			return $resolved;
+		}
+		$theme_location = $resolved['slug'];
+		$resolution     = $resolved['resolution'];
 
 		$locations = get_nav_menu_locations();
 		if ( ! is_array( $locations ) ) {
@@ -1795,6 +1864,8 @@ class WordPressTools {
 			);
 		}
 
+		self::ensure_nav_menu_api_loaded();
+
 		$menu_id = wp_create_nav_menu( $menu_name );
 		if ( is_wp_error( $menu_id ) ) {
 			return $menu_id;
@@ -1814,6 +1885,7 @@ class WordPressTools {
 			'menu_name'                 => $menu_name,
 			'theme_location'            => $theme_location,
 			'theme_location_label'      => $location_label,
+			'theme_location_resolution' => $resolution,
 			'replaced_previous_menu_id' => $previous_menu_id > 0 ? $previous_menu_id : null,
 			'tool'                      => 'webo/create-nav-menu-for-location',
 		);
