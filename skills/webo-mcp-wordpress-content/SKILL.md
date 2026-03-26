@@ -42,13 +42,15 @@ description: >-
 | Terms / tax | `webo/discover-taxonomies`, `webo/list-terms`, term CRUD, `webo/assign-terms-to-content`, `webo/get-content-terms` | category/post_tag paths per PHP |
 | Media | `webo/list-media`, get/update/delete, `webo/upload-media-from-url` | http(s) public URLs only |
 | Featured | `webo/set-post-featured-image` | or `remove: true` |
-| Menus | `webo/list-nav-menus`, `webo/list-nav-menu-items`, `webo/add-nav-menu-item-from-post`, `webo/add-nav-menu-item-custom` | `menu_order` ≥ 1 |
+| Menus | `webo/list-nav-menus`, `webo/list-nav-menu-items`, `webo/add-nav-menu-item-from-post`, `webo/add-nav-menu-item-custom` | `menu_order` ≥ 1; see **Menus vs theme locations** below |
 | Comments | list/get/update/delete `webo/*` | |
 | Reading / front | `webo/get-homepage-info` | |
 
 4. **Workflow (summary):** Discover types/tax → locate content → create **draft** by default → taxonomy/media/menu as needed → risky ops only after dry-run / confirmation → verify with `webo/get-post` or `link`. Same spirit as [wordpress-content (jezweb)](https://skills.sh/jezweb/claude-skills/wordpress-content).
 
-5. **WP-CLI analogues**
+5. **Menus vs theme locations:** MCP can list menus, list items, add items from posts/CPTs, and add **custom URLs** — but it cannot assign a menu to a **theme location** (e.g. *Primary*, *Main*). After using `webo/add-nav-menu-item-*`, ensure in **Appearance → Menus** (Manage Locations / menu settings) that the menu matching your `menu_id` is selected for the correct location; otherwise the header may not change. Full detail: [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md).
+
+6. **WP-CLI analogues**
 
 | WP-CLI | WEBO MCP |
 |--------|----------|
@@ -56,10 +58,11 @@ description: >-
 | `wp media import URL` | `webo/upload-media-from-url` |
 | `wp menu item add-post` | `webo/add-nav-menu-item-from-post` |
 | `wp menu item add-custom` | `webo/add-nav-menu-item-custom` |
+| `wp menu assign` (menu → theme location) | Not in MCP — admin or WP-CLI |
 | Featured | `webo/set-post-featured-image` |
 | Heavy ACF/meta | Abilities bridge or REST/WP-CLI |
 
-6. **Safety:** Default **`draft`**. Never **`search-replace-posts`** with `dry_run: false` without preview and user OK. Honor capability errors from WordPress.
+7. **Safety:** Default **`draft`**. Never **`search-replace-posts`** with `dry_run: false` without preview and user OK. Honor capability errors from WordPress.
 
 ## Examples
 
