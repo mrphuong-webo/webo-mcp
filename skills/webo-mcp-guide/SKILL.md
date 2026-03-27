@@ -39,7 +39,7 @@ description: >-
 | Single-file full tool table | `webo-mcp-wordpress-content` |
 | Rank Math SEO (`rankmath/*`, add-on **mcp-rank-math**) | `webo-mcp-rank-math` |
 
-6. **Safety (all skills):** Prefer **`draft`** for new content unless the user asks to publish. **`webo/list-posts`** defaults to **`status: publish`** and **`post_type: post`** — to list drafts or pages, pass **`status`** / **`post_type`** explicitly; check **`applied`** in the response if results are empty. Prefer that over sending users to wp-admin to filter drafts when MCP is available. **`webo/search-replace-posts`:** always **`dry_run: true`** first, then `false` only after user confirmation. **`webo/upload-media-from-url`:** public **http(s)** only (SSRF-hardened). **Menus:** **`menu_order` ≥ 1**; always inspect **`webo/list-nav-menu-items`** before adding items.
+6. **Safety (all skills):** Prefer **`draft`** for new content unless the user asks to publish. **`webo/list-posts`** defaults to **`status: publish`** and **`post_type: post`** — to list drafts or pages, pass **`status`** / **`post_type`** explicitly; check **`applied`** in the response if results are empty. Prefer that over sending users to wp-admin to filter drafts when MCP is available. **Rank Math per-post SEO:** use **`rankmath/get-meta`** and **`seo_title`** (see **`webo-mcp-rank-math`**) — not only **`webo/get-post`**. Prefer MCP over wp-admin Rank Math panels when the tool is listed. **`webo/search-replace-posts`:** always **`dry_run: true`** first, then `false` only after user confirmation. **`webo/upload-media-from-url`:** public **http(s)** only (SSRF-hardened). **Menus:** **`menu_order` ≥ 1**; always inspect **`webo/list-nav-menu-items`** before adding items.
 
 ## Examples
 

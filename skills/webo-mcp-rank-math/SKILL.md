@@ -4,8 +4,9 @@ description: >-
   WEBO MCP Rank Math SEO tools (rankmath/*): post/page SEO meta, global schema/publisher,
   options, modules, sitemap & llms.txt diagnostics, 404 logs, redirections. Requires the
   mcp-rank-math add-on plugin plus Rank Math SEO and WEBO MCP. Use when the user mentions
-  Rank Math, meta title/description, focus keyword, SEO audit, rankmath/get-meta,
-  rankmath/update-meta, redirects, 404 log, sitemap, llms.txt, or MCP SEO automation
+  Rank Math, SEO title for a post ID, meta title/description, focus keyword, SEO audit,
+  rankmath/get-meta, rankmath/update-meta, redirects, 404 log, sitemap, llms.txt,
+  or MCP SEO automation
   without the WordPress Abilities API stack.
 ---
 
@@ -30,7 +31,7 @@ Call **`tools/list`** on the site to confirm which `rankmath/*` tools are expose
 
 | `name` | Purpose |
 |--------|---------|
-| `rankmath/get-meta` | SEO fields for one post/page — argument **`id`** (post ID). |
+| `rankmath/get-meta` | SEO fields for one post/page — argument **`id`** (post ID). Response includes **`title`** (WordPress post title) and **`seo_title`** / **`seo_description`** / **`focus_keyword`** (Rank Math meta). Custom SEO title is **`seo_title`**; empty string usually means Rank Math uses the template/default (same as an empty field in the editor metabox). |
 | `rankmath/update-meta` | Update meta; pass only fields to change. Aliases: **`title`** → SEO title, **`description`** → meta description, **`keyword`** → focus keyword. Also: `robots` (array), `canonical_url`, `is_pillar`, `is_cornerstone`. |
 | `rankmath/bulk-get-meta` | Audit many items (`post_type`, `per_page`, `page`, optional `missing_desc`, `search`). |
 | `rankmath/list-options` | List `rank_math_*` / `rank-math-*` option names (`limit`, `offset`). |
@@ -54,6 +55,7 @@ Call **`tools/list`** on the site to confirm which `rankmath/*` tools are expose
 
 ## Rules for agents
 
+- **Per-post SEO title (common pitfall):** When the user gives a **post ID** and asks for **SEO title** / **Rank Math title** / **tiêu đề SEO**, call **`rankmath/get-meta`** with **`{ "id": <ID> }`** if that tool appears in **`tools/list`** (requires add-on **mcp-rank-math**). Report **`seo_title`** to the user. **`webo/get-post`** only returns the WordPress **`title`** — it does **not** replace Rank Math’s custom SEO title. **Do not** tell the user to open wp-admin → Rank Math metabox for a value you can read via MCP unless **`rankmath/get-meta`** is missing (then: activate **mcp-rank-math**, **`tools/list`**, or fix permissions).
 - **Discover IDs first:** use `webo/list-posts` / `webo/get-post` / `webo/get-content-by-slug` so **`rankmath/get-meta`** / **`update-meta`** get the correct **`id`**.
 - **Surgical updates:** for `rankmath/update-meta`, send **only** keys being changed (no “fill every field” payloads).
 - **Destructibles:** `clear-404-logs` and bulk `delete-*` need explicit user intent; require **`confirm`** where the tool specifies it.
@@ -62,13 +64,13 @@ Call **`tools/list`** on the site to confirm which `rankmath/*` tools are expose
 
 ## Examples
 
-Get SEO meta for post `123`:
+Get SEO meta for post **37** (SEO title is **`seo_title`** in the response; **`title`** is the regular post headline):
 
 ```json
 {
   "session_id": "<…>",
   "name": "rankmath/get-meta",
-  "arguments": { "id": 123 }
+  "arguments": { "id": 37 }
 }
 ```
 
