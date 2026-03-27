@@ -50,6 +50,7 @@ For **Cursor**, **Codex**, or other agents that support project skills: a mainta
 
 - **Documentation:** [skills/README.md](skills/README.md)
 - **Skills:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md) (full map), [skills/webo-mcp-menu-creation/SKILL.md](skills/webo-mcp-menu-creation/SKILL.md) (create & assign menus)
+- **Rank Math (optional add-on):** [mcp-rank-math/](mcp-rank-math/) — sibling plugin that registers `rankmath/*` tools on WEBO MCP, aligned with [mcp-abilities-rankmath](https://github.com/bjornfix/mcp-abilities-rankmath) without the Abilities API stack
 - **Install via [skills](https://github.com/vercel-labs/skills) CLI:**  
   `npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-wordpress-content -a cursor -g -y`  
   (change `-a cursor` for your agent; use `--list` to preview.)

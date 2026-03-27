@@ -1,9 +1,9 @@
 <?php
 /**
- * Example addon plugin snippet.
+ * Minimal Rank Math tool registration example.
  *
- * This file demonstrates how third-party plugins register tools
- * without editing WEBO MCP plugin.
+ * For production parity with https://github.com/bjornfix/mcp-abilities-rankmath
+ * (23 `rankmath/*` tools), use the bundled add-on in `../mcp-rank-math/`.
  */
 
 namespace WeboMCP\Addon\RankMath;
