@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.24
+ * Version: 2.0.25
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -330,7 +330,7 @@ function webo_mcp_register_standalone_core_tools() {
 	$tools = array(
 		array(
 			'name'        => 'webo/list-posts',
-			'description' => 'List WordPress posts',
+			'description' => 'List posts by type and status. Defaults: post_type post, status publish — drafts/pages will NOT appear unless you set status (e.g. draft, pending, future, private) and post_type (e.g. page). Use status any for all statuses the current user may query (excludes trash). Response includes applied echo of filters used.',
 			'category'    => 'wordpress',
 			'arguments'   => array(
 				'per_page'  => array( 'type' => 'integer', 'required' => false, 'default' => 10, 'min' => 1, 'max' => 100 ),

@@ -38,7 +38,7 @@ description: >-
 | SEO-style post workflow + `webo/create-post` | `webo-write-post-instruction` |
 | Single-file full tool table | `webo-mcp-wordpress-content` |
 
-6. **Safety (all skills):** Prefer **`draft`** for new content unless the user asks to publish. **`webo/search-replace-posts`:** always **`dry_run: true`** first, then `false` only after user confirmation. **`webo/upload-media-from-url`:** public **http(s)** only (SSRF-hardened). **Menus:** **`menu_order` ≥ 1**; always inspect **`webo/list-nav-menu-items`** before adding items.
+6. **Safety (all skills):** Prefer **`draft`** for new content unless the user asks to publish. **`webo/list-posts`** defaults to **`status: publish`** and **`post_type: post`** — to list drafts or pages, pass **`status`** / **`post_type`** explicitly; check **`applied`** in the response if results are empty. **`webo/search-replace-posts`:** always **`dry_run: true`** first, then `false` only after user confirmation. **`webo/upload-media-from-url`:** public **http(s)** only (SSRF-hardened). **Menus:** **`menu_order` ≥ 1**; always inspect **`webo/list-nav-menu-items`** before adding items.
 
 ## Examples
 

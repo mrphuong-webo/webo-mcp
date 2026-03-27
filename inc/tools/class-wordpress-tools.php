@@ -41,9 +41,15 @@ class WordPressTools {
 		}
 
 		return array(
-			'items' => $items,
-			'total' => count( $items ),
-			'tool'  => 'webo/list-posts',
+			'items'   => $items,
+			'total'   => count( $items ),
+			'tool'    => 'webo/list-posts',
+			'applied' => array(
+				'post_type' => $post_type,
+				'status'    => $status,
+				'per_page'  => max( 1, min( 100, $per_page ) ),
+				'search'    => $search,
+			),
 		);
 	}
 

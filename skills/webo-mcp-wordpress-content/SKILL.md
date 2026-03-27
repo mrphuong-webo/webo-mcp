@@ -30,7 +30,7 @@ description: >-
 | Task | `name` | Notes |
 |------|--------|--------|
 | List / discover CPTs | `webo/discover-content-types` | Public types |
-| List posts | `webo/list-posts` | `post_type`, `status`, `search`, `per_page` ≤ 100 |
+| List posts | `webo/list-posts` | Default **`status` publish** + **`post_type` post** — bài nháp / trang cần `status: draft` (v.v.) và `post_type: page`. Phản hồi có **`applied`** echo bộ lọc đã dùng. |
 | Read post | `webo/get-post` | optional `post_type` check |
 | By URL | `webo/find-content-by-url` | optional `update` |
 | By slug | `webo/get-content-by-slug` | optional `post_type` |

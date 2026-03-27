@@ -132,6 +132,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.25 =
+* list-posts: document defaults (publish + post type post); response includes applied filters so empty results are easier to explain. Models should pass status draft (etc.) and post_type page when listing those.
+
 = 2.0.24 =
 * Nav menus: list-nav-menu-locations response includes note explaining slug vs label; MCP descriptions tell models to call this tool first to discover theme_location keys.
 
