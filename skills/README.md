@@ -13,6 +13,7 @@ Skills trong thư mục này được **version trong git** và có thể chia s
 | [webo-mcp-ability-comments](webo-mcp-ability-comments/SKILL.md) | Comment |
 | [webo-mcp-ability-menus](webo-mcp-ability-menus/SKILL.md) | Menu điều hướng (bảng tool) |
 | [webo-mcp-menu-creation](webo-mcp-menu-creation/SKILL.md) | **Tạo / gán menu** — nhiều luồng, discover `theme_location`, ví dụ `tools/call` |
+| [webo-mcp-rank-math](webo-mcp-rank-math/SKILL.md) | **Rank Math SEO** qua plugin `mcp-rank-math`: `rankmath/*` (meta, options, redirect, 404, sitemap, llms.txt) |
 | [webo-mcp-ability-users](webo-mcp-ability-users/SKILL.md) | List user |
 | [webo-mcp-ability-site](webo-mcp-ability-site/SKILL.md) | Plugin, options an toàn |
 | [webo-mcp-wordpress-content](webo-mcp-wordpress-content/SKILL.md) | **Một file** đầy đủ bảng tool + schema (tiếng Anh, tham chiếu nhanh) |

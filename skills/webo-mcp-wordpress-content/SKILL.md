@@ -45,6 +45,7 @@ description: >-
 | Menus | `webo/list-nav-menus`, **`webo/list-nav-menu-locations`**, `webo/list-nav-menu-items`, **`webo/create-nav-menu`**, **`webo/create-nav-menu-for-location`**, **`webo/assign-nav-menu-to-location`**, `webo/add-nav-menu-item-from-post`, `webo/add-nav-menu-item-custom` | **View** lists: `edit_posts`. **Mutations:** `edit_theme_options`. `menu_order` ≥ 1 for add-item |
 | Comments | list/get/update/delete `webo/*` | |
 | Reading / front | `webo/get-homepage-info` | |
+| Rank Math SEO | `rankmath/*` (add-on **mcp-rank-math**) | meta, schema, sitemap, 404, redirections — [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md) |
 
 4. **Workflow (summary):** Discover types/tax → locate content → create **draft** by default → taxonomy/media/menu as needed → risky ops only after dry-run / confirmation → verify with `webo/get-post` or `link`. Same spirit as [wordpress-content (jezweb)](https://skills.sh/jezweb/claude-skills/wordpress-content).
 
