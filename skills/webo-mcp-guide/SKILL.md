@@ -40,6 +40,7 @@ description: >-
 | Single-file full tool table | `webo-mcp-wordpress-content` |
 | Rank Math SEO (`webo-rank-math/*`, addon **[webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math)** — must be activated) | `webo-mcp-rank-math` |
 | SEO plan, content strategy, topical clusters, roadmap (MCP-backed) | `webo-mcp-seo-plan` |
+| Agentic SEO suite index (AEO, audit, schema, sitemap, technical, …) | `webo-mcp-seo-agentic` |
 
 5a. **Reviewing post / page content (common pitfall).** When the user asks to **re-read**, **review**, or **“xem lại nội dung”** of a WordPress post that is tied to this MCP session, **read it via `tools/call`**—do **not** say you cannot open the live site in a browser unless MCP is actually disconnected or **`tools/list`** lacks read tools. **Typical flow:** `**webo/get-post**` with **`post_id`** if they gave an ID → response includes **`content`**, **`title`**, **`excerpt`**, **`status`**. If they gave a **URL** (any path on the site): **`webo/find-content-by-url`** with **`url`**. If they gave a **slug**: **`webo/get-content-by-slug`**. If you only have a title or need to discover IDs: **`webo/list-posts`** (set **`status`** / **`post_type`** correctly, e.g. **`draft`** for drafts). Only tell the user access is impossible after **`tools/list`** shows those tools are unavailable or auth returns **403**.
 

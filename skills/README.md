@@ -14,7 +14,10 @@ Skills trong thư mục này được **version trong git** và có thể chia s
 | [webo-mcp-ability-menus](webo-mcp-ability-menus/SKILL.md) | Menu điều hướng (bảng tool) |
 | [webo-mcp-menu-creation](webo-mcp-menu-creation/SKILL.md) | **Tạo / gán menu** — nhiều luồng, discover `theme_location`, ví dụ `tools/call` |
 | [webo-mcp-rank-math](webo-mcp-rank-math/SKILL.md) | **Rank Math SEO** qua addon [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) (**phải kích hoạt**): `webo-rank-math/*` (meta, options, modules, redirections) |
+| [webo-mcp-seo-agentic](webo-mcp-seo-agentic/SKILL.md) | **Mục lục Agentic SEO** — bản adapt các `seo-*` từ [Agentic-SEO-Skill](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/tree/main/resources/skills); mỗi chủ đề một skill `webo-mcp-seo-*` bên dưới |
 | [webo-mcp-seo-plan](webo-mcp-seo-plan/SKILL.md) | **Kế hoạch / chiến lược SEO** (discovery → roadmap) gắn với `webo/*` và tùy chọn `webo-rank-math/*` |
+
+**Agentic SEO theo chủ đề:** [webo-mcp-seo-aeo](webo-mcp-seo-aeo/SKILL.md), [webo-mcp-seo-article](webo-mcp-seo-article/SKILL.md), [webo-mcp-seo-audit](webo-mcp-seo-audit/SKILL.md), [webo-mcp-seo-competitor-pages](webo-mcp-seo-competitor-pages/SKILL.md), [webo-mcp-seo-content](webo-mcp-seo-content/SKILL.md), [webo-mcp-seo-geo](webo-mcp-seo-geo/SKILL.md), [webo-mcp-seo-github](webo-mcp-seo-github/SKILL.md), [webo-mcp-seo-hreflang](webo-mcp-seo-hreflang/SKILL.md), [webo-mcp-seo-images](webo-mcp-seo-images/SKILL.md), [webo-mcp-seo-links](webo-mcp-seo-links/SKILL.md), [webo-mcp-seo-page](webo-mcp-seo-page/SKILL.md), [webo-mcp-seo-programmatic](webo-mcp-seo-programmatic/SKILL.md), [webo-mcp-seo-schema](webo-mcp-seo-schema/SKILL.md), [webo-mcp-seo-sitemap](webo-mcp-seo-sitemap/SKILL.md), [webo-mcp-seo-technical](webo-mcp-seo-technical/SKILL.md).
 | [webo-mcp-ability-users](webo-mcp-ability-users/SKILL.md) | List user |
 | [webo-mcp-ability-site](webo-mcp-ability-site/SKILL.md) | Plugin, options an toàn |
 | [webo-mcp-wordpress-content](webo-mcp-wordpress-content/SKILL.md) | **Một file** đầy đủ bảng tool + schema (tiếng Anh, tham chiếu nhanh) |

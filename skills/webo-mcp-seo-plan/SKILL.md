@@ -14,6 +14,8 @@ description: >-
 
 Strategic SEO planning workflow aligned with [Agentic-SEO-Skill **seo-plan**](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blob/main/resources/skills/seo-plan.md): discovery → competitive lens → architecture → content → technical foundation → phased roadmap. **Difference:** deliverables are produced in conversation (or user-chosen files); **site changes** go through **[`webo-mcp-guide`](../webo-mcp-guide/SKILL.md)** (`initialize`, `tools/list`, `tools/call`). There are **no** bundled `resources/templates/` or Python scripts in this repo—use MCP for WordPress, plus normal research (SERP, spreadsheets, competitor URLs) where stated.
 
+**Other Agentic topics (AEO, technical, schema, …):** see **[`webo-mcp-seo-agentic`](../webo-mcp-seo-agentic/SKILL.md)** for the full index of adapted skills.
+
 ## Prerequisites
 
 1. **[`webo-mcp-guide`](../webo-mcp-guide/SKILL.md)** — session, auth, capability errors.
