@@ -1,9 +1,10 @@
 <?php
 /**
- * Minimal Rank Math tool registration example.
+ * Minimal custom tool registration example (webo_mcp_register_tools).
  *
- * For production parity with https://github.com/bjornfix/mcp-abilities-rankmath
- * (23 `rankmath/*` tools), use the bundled add-on in `../mcp-rank-math/`.
+ * For Rank Math SEO on production sites, install and activate the addon plugin
+ * https://github.com/mrphuong-webo/webo-mcp-rank-math — it registers Abilities
+ * `webo-rank-math/*` which WEBO MCP bridges to MCP tools (see skills/webo-mcp-rank-math).
  */
 
 namespace WeboMCP\Addon\RankMath;

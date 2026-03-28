@@ -290,6 +290,9 @@ function webo_mcp_register_wordpress_abilities() {
 /**
  * Whether ability should be bridged into MCP tools by default.
  *
+ * Names matching `webo_mcp_bridge_deny_patterns` are denied unless a filter on
+ * `webo_mcp_should_bridge_ability` overrides the decision (e.g. addon allowlist).
+ *
  * @param string $ability_name Ability name.
  * @return bool
  */
@@ -309,16 +312,18 @@ function webo_mcp_should_bridge_ability( string $ability_name ) {
 		)
 	);
 
+	$denied = false;
 	if ( is_array( $deny_patterns ) ) {
 		foreach ( $deny_patterns as $pattern ) {
 			$pattern = trim( (string) $pattern );
 			if ( '' !== $pattern && false !== strpos( $ability_name, $pattern ) ) {
-				return false;
+				$denied = true;
+				break;
 			}
 		}
 	}
 
-	return true;
+	return (bool) apply_filters( 'webo_mcp_should_bridge_ability', ! $denied, $ability_name );
 }
 
 /**

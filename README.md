@@ -50,14 +50,14 @@ For **Cursor**, **Codex**, or other agents that support project skills: a mainta
 
 - **Documentation:** [skills/README.md](skills/README.md)
 - **Skills:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md) (full map), [skills/webo-mcp-menu-creation/SKILL.md](skills/webo-mcp-menu-creation/SKILL.md) (create & assign menus)
-- **Rank Math (optional add-on):** [mcp-rank-math/](mcp-rank-math/) — sibling plugin that registers `rankmath/*` tools on WEBO MCP, aligned with [mcp-abilities-rankmath](https://github.com/bjornfix/mcp-abilities-rankmath) without the Abilities API stack
+- **Rank Math (optional add-on):** [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) — install and activate on the WordPress site alongside WEBO MCP and [Rank Math SEO](https://rankmath.com/); exposes **`webo-rank-math/*`** tools via the [Abilities API](https://github.com/WordPress/abilities-api) bridge
 - **Install via [skills](https://github.com/vercel-labs/skills) CLI:**  
   `npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-wordpress-content -a cursor -g -y`  
   (change `-a cursor` for your agent; use `--list` to preview.)
 
 ## AI training references
 
-- MCP method schema and examples: use this file + `examples/addon-rankmath-example.php`
+- MCP method schema and examples: use this file + `examples/addon-rankmath-example.php` (minimal custom `webo_mcp_register_tools` demo; production Rank Math automation uses the [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) addon)
 - Internal/public policy filters for training data:
   - `webo_mcp_allow_internal_tools`
   - `webo_mcp_public_categories`
@@ -265,18 +265,7 @@ ToolRegistry::register([
 
 ## Register tools from addon plugin
 
-```php
-add_action('webo_mcp_register_tools', function () {
-    ToolRegistry::register([
-        'name' => 'rankmath/get-keywords',
-        'description' => 'Get RankMath focus keywords',
-        'category' => 'seo',
-        'callback' => [RankMathTools::class, 'get_keywords'],
-    ]);
-});
-```
-
-See full example: `examples/addon-rankmath-example.php`
+Third-party plugins can register **`webo_mcp_register_tools`** callbacks (see `examples/addon-rankmath-example.php` for a minimal pattern). Rank Math SEO integration is maintained as a separate addon: **[webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math)** (**must be activated** on the site); it registers WordPress Abilities named **`webo-rank-math/*`**, which WEBO MCP bridges into **`tools/list`** automatically.
 
 ## tools/list output format
 
