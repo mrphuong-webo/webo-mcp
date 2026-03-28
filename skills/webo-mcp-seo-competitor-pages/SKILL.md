@@ -14,7 +14,7 @@ Upstream: [seo-competitor-pages.md](https://github.com/Bhanunamikaze/Agentic-SEO
 
 | Page type | URL pattern | Minimum unique copy |
 |-----------|-------------|---------------------|
-| Head-to-head | `/vs/[competitor]/` hoặc `/[you]-vs-[them]/` | 800+ words, real feature matrix |
+| Head-to-head | `/vs/[competitor]/` or `/[you]-vs-[them]/` | 800+ words, real feature matrix |
 | Alternatives | `/[competitor]-alternatives/` | 12+ tools, 150+ words each |
 | Best-of | `/best-[category]-tools/` | 8+ items, methodology |
 | Migration | `/migrate-from-[competitor]/` | Step-by-step + honest limits |
@@ -25,10 +25,10 @@ Upstream: [seo-competitor-pages.md](https://github.com/Bhanunamikaze/Agentic-SEO
 - Trademark fair use disclaimer (bottom).
 - Last updated + editorial methodology (no fake “unbiased”).
 - Structured comparison table; internal links to docs/pricing.
-- JSON-LD: WebPage + optional ItemList/Products với truthful data only — xem [`webo-mcp-seo-schema`](../webo-mcp-seo-schema/SKILL.md).
+- JSON-LD: WebPage + optional ItemList/Products with truthful data only — see [`webo-mcp-seo-schema`](../webo-mcp-seo-schema/SKILL.md).
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/create-post`** / **`webo/update-post`**; slug theo pattern. Rank Math: [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md).
+[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/create-post`** / **`webo/update-post`**; slug per pattern. Rank Math: [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md).
 
-**`comparison_page_builder.py`** — chỉ trong upstream; dùng LLM + bảng Markdown trong WordPress nếu không clone repo.
+**`comparison_page_builder.py`** — upstream only; use the LLM + Markdown tables in WordPress if you do not clone the repo.

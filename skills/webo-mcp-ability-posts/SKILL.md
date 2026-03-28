@@ -32,7 +32,7 @@ description: >-
 | `webo/search-replace-posts` | edit_posts | `search`; `replace`, `dry_run` (default true), `offset`, `max_scan_posts` 1–500 |
 | `webo/set-post-featured-image` | edit_posts | `post_id` + `attachment_id`, or `remove: true` |
 
-3. **Rules:** To **review** saved body/HTML (“xem lại nội dung”), use **`webo/get-post`**, **`webo/find-content-by-url`**, or **`webo/get-content-by-slug`** when listed—do not claim the site is unreachable if MCP targets that WordPress. `content` is stored after **`wp_kses_post`**. Never set **`dry_run: false`** on search-replace without a prior dry run and user confirmation. Spot-check `post_ids` before bulk status changes.
+3. **Rules:** To **review** saved body/HTML, use **`webo/get-post`**, **`webo/find-content-by-url`**, or **`webo/get-content-by-slug`** when listed—do not claim the site is unreachable if MCP targets that WordPress. `content` is stored after **`wp_kses_post`**. Never set **`dry_run: false`** on search-replace without a prior dry run and user confirmation. Spot-check `post_ids` before bulk status changes.
 
 ## Examples
 

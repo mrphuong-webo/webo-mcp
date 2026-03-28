@@ -28,7 +28,7 @@ Upstream: [seo-content.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/bl
 
 - Clear entity strings; FAQ-style H2; distinct statistics; quotable definitions in first ~100 words of sections.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
 [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/list-posts`**, **`webo/get-post`**, **`webo/update-post`** for body/excerpt/author fields if exposed. Media & menus per skill.
 

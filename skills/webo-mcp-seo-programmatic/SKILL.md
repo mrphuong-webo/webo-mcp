@@ -21,10 +21,10 @@ Upstream: [seo-programmatic.md](https://github.com/Bhanunamikaze/Agentic-SEO-Ski
 - Merge fields: `{city}`, `{use_case}`, `{integration_name}` — min unique % per page.
 - Consistent title/H1/Meta formula + distinct intro + localized facts where applicable.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-Bulk pages: **`webo/create-post`** / **`webo/update-post`** từ template (automation ngoài MCP hoặc loop tool calls). 
+Bulk pages: **`webo/create-post`** / **`webo/update-post`** from a template (automation outside MCP or repeated tool calls).
 
-Sitemap/architecture: [`webo-mcp-seo-sitemap`](../webo-mcp-seo-sitemap/SKILL.md). Chiến lược tổng: [`webo-mcp-seo-plan`](../webo-mcp-seo-plan/SKILL.md).
+Sitemap/architecture: [`webo-mcp-seo-sitemap`](../webo-mcp-seo-sitemap/SKILL.md). Overall strategy: [`webo-mcp-seo-plan`](../webo-mcp-seo-plan/SKILL.md).
 
 **`generate_pages.py`**, **`validate_uniqueness.py`** — upstream.

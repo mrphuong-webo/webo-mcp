@@ -11,7 +11,7 @@ Upstream: [seo-links.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blob
 
 ## Internal (condensed)
 
-- Hub & spoke: pillar → clusters với keyword-rich anchor (natural).
+- Hub & spoke: pillar → clusters with keyword-rich anchors (natural).
 - Orphan detection: pages 0 internal inlinks — link from hub/related posts.
 - Depth: important content within ~3 clicks from home (context-dependent).
 
@@ -21,12 +21,12 @@ Upstream: [seo-links.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blob
 
 ## External / backlinks
 
-- MCP không phục vụ backlinks; dùng GSC/Ahrefs/outsourced lists — skill upstream `backlink_analysis.py`.
+- MCP does not cover backlinks; use GSC/Ahrefs/outside lists — upstream skill `backlink_analysis.py`.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/list-posts`**, **`webo/get-post`**, **`webo/update-post`** để chèn internal links trong HTML body.
+[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/list-posts`**, **`webo/get-post`**, **`webo/update-post`** to add internal links in the HTML body.
 
-Menu site-wide: skill menus trong wordpress-content.
+Site-wide menus: see the menu skills in wordpress-content.
 
 **`link_analyzer.py`**, **`broken_links.py`** — upstream.

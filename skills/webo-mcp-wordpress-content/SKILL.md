@@ -30,7 +30,7 @@ description: >-
 | Task | `name` | Notes |
 |------|--------|--------|
 | List / discover CPTs | `webo/discover-content-types` | Public types |
-| List posts | `webo/list-posts` | Default **`status` publish** + **`post_type` post** — bài nháp / trang cần `status: draft` (v.v.) và `post_type: page`. Phản hồi có **`applied`** echo bộ lọc đã dùng. |
+| List posts | `webo/list-posts` | Default **`status` publish** + **`post_type` post** — drafts / pages need `status: draft` (etc.) and `post_type: page`. Response includes **`applied`** echoing the filters used. |
 | Read post | `webo/get-post` | optional `post_type` check |
 | Duplicate drafts / same body | `webo/find-duplicate-posts` | Default **`status` draft**, **`match` content** (exact match after normalize: strip tags, collapse space, lower case). Also **`title`**, **`title_and_content`**; **`max_posts`**, **`offset`**; **`skip_empty`**. Not fuzzy similarity. |
 | By URL | `webo/find-content-by-url` | optional `update` |
@@ -51,7 +51,7 @@ description: >-
 
 **3a. Listing drafts (common pitfall).** `webo/create-post` defaults new content to **draft**, but **`webo/list-posts` defaults to `status: publish`** and **`post_type: post`** in the plugin ([`WordPressTools::list_posts`](../../inc/tools/class-wordpress-tools.php)). So “no drafts returned” usually means the agent omitted **`status`**. **Do not** tell the user to use wp-admin **Posts → Drafts** when MCP is connected and they have `edit_posts` — call the tool instead. Examples:
 
-- Draft **posts** (tương đương wp-admin “Bài viết → Nháp”):
+- Draft **posts** (same as wp-admin **Posts → Drafts**):
 
 ```json
 {
@@ -64,7 +64,7 @@ description: >-
 
 If `items` is empty, confirm **`applied.status`** and **`applied.post_type`** in the response before assuming there are no drafts.
 
-**3b. Reviewing / reading back content.** For “xem lại nội dung” / QA / verify what was saved: use MCP, not “I cannot browse the site.”
+**3b. Reviewing / reading back content.** For QA / verifying what was saved: use MCP, not “I cannot browse the site.”
 
 | User gives | `tools/call` |
 |------------|----------------|

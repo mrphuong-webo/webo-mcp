@@ -17,8 +17,8 @@ Upstream: [seo-article.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/bl
 3. **Recommendations** — priority + before/after where applicable.
 4. **Rewrite mode** — optional polished blocks while preserving facts/links.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/find-content-by-url`** hoặc **`webo/get-post`** → **`webo/update-post`** (title, content, excerpt). Media: **`webo/upload-media-from-url`**, **`webo/set-post-featured-image`**. Rank Math title/description: [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md).
+[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/find-content-by-url`** or **`webo/get-post`** → **`webo/update-post`** (title, content, excerpt). Media: **`webo/upload-media-from-url`**, **`webo/set-post-featured-image`**. Rank Math title/description: [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md).
 
-**`article_seo.py`** upstream — không có trong webo-mcp; dùng LLM + MCP hoặc clone Agentic repo.
+**`article_seo.py`** is upstream only — not bundled in webo-mcp; use the LLM + MCP workflow or clone the Agentic repo.

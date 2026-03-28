@@ -19,10 +19,10 @@ Upstream: [seo-hreflang.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/b
 - Align with **canonical** (no cross-region canonical to one URL unless true duplicate).
 - HTML `<link rel="alternate" hreflang="...">`, HTTP header, or XML sitemap — be consistent.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-WordPress: thường **WPML / Polylang / Multisite** — hreflang thường do plugin/theme phát sinh; MCP chỉnh **`webo/update-post`** cho nội dung từng ngôn ngữ nếu URL đã đúng.
+WordPress: usually **WPML / Polylang / Multisite** — hreflang usually comes from the plugin/theme; MCP can adjust **`webo/update-post`** for each locale’s content when URLs are already correct.
 
-Kiểm tra HTTP/HTML: script upstream **`hreflang_checker.py`** hoặc crawl ngoài.
+HTTP/HTML checks: upstream script **`hreflang_checker.py`** or an external crawl.
 
-Kết hợp audit: [`webo-mcp-seo-technical`](../webo-mcp-seo-technical/SKILL.md), [`webo-mcp-seo-sitemap`](../webo-mcp-seo-sitemap/SKILL.md).
+Combine with: [`webo-mcp-seo-technical`](../webo-mcp-seo-technical/SKILL.md), [`webo-mcp-seo-sitemap`](../webo-mcp-seo-sitemap/SKILL.md).

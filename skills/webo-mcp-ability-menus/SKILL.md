@@ -8,13 +8,13 @@ description: >-
 
 # WEBO MCP — Navigation menus
 
-**Workflow đa bước (tạo menu, gán vị trí, ví dụ nhiều cách):** xem [`webo-mcp-menu-creation`](../webo-mcp-menu-creation/SKILL.md).
+**Multi-step workflows (create menu, assign location, several patterns):** see [`webo-mcp-menu-creation`](../webo-mcp-menu-creation/SKILL.md).
 
 ## Instructions
 
 ### Listing menus vs listing items inside a menu
 
-- **User asks “list menus” / “danh sách menu” / “what menus exist”:** call **`webo/list-nav-menus`** with **no arguments**. Do **not** ask the user for `menu_id`. The response includes each menu’s **`menu_id`** and **`term_id`** (the same number — WordPress `nav_menu` term ID).
+- **User asks to list menus / “what menus exist”:** call **`webo/list-nav-menus`** with **no arguments**. Do **not** ask the user for `menu_id`. The response includes each menu’s **`menu_id`** and **`term_id`** (the same number — WordPress `nav_menu` term ID).
 - **User asks for links/items inside a specific menu:** call **`webo/list-nav-menu-items`** with **`menu_id`** taken from **`webo/list-nav-menus`** (or from **`webo/list-nav-menu-locations`** → `assigned` → `menu_id`).
 
 1. **Prerequisite:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md).

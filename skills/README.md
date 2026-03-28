@@ -1,61 +1,61 @@
 # Public agent skills (WEBO MCP)
 
-Skills trong thư mục này được **version trong git** và có thể chia sẻ an toàn (khác `.cursor/*` thường bị ignore).
+Skills in this directory are **versioned in git** and safe to share (unlike `.cursor/*`, which is often gitignored).
 
-## Cấu trúc
+## Layout
 
-| Skill | Mục đích |
-|-------|----------|
-| **[webo-mcp-guide](webo-mcp-guide/SKILL.md)** | Hướng dẫn **chung**: MCP flow, auth, Abilities bridge, chọn skill con. **Đọc trước.** |
-| [webo-mcp-extensions](webo-mcp-extensions/SKILL.md) | **Core vs companion plugins** — quy ước tên package/tool (`webo/*`, `webo-rank-math/*`), hook mở rộng, map skill ↔ plugin |
-| [webo-mcp-wordpress-content](webo-mcp-wordpress-content/SKILL.md) | **Một file** đầy đủ bảng `webo/*` + schema (tiếng Anh, tham chiếu nhanh) |
-| [webo-mcp-ability-posts](webo-mcp-ability-posts/SKILL.md) | Bài viết, trang, CPT, revision, search-replace, homepage, … |
-| [webo-mcp-ability-media](webo-mcp-ability-media/SKILL.md) | Media library, upload URL |
-| [webo-mcp-ability-taxonomy](webo-mcp-ability-taxonomy/SKILL.md) | Taxonomy, term, gán term |
-| [webo-mcp-ability-comments](webo-mcp-ability-comments/SKILL.md) | Comment |
-| [webo-mcp-ability-menus](webo-mcp-ability-menus/SKILL.md) | Menu điều hướng (bảng tool) |
-| [webo-mcp-menu-creation](webo-mcp-menu-creation/SKILL.md) | **Tạo / gán menu** — discover `theme_location`, ví dụ `tools/call` |
-| [webo-mcp-ability-users](webo-mcp-ability-users/SKILL.md) | List user |
-| [webo-mcp-ability-site](webo-mcp-ability-site/SKILL.md) | Plugin (`webo/list-active-plugins`, …), options an toàn |
-| [webo-mcp-rank-math](webo-mcp-rank-math/SKILL.md) | **Rank Math** qua [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) (**bật addon**): `webo-rank-math/*` |
-| [webo-mcp-seo-agentic](webo-mcp-seo-agentic/SKILL.md) | **Mục lục Agentic SEO** → các skill `webo-mcp-seo-*` |
-| [webo-mcp-seo-plan](webo-mcp-seo-plan/SKILL.md) | Chiến lược SEO + roadmap (`webo/*`, tùy chọn `webo-rank-math/*`) |
-| [webo-write-post-instruction](webo-write-post-instruction/SKILL.md) | Workflow viết bài SEO + `webo/create-post` (tiếng Việt) |
+| Skill | Purpose |
+|-------|---------|
+| **[webo-mcp-guide](webo-mcp-guide/SKILL.md)** | **General** guide: MCP flow, auth, Abilities bridge, picking child skills. **Read first.** |
+| [webo-mcp-extensions](webo-mcp-extensions/SKILL.md) | **Core vs companion plugins** — package/tool naming (`webo/*`, `webo-rank-math/*`), extension hooks, skill ↔ plugin map |
+| [webo-mcp-wordpress-content](webo-mcp-wordpress-content/SKILL.md) | **Single file** with full `webo/*` table + schema (English, quick reference) |
+| [webo-mcp-ability-posts](webo-mcp-ability-posts/SKILL.md) | Posts, pages, CPTs, revisions, search-replace, homepage, … |
+| [webo-mcp-ability-media](webo-mcp-ability-media/SKILL.md) | Media library, URL upload |
+| [webo-mcp-ability-taxonomy](webo-mcp-ability-taxonomy/SKILL.md) | Taxonomies, terms, assign terms |
+| [webo-mcp-ability-comments](webo-mcp-ability-comments/SKILL.md) | Comments |
+| [webo-mcp-ability-menus](webo-mcp-ability-menus/SKILL.md) | Navigation menus (tool table) |
+| [webo-mcp-menu-creation](webo-mcp-menu-creation/SKILL.md) | **Create / assign menus** — discover `theme_location`, `tools/call` examples |
+| [webo-mcp-ability-users](webo-mcp-ability-users/SKILL.md) | List users |
+| [webo-mcp-ability-site](webo-mcp-ability-site/SKILL.md) | Plugins (`webo/list-active-plugins`, …), safe options |
+| [webo-mcp-rank-math](webo-mcp-rank-math/SKILL.md) | **Rank Math** via [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) (**enable addon**): `webo-rank-math/*` |
+| [webo-mcp-seo-agentic](webo-mcp-seo-agentic/SKILL.md) | **Agentic SEO index** → `webo-mcp-seo-*` skills |
+| [webo-mcp-seo-plan](webo-mcp-seo-plan/SKILL.md) | SEO strategy + roadmap (`webo/*`, optional `webo-rank-math/*`) |
+| [webo-write-post-instruction](webo-write-post-instruction/SKILL.md) | SEO post workflow + `webo/create-post` |
 
-### Agentic SEO (theo chủ đề)
+### Agentic SEO (by topic)
 
 [webo-mcp-seo-aeo](webo-mcp-seo-aeo/SKILL.md), [webo-mcp-seo-article](webo-mcp-seo-article/SKILL.md), [webo-mcp-seo-audit](webo-mcp-seo-audit/SKILL.md), [webo-mcp-seo-competitor-pages](webo-mcp-seo-competitor-pages/SKILL.md), [webo-mcp-seo-content](webo-mcp-seo-content/SKILL.md), [webo-mcp-seo-geo](webo-mcp-seo-geo/SKILL.md), [webo-mcp-seo-github](webo-mcp-seo-github/SKILL.md), [webo-mcp-seo-hreflang](webo-mcp-seo-hreflang/SKILL.md), [webo-mcp-seo-images](webo-mcp-seo-images/SKILL.md), [webo-mcp-seo-links](webo-mcp-seo-links/SKILL.md), [webo-mcp-seo-page](webo-mcp-seo-page/SKILL.md), [webo-mcp-seo-programmatic](webo-mcp-seo-programmatic/SKILL.md), [webo-mcp-seo-schema](webo-mcp-seo-schema/SKILL.md), [webo-mcp-seo-sitemap](webo-mcp-seo-sitemap/SKILL.md), [webo-mcp-seo-technical](webo-mcp-seo-technical/SKILL.md).
 
-Layout tương thích [skills CLI](https://github.com/vercel-labs/skills) (`skills/*/SKILL.md`).
+Layout matches the [skills CLI](https://github.com/vercel-labs/skills) (`skills/*/SKILL.md`).
 
-## Chuẩn authoring (Cursor / Agent Skills)
+## Authoring standard (Cursor / Agent Skills)
 
-Mỗi `SKILL.md` gồm **YAML frontmatter** bắt buộc: `name` (chữ thường, gạch ngang, ≤64 ký tự), `description` (≤1024 ký tự, **ngôi thứ ba**, đủ **WHAT** + **WHEN**, có từ khóa trigger như `webo-mcp`, `tools/call`). Phần thân dùng **`## Instructions`** (bước, quy tắc, bảng tool) và **`## Examples`** (JSON mẫu). Chi tiết: [Creating Skills in Cursor](https://cursor.com/docs/context/skills) và skill `create-skill` trong editor.
+Each `SKILL.md` needs **YAML frontmatter**: `name` (lowercase, hyphens, ≤64 chars), `description` (≤1024 chars, **third person**, **WHAT** + **WHEN**, trigger keywords like `webo-mcp`, `tools/call`). Body uses **`## Instructions`** (steps, rules, tool tables) and **`## Examples`** (sample JSON). Details: [Creating Skills in Cursor](https://cursor.com/docs/context/skills) and the editor’s `create-skill` skill.
 
-## Cài bằng `npx skills`
+## Install with `npx skills`
 
-Liệt kê skill trong repo:
+List skills in the repo:
 
 ```bash
 npx skills add https://github.com/mrphuong-webo/webo-mcp --list
 ```
 
-Cài **một** skill (ví dụ guide chung) vào Cursor global:
+Install **one** skill (e.g. the main guide) into Cursor globally:
 
 ```bash
 npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-guide -a cursor -g -y
 ```
 
-Đổi `--skill` thành `webo-mcp-ability-posts`, `webo-mcp-wordpress-content`, v.v.
+Change `--skill` to `webo-mcp-ability-posts`, `webo-mcp-wordpress-content`, etc.
 
-## Cursor (thủ công)
+## Cursor (manual)
 
-Sao chép thư mục skill (giữ `SKILL.md`) vào:
+Copy the skill folder (keep `SKILL.md`) to:
 
-- Project: `<project>/.cursor/skills/<tên-skill>`
-- Global: `~/.cursor/skills/<tên-skill>` hoặc `%USERPROFILE%\.cursor\skills\<tên-skill>`
+- Project: `<project>/.cursor/skills/<skill-name>`
+- Global: `~/.cursor/skills/<skill-name>` or `%USERPROFILE%\.cursor\skills\<skill-name>`
 
-## OpenAI Codex (từ GitHub)
+## OpenAI Codex (from GitHub)
 
 ```bash
 python /path/to/codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
@@ -65,6 +65,6 @@ python /path/to/codex/skills/.system/skill-installer/scripts/install-skill-from-
 
 ## Raw GitHub
 
-Thay branch nếu cần:
+Swap the branch if needed:
 
 `https://raw.githubusercontent.com/mrphuong-webo/webo-mcp/main/skills/webo-mcp-guide/SKILL.md`

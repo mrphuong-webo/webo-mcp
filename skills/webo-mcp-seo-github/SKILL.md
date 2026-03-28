@@ -20,6 +20,6 @@ Upstream: [seo-github.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blo
 
 ## WEBO MCP
 
-**Không áp dụng** `webo/*` — đây không phải WordPress. Dùng GitHub UI, **gh** CLI, hoặc **`github_seo.py`** trong repo Agentic nếu clone.
+**Does not use** `webo/*` — this is not WordPress. Use the GitHub UI, **gh** CLI, or **`github_seo.py`** in the Agentic repo if you clone it.
 
-Khi user muốn **đăng bài WordPress giới thiệu repo**, dùng [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md).
+When the user wants a **WordPress post** introducing the repo, use [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md).

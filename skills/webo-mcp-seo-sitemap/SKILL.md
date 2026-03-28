@@ -22,8 +22,8 @@ Upstream: [seo-sitemap.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/bl
 
 ## WEBO MCP — WordPress
 
-WordPress: **Yoast / Rank Math / core** thường tạo `/wp-sitemap.xml` — kiểm tra Rank Math sitemap settings qua [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md) nếu có tool; còn lại là wp-admin / hosting.
+WordPress: **Yoast / Rank Math / core** usually serve `/wp-sitemap.xml` — check Rank Math sitemap settings via [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md) when those tools exist; otherwise use wp-admin / hosting.
 
-MCP không thay generator lõi WP trừ khi user tự host static XML — khi đó dùng deliverables upstream (XML files).
+MCP does not replace the core WP sitemap generator unless the user self-hosts static XML — then use upstream deliverables (XML files).
 
 **`robots_checker.py`**, **`broken_links.py`** — upstream.

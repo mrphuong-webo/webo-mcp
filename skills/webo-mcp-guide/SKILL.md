@@ -5,7 +5,7 @@ description: >-
   session handling, and choosing modular webo-mcp-ability-* skills. Use before any
   WordPress change via webo-mcp, the MCP router, n8n WEBO MCP node, or when routing
   tasks to posts, media, taxonomy, comments, menus, users, or site configuration tools.
-  Also when the user wants to review or re-read post/page content (“xem lại nội dung”) via MCP.
+  Also when the user wants to review or re-read post/page content via MCP.
 ---
 
 # WEBO MCP guide
@@ -43,7 +43,7 @@ description: >-
 | SEO plan, content strategy, topical clusters, roadmap (MCP-backed) | `webo-mcp-seo-plan` |
 | Agentic SEO suite index (AEO, audit, schema, sitemap, technical, …) | `webo-mcp-seo-agentic` |
 
-5a. **Reviewing post / page content (common pitfall).** When the user asks to **re-read**, **review**, or **“xem lại nội dung”** of a WordPress post that is tied to this MCP session, **read it via `tools/call`**—do **not** say you cannot open the live site in a browser unless MCP is actually disconnected or **`tools/list`** lacks read tools. **Typical flow:** `**webo/get-post**` with **`post_id`** if they gave an ID → response includes **`content`**, **`title`**, **`excerpt`**, **`status`**. If they gave a **URL** (any path on the site): **`webo/find-content-by-url`** with **`url`**. If they gave a **slug**: **`webo/get-content-by-slug`**. If you only have a title or need to discover IDs: **`webo/list-posts`** (set **`status`** / **`post_type`** correctly, e.g. **`draft`** for drafts). Only tell the user access is impossible after **`tools/list`** shows those tools are unavailable or auth returns **403**.
+5a. **Reviewing post / page content (common pitfall).** When the user asks to **re-read** or **review** WordPress post/page content in this MCP session, **read it via `tools/call`**—do **not** say you cannot open the live site in a browser unless MCP is actually disconnected or **`tools/list`** lacks read tools. **Typical flow:** `**webo/get-post**` with **`post_id`** if they gave an ID → response includes **`content`**, **`title`**, **`excerpt`**, **`status`**. If they gave a **URL** (any path on the site): **`webo/find-content-by-url`** with **`url`**. If they gave a **slug**: **`webo/get-content-by-slug`**. If you only have a title or need to discover IDs: **`webo/list-posts`** (set **`status`** / **`post_type`** correctly, e.g. **`draft`** for drafts). Only tell the user access is impossible after **`tools/list`** shows those tools are unavailable or auth returns **403**.
 
 6. **Safety (all skills):** Prefer **`draft`** for new content unless the user asks to publish. **`webo/list-posts`** defaults to **`status: publish`** and **`post_type: post`** — to list drafts or pages, pass **`status`** / **`post_type`** explicitly; check **`applied`** in the response if results are empty. Prefer that over sending users to wp-admin to filter drafts when MCP is available. **Rank Math per-post SEO:** use **`webo-rank-math/get-post-seo-meta`** and **`seo_meta.rank_math_title`** (see **`webo-mcp-rank-math`**) when the [addon](https://github.com/mrphuong-webo/webo-mcp-rank-math) is active — not only **`webo/get-post`**. Prefer MCP over wp-admin Rank Math panels when the tool is listed. **`webo/search-replace-posts`:** always **`dry_run: true`** first, then `false` only after user confirmation. **`webo/upload-media-from-url`:** public **http(s)** only (SSRF-hardened). **Menus:** **`menu_order` ≥ 1**; always inspect **`webo/list-nav-menu-items`** before adding items.
 

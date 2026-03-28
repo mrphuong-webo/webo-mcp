@@ -21,9 +21,9 @@ Upstream: [seo-page.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blob/
 
 ## Output shape
 
-Score + table (category / status / notes) + prioritized fixes; align severity với upstream.
+Score + table (category / status / notes) + prioritized fixes; align severity with upstream.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
 [`webo/find-content-by-url`](../webo-mcp-wordpress-content/SKILL.md) → **`webo/get-post`** → **`webo/update-post`**.
 

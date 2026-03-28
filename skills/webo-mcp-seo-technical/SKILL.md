@@ -26,8 +26,8 @@ Upstream: [seo-technical.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/
 
 - Featured-snippet-style answers; TTFB; `speakable`; local schema for local intent — cross-link [`webo-mcp-seo-aeo`](../webo-mcp-seo-aeo/SKILL.md).
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-WordPress: nhiều hạng mục là **hosting / theme / cache plugin / Cloudflare** — MCP không bật HSTS. Per-post: canonical/noindex qua Rank Math (`webo-rank-math/*`) khi có.
+WordPress: many items are **hosting / theme / cache plugin / Cloudflare** — MCP cannot toggle HSTS. Per-post: canonical/noindex via Rank Math (`webo-rank-math/*`) when available.
 
 **`robots_checker.py`**, **`security_headers.py`**, **`redirect_checker.py`**, **`pagespeed.py`**, **`hreflang_checker.py`**, **`indexnow_checker.py`** — upstream.

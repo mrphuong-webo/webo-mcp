@@ -2,104 +2,105 @@
 name: webo-mcp-menu-creation
 description: >-
   Step-by-step WEBO MCP workflows to create WordPress nav menus, assign theme locations,
-  and add items (Appearance > Menus via MCP). Use when the user asks to tạo menu, gán menu,
-  Primary Menu, theme location, header/footer menu, assign location, create-nav-menu,
-  create-nav-menu-for-location, list-nav-menu-locations, or automate menus without wp-admin.
-  Complements webo-mcp-ability-menus (tool table) with decision trees and multiple valid paths.
+  and add items (Appearance > Menus via MCP). Use when the user asks to create a menu,
+  assign a menu, Primary Menu, theme location, header/footer menu, assign location,
+  create-nav-menu, create-nav-menu-for-location, list-nav-menu-locations, or automate
+  menus without wp-admin. Complements webo-mcp-ability-menus (tool table) with decision
+  trees and multiple valid paths.
 ---
 
-# WEBO MCP — Tạo menu và gán vị trí (nhiều cách)
+# WEBO MCP — Create menus and assign locations (several paths)
 
-## Khi nào đọc skill này
+## When to use this skill
 
-- User muốn **tạo menu mới**, **gán vào vị trí theme** (Main Menu, Footer, …), hoặc **chỉnh menu hiện có**.
-- Làm việc qua **MCP** (`webo/*`), **n8n WEBO MCP**, hoặc client gọi `tools/call`.
+- The user wants a **new menu**, **assignment to a theme location** (Main Menu, Footer, …), or to **edit an existing menu**.
+- Work happens over **MCP** (`webo/*`), **n8n WEBO MCP**, or any client that calls `tools/call`.
 
-**Điều kiện:** đã [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md) (session, `tools/call`). Bảng tool đầy đủ: [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md).
+**Prerequisites:** [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md) (session, `tools/call`). Full tool table: [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md).
 
-**Quyền:**
+**Capabilities:**
 
-- **Xem** danh sách menu / vị trí / mục: `edit_posts`.
-- **Tạo menu, gán vị trí, thêm mục:** `edit_theme_options`.
-
----
-
-## Luồng chung (luôn làm trước khi gán)
-
-1. **`webo/list-nav-menu-locations`** (không tham số) — biết **slug** thật của theme. Trong `registered_locations`, **key** = giá trị `theme_location`; **value** = nhãn trong admin (“Main Menu”, …).
-2. **`webo/list-nav-menus`** (không tham số) — nếu cần danh sách menu và `menu_id` / `menu_name` hiện có. **Không** hỏi user `menu_id` chỉ để liệt kê menu.
-3. Chỉ khi cần chi tiết từng link: **`webo/list-nav-menu-items`** với `menu_id` lấy từ bước 2 hoặc từ `assigned` ở bước 1.
-
-Nếu `registered_locations` **rỗng**: theme block / không đăng ký classic menu — xử lý trong **Site Editor**, không qua các tool menu cổ điển này.
+- **View** menu / location / item lists: `edit_posts`.
+- **Create menus, assign locations, add items:** `edit_theme_options`.
 
 ---
 
-## Cách 1 — Một lần gọi: tạo menu + gán vị trí
+## Common flow (always before assigning)
 
-**Khi dùng:** menu mới và đã biết (hoặc chấp nhận fallback) `theme_location`.
+1. **`webo/list-nav-menu-locations`** (no args) — learn the theme’s real **slugs**. In `registered_locations`, **key** = `theme_location` value; **value** = admin label (“Main Menu”, …).
+2. **`webo/list-nav-menus`** (no args) — when you need existing menus and `menu_id` / `menu_name`. **Do not** ask the user for `menu_id` just to list menus.
+3. Only when you need each link in detail: **`webo/list-nav-menu-items`** with `menu_id` from step 2 or from `assigned` in step 1.
+
+If `registered_locations` is **empty**: block theme / no classic menu registration — handle in the **Site Editor**, not these classic menu tools.
+
+---
+
+## Path 1 — One call: create menu + assign location
+
+**When:** New menu and you know (or accept fallback for) `theme_location`.
 
 - Tool: **`webo/create-nav-menu-for-location`**
-- Tham số thường gặp:
-  - `menu_name` (tuỳ chọn; mặc định localized “Primary Menu”)
-  - `theme_location` (tuỳ chọn; mặc định `primary`) — ưu tiên **slug** từ `list-nav-menu-locations`
-  - `replace` (mặc định `true`): ghi đè menu đang gắn ở slot đó
+- Common arguments:
+  - `menu_name` (optional; default localized “Primary Menu”)
+  - `theme_location` (optional; default `primary`) — prefer the **slug** from `list-nav-menu-locations`
+  - `replace` (default `true`): overwrite whatever is already in that slot
 
-**Ghi nhận phản hồi:**
+**Read the response:**
 
-- `theme_location_resolution`: `exact` | `single_registered_location` | `common_slug_fallback` — biết slot thực tế được chọn.
-- `reused_existing_menu`: menu trùng tên đã tồn tại; plugin tái dùng term đó.
-
----
-
-## Cách 2 — Hai bước: chỉ tạo menu, gán sau
-
-**Khi dùng:** cần tạo rỗng trước, hoặc tách quyền / logic.
-
-1. **`webo/create-nav-menu`** — optional `menu_name` (mặc định “New Menu”). **Không** gán theme.
-2. **`webo/assign-nav-menu-to-location`** — `theme_location` + một trong:
-   - `menu_id` (từ bước 1 hoặc `list-nav-menus`), **hoặc**
-   - `menu_name` (đúng tên trong admin) nếu không có ID.
+- `theme_location_resolution`: `exact` | `single_registered_location` | `common_slug_fallback` — shows which slot was actually used.
+- `reused_existing_menu`: a menu with that name already existed; the plugin reused that term.
 
 ---
 
-## Cách 3 — Menu đã có: chỉ gán / đổi vị trí
+## Path 2 — Two steps: create empty menu, assign later
 
-**Khi dùng:** menu đã tồn tại (user chỉ muốn “gán lại chỗ hiển thị”).
+**When:** You need an empty menu first, or you want to split permissions / logic.
+
+1. **`webo/create-nav-menu`** — optional `menu_name` (default “New Menu”). **Does not** assign a theme.
+2. **`webo/assign-nav-menu-to-location`** — `theme_location` plus one of:
+   - `menu_id` (from step 1 or `list-nav-menus`), **or**
+   - `menu_name` (exact admin name) if you have no ID.
+
+---
+
+## Path 3 — Menu already exists: assign or move only
+
+**When:** Menu exists; user only wants to “put it in the right place”.
 
 - **`webo/assign-nav-menu-to-location`**
-- Cung cấp `menu_id` **hoặc** `menu_name`, và `theme_location` (slug từ bước discover).
-- `replace: false` nếu **không** muốn ghi đè slot đang có menu khác.
+- Pass `menu_id` **or** `menu_name`, and `theme_location` (slug from discovery).
+- `replace: false` if you **do not** want to overwrite a slot that already has another menu.
 
 ---
 
-## Cách 4 — Chỉ cần menu rỗng trong danh sách (chưa gán theme)
+## Path 4 — Empty menu in the list only (not tied to theme yet)
 
-**Khi dùng:** dự trữ menu, hoặc theme không dùng classic location.
+**When:** Staging a menu, or the theme has no classic location.
 
-- Chỉ **`webo/create-nav-menu`**.
-- Gán sau bằng Cách 3 khi cần.
-
----
-
-## Sau khi có menu: thêm mục (link)
-
-1. Gọi **`webo/list-nav-menu-items`** với `menu_id` để chọn `menu_order` và `parent_db_id`.
-2. Thêm nội dung trang/bài: **`webo/add-nav-menu-item-from-post`** (`post_id`, `post_type`, `menu_order` ≥ 1, …).
-3. Hoặc link tuỳ chỉnh: **`webo/add-nav-menu-item-custom`** (`url`, `title`, `menu_order` ≥ 1).
+- Only **`webo/create-nav-menu`**.
+- Assign later with Path 3 when needed.
 
 ---
 
-## `primary` và slug theme
+## After you have a menu: add items (links)
 
-- Nhiều theme **không** đăng ký slug `primary`; có thể là `main`, `menu-1`, …
-- MCP có thể **tự map** `primary` → slot duy nhất hoặc slug phổ biến; xem `theme_location_resolution` trong phản hồi.
-- Để **chắc chắn** đúng slot (ví dụ “Main Menu - Mobile”): luôn lấy slug từ **`list-nav-menu-locations`**.
+1. Call **`webo/list-nav-menu-items`** with `menu_id` to choose `menu_order` and `parent_db_id`.
+2. Add a post/page: **`webo/add-nav-menu-item-from-post`** (`post_id`, `post_type`, `menu_order` ≥ 1, …).
+3. Or a custom link: **`webo/add-nav-menu-item-custom`** (`url`, `title`, `menu_order` ≥ 1).
 
 ---
 
-## Ví dụ `tools/call` (minh hoạ)
+## `primary` vs theme slugs
 
-**Discover chỗ gắn:**
+- Many themes **do not** register `primary`; it may be `main`, `menu-1`, …
+- MCP may **map** `primary` → the only slot or a common slug; see `theme_location_resolution` in the response.
+- To **pin** the right slot (e.g. “Main Menu - Mobile”): always take the slug from **`list-nav-menu-locations`**.
+
+---
+
+## Example `tools/call` snippets
+
+**Discover assignment slots:**
 
 ```json
 {
@@ -108,7 +109,7 @@ Nếu `registered_locations` **rỗng**: theme block / không đăng ký classic
 }
 ```
 
-**Tạo + gán (slug thật từ `registered_locations`, ví dụ `main`):**
+**Create + assign (real slug from `registered_locations`, e.g. `main`):**
 
 ```json
 {
@@ -121,7 +122,7 @@ Nếu `registered_locations` **rỗng**: theme block / không đăng ký classic
 }
 ```
 
-**Gán menu có sẵn theo tên:**
+**Assign an existing menu by name:**
 
 ```json
 {
@@ -136,9 +137,9 @@ Nếu `registered_locations` **rỗng**: theme block / không đăng ký classic
 
 ---
 
-## Liên kết
+## See also
 
-| Tài liệu | Mục đích |
-|----------|----------|
+| Doc | Purpose |
+|-----|---------|
 | [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md) | Router, session, auth |
-| [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md) | Bảng tool + quy tắc `menu_order` |
+| [`webo-mcp-ability-menus`](../webo-mcp-ability-menus/SKILL.md) | Tool table + `menu_order` rules |

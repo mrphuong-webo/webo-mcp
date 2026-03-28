@@ -14,40 +14,40 @@ description: >-
 
 ## Instructions
 
-1. **Addon (bắt buộc):** Cài plugin từ GitHub **[WEBO MCP – Rank Math addon](https://github.com/mrphuong-webo/webo-mcp-rank-math)** và **kích hoạt** trên WordPress. Không có addon thì **không** có công cụ `webo-rank-math/*` trong `tools/list`.
-2. **Core dependencies:** **[WEBO MCP](https://github.com/mrphuong-webo/webo-mcp)** (router, Abilities bridge) và **[Rank Math SEO](https://rankmath.com/)** (`seo-by-rank-math`) đều phải **active**. Thứ tự khuyên dùng: Rank Math → WEBO MCP → addon Rank Math.
-3. **Entry flow:** Đọc **[`webo-mcp-guide`](../webo-mcp-guide/SKILL.md)** — `initialize` → giữ **`session_id`** → **`tools/list`** để xác nhận tên đúng và **JSON schema** từng ability (đối số có thể khác giữa các phiên bản addon).
-4. **Cơ chế:** Addon đăng ký **WordPress Abilities API** (`wp_register_ability`) với prefix **`webo-rank-math/`**. WEBO MCP **tự bridge** các ability đó thành MCP tools cùng tên (filter `webo_mcp_auto_bridge_abilities` mặc định bật).
+1. **Addon (required):** Install the plugin from GitHub **[WEBO MCP – Rank Math addon](https://github.com/mrphuong-webo/webo-mcp-rank-math)** and **activate** it on WordPress. Without the addon there are **no** `webo-rank-math/*` tools in `tools/list`.
+2. **Core dependencies:** **[WEBO MCP](https://github.com/mrphuong-webo/webo-mcp)** (router, Abilities bridge) and **[Rank Math SEO](https://rankmath.com/)** (`seo-by-rank-math`) must both be **active**. Recommended order: Rank Math → WEBO MCP → Rank Math addon.
+3. **Entry flow:** Read **[`webo-mcp-guide`](../webo-mcp-guide/SKILL.md)** — `initialize` → keep **`session_id`** → **`tools/list`** to confirm exact names and per-ability **JSON schema** (arguments may differ across addon versions).
+4. **Mechanism:** The addon registers **WordPress Abilities API** (`wp_register_ability`) abilities with prefix **`webo-rank-math/`**. WEBO MCP **auto-bridges** them to MCP tools with the same names (filter `webo_mcp_auto_bridge_abilities` on by default).
 
-### Tool map (tham chiếu nhanh)
+### Tool map (quick reference)
 
-| `name` | Ghi chú |
-|--------|---------|
-| `webo-rank-math/get-plugin-status` | Trạng thái Rank Math, version, modules. |
-| `webo-rank-math/get-post-seo-meta` | **`post_id`** hoặc **`slug`** + **`post_type`**; phản hồi có **`seo_meta`** (các key `rank_math_*`). SEO title tùy chỉnh: **`rank_math_title`**. |
-| `webo-rank-math/update-post-seo-meta` | **`seo_meta`**: object key → value; `null` xóa key. |
-| `webo-rank-math/bulk-upsert-post-seo-meta` | Nhiều bài; **`items`** (tối đa 200). |
-| `webo-rank-math/get-term-seo-meta` / `webo-rank-math/update-term-seo-meta` | Meta SEO taxonomy. |
+| `name` | Notes |
+|--------|-------|
+| `webo-rank-math/get-plugin-status` | Rank Math status, version, modules. |
+| `webo-rank-math/get-post-seo-meta` | **`post_id`** or **`slug`** + **`post_type`**; response includes **`seo_meta`** (`rank_math_*` keys). Custom SEO title: **`rank_math_title`**. |
+| `webo-rank-math/update-post-seo-meta` | **`seo_meta`**: object key → value; `null` removes a key. |
+| `webo-rank-math/bulk-upsert-post-seo-meta` | Many posts; **`items`** (max 200). |
+| `webo-rank-math/get-term-seo-meta` / `webo-rank-math/update-term-seo-meta` | Taxonomy SEO meta. |
 | `webo-rank-math/get-options` / `webo-rank-math/update-options` | Option groups (`rank_math_*`). |
-| `webo-rank-math/get-modules` / `webo-rank-math/update-modules` | Module bật/tắt. |
+| `webo-rank-math/get-modules` / `webo-rank-math/update-modules` | Enable/disable modules. |
 | `webo-rank-math/get-user-seo-meta` / `webo-rank-math/update-user-seo-meta` | Author archive SEO. |
 | `webo-rank-math/list-redirections` | **`limit`**, **`paged`**, **`status`**, **`search`**. |
-| `webo-rank-math/get-redirection` | Theo **`id`**. |
+| `webo-rank-math/get-redirection` | By **`id`**. |
 | `webo-rank-math/create-redirection` | **`source`**, **`destination`**, **`type`** (301, 302, …), **`comparison`**, **`ignore_case`**, **`status`**. |
-| `webo-rank-math/update-redirection` / `webo-rank-math/delete-redirection` | Cập nhật / xóa. |
+| `webo-rank-math/update-redirection` / `webo-rank-math/delete-redirection` | Update / delete. |
 
-Chi tiết và quyền: [README addon trên GitHub](https://github.com/mrphuong-webo/webo-mcp-rank-math/blob/main/README.md).
+Details and capabilities: [addon README on GitHub](https://github.com/mrphuong-webo/webo-mcp-rank-math/blob/main/README.md).
 
-### Quy tắc cho agent
+### Rules for agents
 
-- **Tiêu đề SEO một bài:** ưu tiên **`webo-rank-math/get-post-seo-meta`** với **`post_id`** (hoặc slug) và đọc **`seo_meta.rank_math_title`**. **`webo/get-post`** chỉ cho tiêu đề bài WordPress, không thay thế meta Rank Math.
-- **Không** bảo user vào wp-admin nếu **`tools/list`** đã có các tool trên và phiên làm việc có quyền.
-- **URL nguồn addon:** luôn dùng **`https://github.com/mrphuong-webo/webo-mcp-rank-math`** khi hướng dẫn cài/kích hoạt.
-- Cập nhật meta: chỉ gửi các key cần đổi trong **`seo_meta`**; redirection **`create-redirection`** cần module Redirections của Rank Math.
+- **Per-post SEO title:** prefer **`webo-rank-math/get-post-seo-meta`** with **`post_id`** (or slug) and read **`seo_meta.rank_math_title`**. **`webo/get-post`** is only the WordPress post title, not Rank Math meta.
+- **Do not** send users to wp-admin if **`tools/list`** already exposes these tools and the session has the right caps.
+- **Addon URL:** always use **`https://github.com/mrphuong-webo/webo-mcp-rank-math`** when explaining install/activate.
+- Meta updates: send only keys that change in **`seo_meta`**; **`create-redirection`** needs Rank Math’s Redirections module.
 
 ## Examples
 
-Đọc meta SEO bài **ID 37**:
+Read SEO meta for post **ID 37**:
 
 ```json
 {
@@ -57,7 +57,7 @@ Chi tiết và quyền: [README addon trên GitHub](https://github.com/mrphuong-
 }
 ```
 
-Cập nhật tiêu đề + mô tả SEO:
+Update SEO title + description:
 
 ```json
 {
@@ -73,7 +73,7 @@ Cập nhật tiêu đề + mô tả SEO:
 }
 ```
 
-Tạo redirect 301:
+Create a 301 redirect:
 
 ```json
 {
@@ -91,4 +91,4 @@ Tạo redirect 301:
 
 ## Reference
 
-- Addon (mã nguồn + hướng dẫn): [github.com/mrphuong-webo/webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math)
+- Addon (source + docs): [github.com/mrphuong-webo/webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math)

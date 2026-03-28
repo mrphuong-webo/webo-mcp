@@ -20,10 +20,10 @@ Upstream: [seo-aeo.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blob/m
 - **Tables:** first column = entity names; header row; scope; caption; responsive.
 - **Lists:** logical order; max ~8 H2 sections with bullets.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-[`webo-mcp-guide`](../webo-mcp-guide/SKILL.md), [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/get-post`**, **`webo/find-content-by-url`**, **`webo/update-post`**, **`webo/create-post`** for headings/body. Ảnh/video: **`webo/upload-media-from-url`**, **`webo/set-post-featured-image`**.
+[`webo-mcp-guide`](../webo-mcp-guide/SKILL.md), [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/get-post`**, **`webo/find-content-by-url`**, **`webo/update-post`**, **`webo/create-post`** for headings/body. Images/video: **`webo/upload-media-from-url`**, **`webo/set-post-featured-image`**.
 
-Rank Math / schema khi có addon: [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md).
+Rank Math / schema when the addon is active: [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md).
 
-**Scripts Agentic** (`featured_snippet_optimizer.py`, …) chỉ có trong repo upstream — chạy ngoài MCP nếu cần.
+**Agentic scripts** (`featured_snippet_optimizer.py`, …) live only in the upstream repo — run them outside MCP when needed.

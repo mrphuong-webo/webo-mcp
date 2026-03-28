@@ -25,10 +25,10 @@ Upstream: [seo-schema.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blo
 
 - Truthful data only; mark TBD clearly for user fill-in.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
 [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md) — meta schema types, Article/Product toggles, Local SEO module.
 
-Custom JSON-LD: thường qua theme/child theme hoặc Rank Math custom schema — MCP chỉnh nội dung bài viết; snippet tùy biến có thể cần deploy theme/plugin ngoài phiên MCP.
+Custom JSON-LD: usually via theme/child theme or Rank Math custom schema — MCP edits post content; bespoke snippets may require deploying theme/plugin outside the MCP session.
 
 **`parse_html.py`**, **`validate_schema.py`** — upstream.

@@ -26,8 +26,8 @@ Upstream: [seo-geo.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blob/m
 - Optional `llms.txt` and `llms-full.txt` — curated paths, pricing, API docs, contact (pattern per upstream).
 - WordPress: static file, theme file, or redirect — **not** a core MCP tool; implement in hosting/theme.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-Nội dung + meta trong WP: [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md) + [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md). Technical overlap: [`webo-mcp-seo-technical`](../webo-mcp-seo-technical/SKILL.md).
+WP content + meta: [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md) + [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md). Technical overlap: [`webo-mcp-seo-technical`](../webo-mcp-seo-technical/SKILL.md).
 
 **`geo_optimizer.py`** — upstream only.

@@ -11,45 +11,45 @@ description: >-
 
 ## Instructions
 
-### 1. Packages (chuẩn hóa tên)
+### 1. Packages (naming standard)
 
-| Vai trò | Package / repo (typical) | Kích hoạt MCP tools | Skill agent |
-|--------|---------------------------|---------------------|-------------|
+| Role | Package / repo (typical) | Enables MCP tools | Agent skill |
+|------|---------------------------|-------------------|-------------|
 | **Core** | [webo-mcp](https://github.com/mrphuong-webo/webo-mcp) | `webo/*` (posts, media, taxonomy, …) | [`webo-mcp-guide`](../webo-mcp-guide/SKILL.md), [`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md), `webo-mcp-ability-*` |
-| **Rank Math bridge** | [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) + Rank Math SEO | Abilities **`webo-rank-math/*`** bridged như MCP | [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md) |
-| **WP Ultimo / SaaS** | Companion (ví dụ webo-mcp-ultimo) | Thường thêm tools qua `webo_mcp_register_tools` + filter quyền | Theo từng repo; tham chiếu `examples/webo-mcp-ultimo-example.php` |
+| **Rank Math bridge** | [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) + Rank Math SEO | Abilities **`webo-rank-math/*`** bridged as MCP | [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md) |
+| **WP Ultimo / SaaS** | Companion (e.g. webo-mcp-ultimo) | Usually adds tools via `webo_mcp_register_tools` + capability filters | Per-repo; see `examples/webo-mcp-ultimo-example.php` |
 
-**Quy ước tên plugin ZIP / slug:** `webo-mcp` (core), companion dùng tiền tố **`webo-mcp-`** + domain (`webo-mcp-rank-math`, `webo-mcp-ultimo`, …).
+**Plugin ZIP / slug convention:** `webo-mcp` (core); companions use the **`webo-mcp-`** prefix + domain (`webo-mcp-rank-math`, `webo-mcp-ultimo`, …).
 
-### 2. Quy ước tên **tool** (MCP `tools/call` → `name`)
+### 2. **Tool** naming (MCP `tools/call` → `name`)
 
-| Nguồn | Dạng `name` | Ghi chú |
-|--------|-------------|---------|
-| Core | `webo/<action>` | Chữ thường, gạch ngang, một segment sau `webo/` (ví dụ `webo/list-posts`). |
-| Abilities API (bridge) | Đúng **tên ability** đã đăng ký | Addon Rank Math đăng ký `webo-rank-math/...` — **không** đổi tên khi gọi MCP. |
-| Custom PHP (`webo_mcp_register_tools`) | `<prefix>/<action>` | Tránh chiếm `webo/*`. Dùng prefix tổ chức (`acme-crm/sync-order`). File mẫu trong repo: `examples/addon-rankmath-example.php` (tên ví dụ `rankmath/...` chỉ để minh họa code — production dùng gói **webo-mcp-rank-math**). |
+| Source | `name` pattern | Notes |
+|--------|----------------|-------|
+| Core | `webo/<action>` | Lowercase, hyphens, one segment after `webo/` (e.g. `webo/list-posts`). |
+| Abilities API (bridge) | Exact **registered ability name** | Rank Math addon registers `webo-rank-math/...` — **do not** rename when calling MCP. |
+| Custom PHP (`webo_mcp_register_tools`) | `<prefix>/<action>` | Avoid occupying `webo/*`. Use an org prefix (`acme-crm/sync-order`). Sample file in repo: `examples/addon-rankmath-example.php` (example names `rankmath/...` are illustrative only — production uses the **webo-mcp-rank-math** package). |
 
-Sau **`initialize`**, luôn **`tools/list`** trên site đích để lấy danh sách thực tế (addon tắt → không có `webo-rank-math/*`).
+After **`initialize`**, always run **`tools/list`** on the **target site** for the real tool list (addon inactive → no `webo-rank-math/*`).
 
-### 3. Phát hiện addon đã cài
+### 3. Detecting installed addons
 
-- **`webo/list-active-plugins`** ([`webo-mcp-ability-site`](../webo-mcp-ability-site/SKILL.md)) — quyền `activate_plugins`.
-- Đối chiếu bảng trên: nếu thiếu plugin companion, hướng dẫn cài / kích hoạt trước khi gọi tool tương ứng.
+- **`webo/list-active-plugins`** ([`webo-mcp-ability-site`](../webo-mcp-ability-site/SKILL.md)) — requires `activate_plugins`.
+- Cross-check the table above: if a companion plugin is missing, tell the user to install/activate it before calling the matching tools.
 
-### 4. Phát triển companion plugin
+### 4. Building a companion plugin
 
-1. Phụ thuộc **WEBO MCP** (load sau core).
-2. Đăng ký tool: hook **`webo_mcp_register_tools`** → `ToolRegistry::register()` (xem `examples/addon-rankmath-example.php`).
-3. *Hoặc* đăng ký **Ability** + `mcp.public` meta nếu muốn dùng bridge core (giống Rank Math addon).
-4. Thu hẹp quyền multisite / khách hàng: filter **`webo_mcp_current_user_can_use_mcp`** (xem `examples/webo-mcp-ultimo-example.php`).
+1. Depend on **WEBO MCP** (load after core).
+2. Register tools: hook **`webo_mcp_register_tools`** → `ToolRegistry::register()` (see `examples/addon-rankmath-example.php`).
+3. *Or* register an **Ability** + `mcp.public` meta to use the core bridge (like the Rank Math addon).
+4. Scope multisite / tenant access: filter **`webo_mcp_current_user_can_use_mcp`** (see `examples/webo-mcp-ultimo-example.php`).
 
-### 5. Skill đi kèm
+### 5. Bundled skills
 
-Mỗi companion **nên** có một `skills/webo-mcp-*/SKILL.md` trong repo của nó hoặc trong core (như Rank Math) để agent biết `name` + arguments + prerequisite.
+Each companion **should** ship a `skills/webo-mcp-*/SKILL.md` in its own repo or in core (like Rank Math) so agents know `name`, arguments, and prerequisites.
 
 ## Examples
 
-Kiểm tra plugin trước khi gọi Rank Math:
+Check plugins before calling Rank Math:
 
 ```json
 {
@@ -64,4 +64,4 @@ Kiểm tra plugin trước khi gọi Rank Math:
 }
 ```
 
-Sau đó `tools/list` và tìm tiền tố `webo-rank-math/`.
+Then `tools/list` and look for the `webo-rank-math/` prefix.

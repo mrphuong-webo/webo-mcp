@@ -18,10 +18,10 @@ Upstream: [seo-images.md](https://github.com/Bhanunamikaze/Agentic-SEO-Skill/blo
 - **Filenames:** readable, hyphenated; avoid generic `IMG_001`.
 - **Captions** when helpful for context.
 
-## WEBO MCP — thực thi
+## WEBO MCP — execution
 
-[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/upload-media-from-url`**, **`webo/update-post`/`get-post`** — nếu MCP trả về `featured_media` hoặc HTML gallery; Rank Math **Image SEO** nếu có addon.
+[`webo-mcp-wordpress-content`](../webo-mcp-wordpress-content/SKILL.md): **`webo/upload-media-from-url`**, **`webo/update-post`/`get-post`** — when responses include `featured_media` or HTML galleries; Rank Math **Image SEO** when the addon is active.
 
-Core WP thường quản media trong Media Library — MCP có thể hạn chế trừ khi có tool chỉnh ALT từng attachment-ID (mở rộng router sau).
+Core WP usually manages media in the Media Library — MCP may be limited unless there is a per-attachment ALT tool (future router extension).
 
 **`image_analyzer.py`** — upstream.
