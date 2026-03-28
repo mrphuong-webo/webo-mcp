@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.15
+Stable tag: 2.0.26
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,7 @@ Standalone core tools included:
 - Nav menus: list menus, list menu items (menu_order, db_id), add menu link from post (explicit post_id + menu_order required)
 - Plugins: list active status, toggle (activate/deactivate)
 - Options: get/update (safe allowlist only)
+- SEO (WordPress post): seo/article-analysis — requires post_id; merges Rank Math meta when available (same data path as webo-rank-math/get-post-seo-meta); optional related-keyword suggestions via outbound request unless no_autocomplete is true
 
 Excluded by default in standalone-safe mode:
 - Bulk/mass execution tools
@@ -52,7 +53,7 @@ Excluded by default in standalone-safe mode:
 
 == Privacy ==
 
-This plugin does not send any data to remote servers by itself. All MCP traffic is initiated by external MCP clients that you configure to call your site.
+This plugin does not phone home or send telemetry. MCP traffic is initiated by clients you configure. Some tools may perform outbound HTTP requests only when a client invokes them (for example seo/article-analysis may request keyword suggestions from a third-party suggest API unless you pass no_autocomplete).
 
 The plugin stores the following options in the WordPress database when configured:
 - `webo_mcp_api_key`: API key used to authenticate MCP requests.
@@ -132,6 +133,10 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.26 =
+* New MCP tool seo/article-analysis (category seo, edit_posts): WordPress-only on-page SEO signals for a post via post_id — rendered content, Rank Math merge, readability, issues, content_gaps. Agent documentation: skills/webo-mcp-seo-article/SKILL.md in the GitHub repo (not bundled in the WordPress.org zip).
+* Readme: Stable tag sync, privacy note for optional outbound tool requests.
+
 = 2.0.25 =
 * list-posts: document defaults (publish + post type post); response includes applied filters so empty results are easier to explain. Models should pass status draft (etc.) and post_type page when listing those.
 
@@ -201,6 +206,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.26 =
+Adds seo/article-analysis for post-level SEO diagnostics (optional outbound suggest API; set no_autocomplete to skip).
+
 = 2.0.7 =
 Readme and GitHub README now link webomcp.com and the n8n-nodes-webo-mcp npm package.
 
