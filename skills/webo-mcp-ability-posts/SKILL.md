@@ -3,8 +3,8 @@ name: webo-mcp-ability-posts
 description: >-
   Documents WEBO MCP post/page/CPT tools: list, read, discover types, resolve by URL
   or slug, homepage info, create/update/delete, bulk status, revisions, search-replace,
-  featured image. Use for WordPress content or HTML bulk edits via tools/call
-  (webo/create-post, webo/update-post, webo/search-replace-posts, etc.).
+  featured image, duplicate draft detection. Use for WordPress content or HTML bulk edits via tools/call
+  (webo/create-post, webo/update-post, webo/search-replace-posts, webo/find-duplicate-posts, etc.).
 ---
 
 # WEBO MCP — Posts & content
@@ -18,6 +18,7 @@ description: >-
 |--------|--------------|-------|
 | `webo/list-posts` | read | `per_page` 1–100, `post_type`, `search`, `status` |
 | `webo/get-post` | read | `post_id`; optional `post_type` validation |
+| `webo/find-duplicate-posts` | read | Default `status` draft, `match` content; optional `post_type`, `max_posts` 1–500, `offset`, `skip_empty` |
 | `webo/discover-content-types` | read | No arguments |
 | `webo/find-content-by-url` | read | `url`; optional `update` array |
 | `webo/get-content-by-slug` | read | `slug`; optional `post_type` |
@@ -47,6 +48,16 @@ Create a draft:
     "post_type": "post",
     "status": "draft"
   }
+}
+```
+
+Find draft posts with identical normalized body text (default):
+
+```json
+{
+  "session_id": "<…>",
+  "name": "webo/find-duplicate-posts",
+  "arguments": { "status": "draft", "match": "content", "max_posts": 200 }
 }
 ```
 

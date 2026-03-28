@@ -358,6 +358,21 @@ function webo_mcp_register_standalone_core_tools() {
 			'callback'    => array( WordPressTools::class, 'get_post' ),
 		),
 		array(
+			'name'        => 'webo/find-duplicate-posts',
+			'description' => 'Detect duplicate drafts/posts: groups items sharing the same normalized text (HTML stripped, whitespace collapsed, case-insensitive). Default scans post_type post, status draft. match: content (body only), title, or title_and_content. max_posts 1-500 (default 200); offset for next batch. skip_empty default true excludes empty bodies/titles from comparison. Only posts the user may read are included. Exact normalized match only — not fuzzy near-duplicate detection.',
+			'category'    => 'wordpress',
+			'arguments'   => array(
+				'post_type'  => array( 'type' => 'string', 'required' => false, 'default' => 'post' ),
+				'status'     => array( 'type' => 'string', 'required' => false, 'default' => 'draft' ),
+				'match'      => array( 'type' => 'string', 'required' => false, 'default' => 'content' ),
+				'max_posts'  => array( 'type' => 'integer', 'required' => false, 'default' => 200, 'min' => 1, 'max' => 500 ),
+				'offset'     => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
+				'skip_empty' => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
+			),
+			'permission'  => 'read',
+			'callback'    => array( WordPressTools::class, 'find_duplicate_posts' ),
+		),
+		array(
 			'name'        => 'webo/discover-content-types',
 			'description' => 'List public post types (content types) on the site',
 			'category'    => 'wordpress',

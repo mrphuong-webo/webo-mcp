@@ -121,6 +121,168 @@ class WordPressTools {
 	}
 
 	/**
+	 * Group posts that share identical normalized title and/or body text (e.g. duplicate drafts).
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>
+	 */
+	public static function find_duplicate_posts( array $arguments ) {
+		$post_type = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : 'post';
+		$status    = isset( $arguments['status'] ) ? sanitize_key( (string) $arguments['status'] ) : 'draft';
+		$match     = isset( $arguments['match'] ) ? sanitize_key( (string) $arguments['match'] ) : 'content';
+		if ( ! in_array( $match, array( 'content', 'title', 'title_and_content' ), true ) ) {
+			$match = 'content';
+		}
+		$max_posts = isset( $arguments['max_posts'] ) ? (int) $arguments['max_posts'] : 200;
+		$max_posts = max( 1, min( 500, $max_posts ) );
+		$offset    = isset( $arguments['offset'] ) ? max( 0, (int) $arguments['offset'] ) : 0;
+		$skip_empty = ! array_key_exists( 'skip_empty', $arguments ) || (bool) $arguments['skip_empty'];
+
+		$query = new \WP_Query(
+			array(
+				'post_type'           => $post_type,
+				'post_status'         => $status,
+				'posts_per_page'      => $max_posts,
+				'offset'              => $offset,
+				'orderby'             => 'ID',
+				'order'               => 'ASC',
+				'no_found_rows'       => true,
+				'ignore_sticky_posts' => true,
+			)
+		);
+
+		$buckets  = array();
+		$scanned  = 0;
+		$skipped_permission = 0;
+		foreach ( $query->posts as $post ) {
+			if ( ! $post instanceof \WP_Post ) {
+				continue;
+			}
+			++$scanned;
+			if ( ! current_user_can( 'read_post', $post->ID ) ) {
+				++$skipped_permission;
+				continue;
+			}
+			$sig_data = self::duplicate_post_signature_data( $post, $match, $skip_empty );
+			if ( null === $sig_data ) {
+				continue;
+			}
+			$hash = md5( $sig_data );
+			if ( ! isset( $buckets[ $hash ] ) ) {
+				$buckets[ $hash ] = array(
+					'normalized_preview' => self::duplicate_preview( $sig_data ),
+					'posts'              => array(),
+				);
+			}
+			$buckets[ $hash ]['posts'][] = array(
+				'id'     => (int) $post->ID,
+				'title'  => get_the_title( $post ),
+				'slug'   => $post->post_name,
+				'status' => $post->post_status,
+				'type'   => $post->post_type,
+			);
+		}
+
+		$groups = array();
+		foreach ( $buckets as $hash => $bucket ) {
+			if ( count( $bucket['posts'] ) < 2 ) {
+				continue;
+			}
+			$groups[] = array(
+				'content_hash'       => $hash,
+				'match'              => $match,
+				'normalized_preview' => $bucket['normalized_preview'],
+				'posts'              => $bucket['posts'],
+			);
+		}
+
+		$dup_ids = array();
+		foreach ( $groups as $g ) {
+			foreach ( $g['posts'] as $p ) {
+				$dup_ids[] = $p['id'];
+			}
+		}
+		$dup_ids = array_values( array_unique( array_map( 'intval', $dup_ids ) ) );
+
+		return array(
+			'tool'                 => 'webo/find-duplicate-posts',
+			'groups'               => $groups,
+			'group_count'          => count( $groups ),
+			'duplicate_post_ids'   => $dup_ids,
+			'scanned_post_count'   => $scanned,
+			'skipped_no_permission'=> $skipped_permission,
+			'applied'              => array(
+				'post_type'  => $post_type,
+				'status'     => $status,
+				'match'      => $match,
+				'max_posts'  => $max_posts,
+				'offset'     => $offset,
+				'skip_empty' => $skip_empty,
+			),
+		);
+	}
+
+	/**
+	 * Normalize text for duplicate comparison (HTML stripped, entities decoded, whitespace collapsed, lowercased).
+	 *
+	 * @param string $raw Raw HTML or plain text.
+	 * @return string
+	 */
+	private static function normalize_for_duplicate_match( string $raw ): string {
+		$text = wp_strip_all_tags( $raw );
+		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$text = preg_replace( '/\s+/u', ' ', $text );
+		return strtolower( trim( $text ) );
+	}
+
+	/**
+	 * Build signature string or null if skipped.
+	 *
+	 * @param \WP_Post $post       Post object.
+	 * @param string   $match      content|title|title_and_content.
+	 * @param bool     $skip_empty Whether to omit empty signatures.
+	 * @return string|null
+	 */
+	private static function duplicate_post_signature_data( \WP_Post $post, string $match, bool $skip_empty ): ?string {
+		$title   = self::normalize_for_duplicate_match( get_the_title( $post ) );
+		$content = self::normalize_for_duplicate_match( (string) $post->post_content );
+
+		switch ( $match ) {
+			case 'title':
+				$blob = $title;
+				break;
+			case 'title_and_content':
+				$blob = $title . "\0" . $content;
+				break;
+			case 'content':
+			default:
+				$blob = $content;
+				break;
+		}
+
+		if ( $skip_empty && '' === $blob ) {
+			return null;
+		}
+
+		return $blob;
+	}
+
+	/**
+	 * Truncate normalized string for API response preview.
+	 *
+	 * @param string $blob Normalized signature blob.
+	 * @return string
+	 */
+	private static function duplicate_preview( string $blob ): string {
+		$blob = preg_replace( '/\s+/u', ' ', $blob );
+		$blob = trim( (string) $blob );
+		if ( strlen( $blob ) <= 200 ) {
+			return $blob;
+		}
+		return substr( $blob, 0, 197 ) . '…';
+	}
+
+	/**
 	 * Discover public content types (post types) on the site.
 	 *
 	 * @param array<string, mixed> $arguments Tool arguments.

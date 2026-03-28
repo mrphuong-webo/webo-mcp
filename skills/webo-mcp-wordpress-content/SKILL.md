@@ -4,7 +4,7 @@ description: >-
   Creates, updates, and manages WordPress content (posts, pages, media, categories,
   tags, menus, comments) through the WEBO MCP router and webo/* tools. Use when the
   user connects an MCP client to WordPress via webo-mcp, the n8n WEBO MCP node, or
-  mentions tools/call with webo/list-posts, webo/create-post, draft post lists (status draft),
+  mentions tools/call with webo/list-posts, webo/find-duplicate-posts, webo/create-post, draft post lists (status draft),
   the MCP router, or site content automation without WP-CLI. Workflow: discover → draft → verify → publish,
   aligned with the wordpress-content skill pattern (JSON-RPC transport instead of WP-CLI over SSH).
 ---
@@ -32,6 +32,7 @@ description: >-
 | List / discover CPTs | `webo/discover-content-types` | Public types |
 | List posts | `webo/list-posts` | Default **`status` publish** + **`post_type` post** — bài nháp / trang cần `status: draft` (v.v.) và `post_type: page`. Phản hồi có **`applied`** echo bộ lọc đã dùng. |
 | Read post | `webo/get-post` | optional `post_type` check |
+| Duplicate drafts / same body | `webo/find-duplicate-posts` | Default **`status` draft**, **`match` content** (exact match after normalize: strip tags, collapse space, lower case). Also **`title`**, **`title_and_content`**; **`max_posts`**, **`offset`**; **`skip_empty`**. Not fuzzy similarity. |
 | By URL | `webo/find-content-by-url` | optional `update` |
 | By slug | `webo/get-content-by-slug` | optional `post_type` |
 | Create | `webo/create-post` | |
