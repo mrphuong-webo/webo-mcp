@@ -1,0 +1,13 @@
+WEBO MCP — Gói tải lên WordPress.org
+=====================================
+
+1) Khớp phiên bản: * Version: trong webo-mcp.php = Stable tag: trong readme.txt = mục Changelog đầu tiên.
+
+2) Tạo zip (máy dev, có thư mục scripts/):
+     powershell -ExecutionPolicy Bypass -File .\scripts\build-release.ps1
+
+3) Lấy file:
+     dist\webo-mcp-<Version>.zip
+   (Version script đọc từ header plugin, ví dụ webo-mcp-2.0.26.zip)
+
+4) Upload zip lên WordPress.org. Không nén cả thư mục git.
