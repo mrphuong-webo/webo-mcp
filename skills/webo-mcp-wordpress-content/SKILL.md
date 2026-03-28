@@ -46,6 +46,7 @@ description: >-
 | Comments | list/get/update/delete `webo/*` | |
 | Reading / front | `webo/get-homepage-info` | |
 | Rank Math SEO | `rankmath/*` (add-on **mcp-rank-math**) | Per-post SEO title: **`rankmath/get-meta`** → **`seo_title`** (not only **`webo/get-post`** `title`). Also schema, sitemap, 404, redirections — [`webo-mcp-rank-math`](../webo-mcp-rank-math/SKILL.md) |
+| SEO plan / strategy / roadmap | `webo/*` + optional `rankmath/*` | Discovery, IA, topical clusters, phased rollout — [`webo-mcp-seo-plan`](../webo-mcp-seo-plan/SKILL.md) |
 
 **3a. Listing drafts (common pitfall).** `webo/create-post` defaults new content to **draft**, but **`webo/list-posts` defaults to `status: publish`** and **`post_type: post`** in the plugin ([`WordPressTools::list_posts`](../../inc/tools/class-wordpress-tools.php)). So “no drafts returned” usually means the agent omitted **`status`**. **Do not** tell the user to use wp-admin **Posts → Drafts** when MCP is connected and they have `edit_posts` — call the tool instead. Examples:
 
