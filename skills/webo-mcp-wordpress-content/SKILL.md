@@ -4,7 +4,7 @@ description: >-
   Creates, updates, and manages WordPress content (posts, pages, media, categories,
   tags, menus, comments) through the WEBO MCP router and webo/* tools. Use when the
   user connects an MCP client to WordPress via webo-mcp, the n8n WEBO MCP node, or
-  mentions tools/call with webo/list-posts, webo/find-duplicate-posts, webo/create-post, draft post lists (status draft),
+  mentions tools/call with webo/get-post, webo/find-content-by-url, webo/list-posts, webo/find-duplicate-posts, webo/create-post, draft post lists (status draft), reviewing or reading back post content,
   the MCP router, or site content automation without WP-CLI. Workflow: discover → draft → verify → publish,
   aligned with the wordpress-content skill pattern (JSON-RPC transport instead of WP-CLI over SSH).
 ---
@@ -63,6 +63,29 @@ description: >-
 - Draft **pages**: add `"post_type": "page"`.
 
 If `items` is empty, confirm **`applied.status`** and **`applied.post_type`** in the response before assuming there are no drafts.
+
+**3b. Reviewing / reading back content.** For “xem lại nội dung” / QA / verify what was saved: use MCP, not “I cannot browse the site.”
+
+| User gives | `tools/call` |
+|------------|----------------|
+| **Post/page ID** | **`webo/get-post`** → **`arguments`: `{ "post_id": <id> }`** (optional **`post_type`** e.g. `page`) — body is **`content`**. |
+| **Full or relative URL** on this WordPress site | **`webo/find-content-by-url`** → **`url`**: permalink or path. |
+| **Slug only** | **`webo/get-content-by-slug`** → **`slug`** + optional **`post_type`**. |
+| Unknown ID | **`webo/list-posts`** (correct **`status`**) then **`webo/get-post`**. |
+
+```json
+{
+  "name": "webo/get-post",
+  "arguments": { "post_id": 42 }
+}
+```
+
+```json
+{
+  "name": "webo/find-content-by-url",
+  "arguments": { "url": "https://example.com/my-article/" }
+}
+```
 
 4. **Workflow (summary):** Discover types/tax → locate content → create **draft** by default → taxonomy/media/menu as needed → risky ops only after dry-run / confirmation → verify with `webo/get-post` or `link`. Same spirit as [wordpress-content (jezweb)](https://skills.sh/jezweb/claude-skills/wordpress-content).
 
