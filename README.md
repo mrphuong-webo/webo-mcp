@@ -48,7 +48,7 @@ If you use this plugin, please give credit to the authors of these libraries.
 
 For **Cursor**, **Codex**, or other agents that support project skills: a maintained skill maps content-editing workflows (like the [wordpress-content](https://skills.sh/jezweb/claude-skills/wordpress-content) pattern) to **`webo/*` MCP tools**.
 
-- **Documentation:** [skills/README.md](skills/README.md)
+- **Documentation:** [skills/README.md](skills/README.md) — extension / naming: [skills/webo-mcp-extensions/SKILL.md](skills/webo-mcp-extensions/SKILL.md)
 - **Skills:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md) (full map), [skills/webo-mcp-menu-creation/SKILL.md](skills/webo-mcp-menu-creation/SKILL.md) (create & assign menus)
 - **Rank Math (optional add-on):** [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) — install and activate on the WordPress site alongside WEBO MCP and [Rank Math SEO](https://rankmath.com/); exposes **`webo-rank-math/*`** tools via the [Abilities API](https://github.com/WordPress/abilities-api) bridge
 - **Install via [skills](https://github.com/vercel-labs/skills) CLI:**  

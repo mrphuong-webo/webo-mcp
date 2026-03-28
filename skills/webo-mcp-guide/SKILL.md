@@ -12,7 +12,7 @@ description: >-
 
 ## Instructions
 
-1. **Entry point:** Read this skill first. Detailed tool tables live in **`webo-mcp-ability-*`** or the combined **`webo-mcp-wordpress-content`** reference.
+1. **Entry point:** Read this skill first. For **core vs addon plugins** and tool naming (`webo/*`, `webo-rank-math/*`), see **`webo-mcp-extensions`**. Detailed tool tables live in **`webo-mcp-ability-*`** or **`webo-mcp-wordpress-content`**.
 2. **Required flow**
 
 | Step | Action |
@@ -28,6 +28,7 @@ description: >-
 
 | Task area | Skill directory |
 |-----------|-----------------|
+| Companion plugins, tool prefixes, Rank Math vs core | `webo-mcp-extensions` |
 | Posts, pages, CPT, revisions, search-replace, homepage | `webo-mcp-ability-posts` |
 | Media, upload from URL | `webo-mcp-ability-media` |
 | Taxonomies and terms | `webo-mcp-ability-taxonomy` |

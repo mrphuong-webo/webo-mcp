@@ -1,15 +1,16 @@
 <?php
 /**
- * Example: keep webo-mcp-ultimo aligned with WEBO MCP core + WP Ultimo.
+ * Example: companion plugin (e.g. webo-mcp-ultimo) aligned with WEBO MCP + WP Ultimo.
+ *
+ * Package convention: `webo-mcp-<product>` (see skills/webo-mcp-extensions/SKILL.md).
  *
  * Core (2.0.20+): default MCP access is super admin OR manage_options OR edit_posts.
  * Use filter `webo_mcp_current_user_can_use_mcp` to tighten (e.g. customers: super admin only).
  *
- * Recommended for webo-mcp-ultimo:
- * - Require this file after webo-mcp loads; depend on webo-mcp + wp-ultimo.
- * - Register Ultimo-only tools on `webo_mcp_register_tools` (same as Rank Math example).
- * - Use WP Ultimo capabilities / customer context only inside tool callbacks; do not
- *   bypass the network gate unless business rules require it.
+ * Recommended:
+ * - Depend on webo-mcp + wp-ultimo; load after WEBO MCP.
+ * - Register Ultimo-only tools on `webo_mcp_register_tools`; use tool prefix other than `webo/` (e.g. `webo-ultimo/*`).
+ * - Enforce WP Ultimo capabilities / site context inside callbacks only; do not bypass the network gate unless required.
  *
  * @package WeboMCP\Examples
  */

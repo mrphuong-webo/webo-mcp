@@ -1,10 +1,11 @@
 <?php
 /**
- * Minimal custom tool registration example (webo_mcp_register_tools).
+ * Minimal custom tool registration example (`webo_mcp_register_tools`).
  *
- * For Rank Math SEO on production sites, install and activate the addon plugin
- * https://github.com/mrphuong-webo/webo-mcp-rank-math — it registers Abilities
- * `webo-rank-math/*` which WEBO MCP bridges to MCP tools (see skills/webo-mcp-rank-math).
+ * Naming (see skills/webo-mcp-extensions/SKILL.md):
+ * - Core tools: `webo/*` (reserved).
+ * - Production Rank Math: install https://github.com/mrphuong-webo/webo-mcp-rank-math — Abilities `webo-rank-math/*` bridged to MCP (skills/webo-mcp-rank-math).
+ * - Demo below uses `rankmath/*` only to illustrate `ToolRegistry::register`; do not treat it as the official Rank Math tool prefix.
  */
 
 namespace WeboMCP\Addon\RankMath;
