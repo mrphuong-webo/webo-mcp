@@ -164,6 +164,7 @@ if ( file_exists( $webo_mcp_abilities_api ) ) {
 require_once __DIR__ . '/inc/registry/class-tool-registry.php';
 require_once __DIR__ . '/inc/abilities/class-site-settings-ability.php';
 require_once __DIR__ . '/inc/tools/class-wordpress-tools.php';
+require_once __DIR__ . '/inc/tools/class-seo-article-analysis.php';
 require_once __DIR__ . '/inc/session/class-session-manager.php';
 require_once __DIR__ . '/inc/router/class-mcp-router.php';
 
@@ -171,6 +172,7 @@ use WeboMCP\Core\Abilities\Site_Settings_Ability;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Router\AccessHelper;
 use WeboMCP\Core\Router\McpRouter;
+use WeboMCP\Core\Tools\SeoArticleAnalysis;
 use WeboMCP\Core\Tools\WordPressTools;
 use WP\MCP\Core\McpAdapter;
 
@@ -837,6 +839,35 @@ function webo_mcp_register_standalone_core_tools() {
 			),
 			'permission'  => 'manage_options',
 			'callback'    => array( WordPressTools::class, 'update_options' ),
+		),
+		array(
+			'name'        => 'seo/article-analysis',
+			'description' => 'WordPress-only SEO analysis for one post by post_id (rendered the_content + Rank Math in synthetic head). No URL or raw HTML input. Merges webo-rank-math/get-post-seo-meta when registered; optional keyword, no_autocomplete, include_rank_math. Returns seo_score, issues, content_gaps, rank_math, integration tool names.',
+			'category'    => 'seo',
+			'arguments'   => array(
+				'post_id'           => array(
+					'type'     => 'integer',
+					'required' => true,
+					'min'      => 1,
+				),
+				'keyword'           => array(
+					'type'     => 'string',
+					'required' => false,
+					'default'  => '',
+				),
+				'no_autocomplete'   => array(
+					'type'     => 'boolean',
+					'required' => false,
+					'default'  => false,
+				),
+				'include_rank_math' => array(
+					'type'     => 'boolean',
+					'required' => false,
+					'default'  => true,
+				),
+			),
+			'permission'  => 'edit_posts',
+			'callback'    => array( SeoArticleAnalysis::class, 'analyze_tool' ),
 		),
 	);
 
