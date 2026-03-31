@@ -5,7 +5,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.0.26
+ * Version: 2.0.27
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -141,7 +141,7 @@ function webo_mcp_render_settings_page() {
 			<em>
 				<?php
 				echo esc_html__(
-					'Configure the API key or HMAC secret here. If left empty, the plugin will not require authentication for MCP requests.',
+					'MCP requests always require a WordPress Application Password (HTTP Basic) or a logged-in session. Use these fields only as an optional extra secret: if set, clients must also send the API key header and/or valid HMAC signatures.',
 					'webo-mcp'
 				);
 				?>
@@ -973,7 +973,7 @@ add_action( 'rest_api_init', 'webo_mcp_register_rest_routes' );
  *
  * Priority 20 runs after WordPress MCP Adapter registers the default HTTP transport
  * on rest_api_init priority 15–16; otherwise that route would be owned by the adapter
- * and would not use WEBO secure_permission_callback (API key / HMAC / Application Password).
+ * and would not use WEBO secure_permission_callback (Application Password session + optional API key / HMAC).
  *
  * @return void
  */

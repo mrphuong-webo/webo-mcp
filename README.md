@@ -140,7 +140,7 @@ add_filter( 'webo_mcp_public_categories', function () {
 
 ### tools/call flow
 
-1. Router validates security (`WP auth` or `X-WEBO-API-KEY` or HMAC headers)
+1. Router validates security (WordPress Application Password / session, then optional `X-WEBO-API-KEY` and HMAC if configured)
 2. Router validates session (`params.session_id` or `Mcp-Session-Id` header)
 3. Router validates tool name and arguments
 4. Router checks visibility policy (`public`/`internal`)

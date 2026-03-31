@@ -1,11 +1,11 @@
 === WEBO MCP ===
-Contributors: dinhwp
+Contributors: phuongwebo, dinhwp
 Author URI: https://dinhwp.com
 Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.26
+Stable tag: 2.0.27
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,9 +30,9 @@ Supported AI Platforms: Use with any MCP-compatible client (e.g. Cursor, Claude 
 - Bundled WordPress MCP Adapter runtime
 - Automatic bridge from registered abilities to MCP tools
 - Public tools policy with category and allowlist filters
-- Optional API key and HMAC authentication for tools/call
+- Optional site-wide or per-user API key plus HMAC (after WordPress login via Application Password or session)
 - Session lifecycle for MCP clients
-- MCP access (router + GET /webo-mcp/v1/tools): default users with `is_super_admin`, `manage_options`, or `edit_posts`; global API key/HMAC impersonate first network Super Admin on multisite or first site Administrator on the current blog if none; single site unchanged fallback to first Administrator
+- MCP access (router + GET /webo-mcp/v1/tools): accounts with `is_super_admin`, `manage_options`, or `edit_posts`, authenticated with WordPress Application Password (HTTP Basic) or a normal logged-in session; optional API key/HMAC are an extra layer when configured in Settings
 
 Standalone core tools included:
 - Site info
@@ -127,12 +127,19 @@ Yes. Default bridge rules exclude patterns for bulk, plugins/themes, and multisi
 = Is this plugin suitable for production? =
 Yes, when used with proper authentication, TLS, and a limited tool exposure policy.
 
+= How do I authenticate MCP clients? =
+Use a WordPress **Application Password** (Users → Profile → Application Passwords) and send it with HTTP Basic Auth (username = WordPress username, password = the application password). You can combine that with the optional **API Key** and **HMAC** values from Settings → WEBO MCP when those fields are set.
+
 == Screenshots ==
 1. MCP endpoint working in a REST client (initialize)
 2. tools/list response with public tools
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.27 =
+* Security (WordPress.org guidelines): MCP router no longer maps API keys or HMAC to arbitrary user accounts. All requests require WordPress Application Password (Basic Auth) or an existing logged-in session; optional site API key and HMAC apply only after authentication.
+* Readme: Contributors includes phuongwebo; clarify authentication in description and FAQ.
+
 = 2.0.26 =
 * New MCP tool seo/article-analysis (category seo, edit_posts): WordPress-only on-page SEO signals for a post via post_id — rendered content, Rank Math merge, readability, issues, content_gaps. Agent documentation: skills/webo-mcp-seo-article/SKILL.md in the GitHub repo (not bundled in the WordPress.org zip).
 * Readme: Stable tag sync, privacy note for optional outbound tool requests.
@@ -206,6 +213,9 @@ Yes, when used with proper authentication, TLS, and a limited tool exposure poli
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.27 =
+MCP clients must send WordPress Application Password (HTTP Basic) or use a logged-in session. API key/HMAC alone are no longer sufficient when calling the router.
+
 = 2.0.26 =
 Adds seo/article-analysis for post-level SEO diagnostics (optional outbound suggest API; set no_autocomplete to skip).
 

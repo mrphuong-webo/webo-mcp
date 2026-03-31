@@ -13,8 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Default: network super admins, site Administrators (`manage_options`), or content roles (`edit_posts`).
- * The REST layer still requires {@see current_user_can}( 'read' ). Each tool enforces its own capability
- * (e.g. list-nav-menus uses edit_posts; menu mutations use edit_theme_options).
+ * The REST layer requires a real WordPress session: Application Password (Basic Auth) or cookie auth.
+ * Optional site-wide or per-user API key and HMAC apply only after that identity is established.
  *
  * Tighten with {@see apply_filters}( 'webo_mcp_current_user_can_use_mcp', … ).
  */
@@ -45,7 +45,7 @@ class AccessHelper {
 		if ( ! self::current_user_can_use_mcp() ) {
 			return new \WP_Error(
 				'webo_mcp_access_denied',
-				__( 'You do not have permission to use MCP. Sign in as a user with edit_posts or higher, or use a configured API key / HMAC.', 'webo-mcp' ),
+				__( 'You do not have permission to use MCP. Use an account with edit_posts or higher.', 'webo-mcp' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -54,57 +54,130 @@ class AccessHelper {
 	}
 
 	/**
-	 * For global API key / HMAC: set `current_user` to a user who can legally run MCP.
-	 * Multisite: first login from `get_super_admins()`. Single site: first administrator (legacy).
+	 * Establish the current user using WordPress Application Password (HTTP Basic) or an existing session.
+	 * Does not impersonate arbitrary users from shared secrets alone (WordPress.org plugin guidelines).
 	 *
-	 * @return void
+	 * @param \WP_REST_Request $request Request.
+	 * @return bool True if the current user can proceed (logged in with read capability).
 	 */
-	public static function bootstrap_current_user_for_signed_request(): void {
+	public static function try_authenticate_application_password( \WP_REST_Request $request ): bool {
 		if ( is_user_logged_in() && current_user_can( 'read' ) ) {
-			return;
+			return true;
 		}
 
-		if ( is_multisite() ) {
-			$super_logins = get_super_admins();
-			if ( is_array( $super_logins ) ) {
-				foreach ( $super_logins as $login ) {
-					$login = (string) $login;
-					if ( '' === $login ) {
-						continue;
-					}
-					$user = get_user_by( 'login', $login );
-					if ( $user instanceof \WP_User ) {
-						wp_set_current_user( $user->ID );
-						return;
+		if ( ! function_exists( 'wp_authenticate_application_password' ) ) {
+			return false;
+		}
+
+		$auth_header = (string) $request->get_header( 'Authorization' );
+		if ( '' === $auth_header ) {
+			foreach ( array( 'HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION' ) as $server_key ) {
+				if ( isset( $_SERVER[ $server_key ] ) && is_string( $_SERVER[ $server_key ] ) && $_SERVER[ $server_key ] !== '' ) {
+					$auth_header = (string) $_SERVER[ $server_key ];
+					break;
+				}
+			}
+		}
+
+		if ( strpos( $auth_header, 'Basic ' ) !== 0 ) {
+			return false;
+		}
+
+		$encoded = trim( substr( $auth_header, 6 ) );
+		if ( '' === $encoded ) {
+			return false;
+		}
+
+		$decoded = base64_decode( $encoded, true );
+		if ( false === $decoded ) {
+			return false;
+		}
+
+		$colon = strpos( $decoded, ':' );
+		if ( false === $colon ) {
+			return false;
+		}
+
+		$username = substr( $decoded, 0, $colon );
+		$password = substr( $decoded, $colon + 1 );
+		if ( '' === $username || '' === $password ) {
+			return false;
+		}
+
+		$user = wp_authenticate_application_password( null, $username, $password );
+		if ( $user instanceof \WP_User && ! is_wp_error( $user ) ) {
+			wp_set_current_user( $user->ID );
+			return current_user_can( 'read' );
+		}
+
+		return false;
+	}
+
+	/**
+	 * If configured, require X-WEBO-API-KEY and/or valid HMAC headers after the user is authenticated.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return true|\WP_Error
+	 */
+	public static function validate_secondary_credentials( \WP_REST_Request $request ) {
+		$hmac_secret  = (string) get_option( 'webo_mcp_hmac_secret', '' );
+		$global_key   = (string) get_option( 'webo_mcp_api_key', '' );
+		$provided_key = trim( (string) $request->get_header( 'X-WEBO-API-KEY' ) );
+
+		if ( $global_key !== '' ) {
+			if ( $provided_key === '' || ! hash_equals( $global_key, $provided_key ) ) {
+				return new \WP_Error(
+					'webo_mcp_bad_api_key',
+					__( 'Missing or invalid X-WEBO-API-KEY header.', 'webo-mcp' ),
+					array( 'status' => 401 )
+				);
+			}
+		} else {
+			$uid = get_current_user_id();
+			if ( $uid > 0 ) {
+				$user_key = (string) get_user_meta( $uid, 'webo_mcp_api_key', true );
+				if ( $user_key !== '' ) {
+					if ( $provided_key === '' || ! hash_equals( $user_key, $provided_key ) ) {
+						return new \WP_Error(
+							'webo_mcp_bad_api_key',
+							__( 'Missing or invalid X-WEBO-API-KEY for this user.', 'webo-mcp' ),
+							array( 'status' => 401 )
+						);
 					}
 				}
 			}
+		}
 
-			$admins = get_users(
-				array(
-					'blog_id' => get_current_blog_id(),
-					'role'    => 'administrator',
-					'number'  => 1,
-					'orderby' => 'ID',
-				)
-			);
-			if ( ! empty( $admins ) && $admins[0] instanceof \WP_User ) {
-				wp_set_current_user( (int) $admins[0]->ID );
+		if ( $hmac_secret !== '' ) {
+			$signature = (string) $request->get_header( 'X-WEBO-SIGNATURE' );
+			$timestamp = (string) $request->get_header( 'X-WEBO-TIMESTAMP' );
+			if ( $signature === '' || $timestamp === '' || ! ctype_digit( $timestamp ) ) {
+				return new \WP_Error(
+					'webo_mcp_bad_hmac',
+					__( 'When an HMAC secret is configured, requests require X-WEBO-TIMESTAMP and X-WEBO-SIGNATURE headers.', 'webo-mcp' ),
+					array( 'status' => 401 )
+				);
 			}
-
-			return;
+			$now           = time();
+			$request_epoch = (int) $timestamp;
+			if ( abs( $now - $request_epoch ) > 300 ) {
+				return new \WP_Error(
+					'webo_mcp_bad_hmac',
+					__( 'Request timestamp skew too large.', 'webo-mcp' ),
+					array( 'status' => 401 )
+				);
+			}
+			$payload            = $timestamp . '.' . (string) $request->get_body();
+			$expected_signature = 'sha256=' . hash_hmac( 'sha256', $payload, $hmac_secret );
+			if ( ! hash_equals( $expected_signature, trim( $signature ) ) ) {
+				return new \WP_Error(
+					'webo_mcp_bad_hmac',
+					__( 'Invalid HMAC signature.', 'webo-mcp' ),
+					array( 'status' => 401 )
+				);
+			}
 		}
 
-		$admins = get_users(
-			array(
-				'role'    => 'administrator',
-				'number'  => 1,
-				'orderby' => 'ID',
-			)
-		);
-
-		if ( ! empty( $admins ) && $admins[0] instanceof \WP_User ) {
-			wp_set_current_user( (int) $admins[0]->ID );
-		}
+		return true;
 	}
 }

@@ -169,82 +169,17 @@ class McpRouter {
 	}
 
 	public static function secure_permission_callback( WP_REST_Request $request ) {
-		// Allow HMAC-signed requests through the REST permission callback.
-		// The router will still enforce per-method security and tool policy.
-		$configured_hmac_secret = (string) get_option( 'webo_mcp_hmac_secret', '' );
-		$signature              = (string) $request->get_header( 'X-WEBO-SIGNATURE' );
-		$timestamp              = (string) $request->get_header( 'X-WEBO-TIMESTAMP' );
-		if ( $configured_hmac_secret !== '' && $signature !== '' && $timestamp !== '' && ctype_digit( $timestamp ) ) {
-			$now           = time();
-			$request_epoch = (int) $timestamp;
-			if ( abs( $now - $request_epoch ) <= 300 ) {
-				$payload            = $timestamp . '.' . (string) $request->get_body();
-				$expected_signature = 'sha256=' . hash_hmac( 'sha256', $payload, $configured_hmac_secret );
-				if ( hash_equals( $expected_signature, trim( $signature ) ) ) {
-					AccessHelper::bootstrap_current_user_for_signed_request();
-					$gate = AccessHelper::require_mcp_access_or_error();
-					return is_wp_error( $gate ) ? $gate : true;
-				}
-			}
+		if ( ! AccessHelper::try_authenticate_application_password( $request ) ) {
+			return new WP_Error(
+				'webo_mcp_permission_denied',
+				__( 'Authenticate with a WordPress Application Password (HTTP Basic) or a logged-in session. API keys and HMAC do not replace login.', 'webo-mcp' ),
+				array( 'status' => 401 )
+			);
 		}
 
-		$provided_api_key = (string) $request->get_header( 'X-WEBO-API-KEY' );
-		if ( $provided_api_key !== '' ) {
-			$configured_key = (string) get_option( 'webo_mcp_api_key', '' );
-			if ( $configured_key !== '' && hash_equals( $configured_key, trim( $provided_api_key ) ) ) {
-				AccessHelper::bootstrap_current_user_for_signed_request();
-			} else {
-				$key = trim( $provided_api_key );
-				$users = get_users(
-					array(
-						'meta_key'     => 'webo_mcp_api_key',
-						'meta_value'   => $key,
-						'meta_compare' => '=',
-						'number'       => 1,
-						'fields'       => 'ID',
-					)
-				);
-				if ( ! empty( $users ) && isset( $users[0] ) ) {
-					wp_set_current_user( (int) $users[0] );
-				}
-			}
-		}
-
-		// If still not authenticated, try Basic Auth (username + Application Password).
-		if ( ! current_user_can( 'read' ) && function_exists( 'wp_authenticate_application_password' ) ) {
-			$auth_header = (string) $request->get_header( 'Authorization' );
-			// Apache / some FPM stacks pass Authorization only via $_SERVER (REST request header empty).
-			if ( '' === $auth_header ) {
-				foreach ( array( 'HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION' ) as $server_key ) {
-					if ( isset( $_SERVER[ $server_key ] ) && is_string( $_SERVER[ $server_key ] ) && $_SERVER[ $server_key ] !== '' ) {
-						$auth_header = (string) $_SERVER[ $server_key ];
-						break;
-					}
-				}
-			}
-			if ( strpos( $auth_header, 'Basic ' ) === 0 ) {
-				$encoded = trim( substr( $auth_header, 6 ) );
-				if ( $encoded !== '' ) {
-					$decoded = base64_decode( $encoded, true );
-					if ( $decoded !== false ) {
-						$colon = strpos( $decoded, ':' );
-						if ( $colon !== false ) {
-							$username = substr( $decoded, 0, $colon );
-							$password = substr( $decoded, $colon + 1 );
-							if ( $username !== '' && $password !== '' ) {
-								$user = wp_authenticate_application_password( null, $username, $password );
-								if ( $user instanceof \WP_User && ! is_wp_error( $user ) ) {
-									wp_set_current_user( $user->ID );
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
-			return new WP_Error( 'webo_mcp_permission_denied', 'User does not have required capability.' );
+		$secondary = AccessHelper::validate_secondary_credentials( $request );
+		if ( is_wp_error( $secondary ) ) {
+			return $secondary;
 		}
 
 		$gate = AccessHelper::require_mcp_access_or_error();
