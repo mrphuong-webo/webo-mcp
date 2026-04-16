@@ -1808,9 +1808,17 @@ class WordPressTools {
 		if ( function_exists( 'wp_create_nav_menu' ) ) {
 			return true;
 		}
-		$file = ABSPATH . WPINC . '/nav-menu.php';
-		if ( is_readable( $file ) ) {
-			require_once $file;
+
+		$admin_nav_menu_file = trailingslashit( ABSPATH ) . 'wp-admin/includes/nav-menu.php';
+		if ( is_readable( $admin_nav_menu_file ) ) {
+			require_once $admin_nav_menu_file;
+		}
+
+		if ( ! function_exists( 'wp_create_nav_menu' ) ) {
+			$includes_nav_menu_file = trailingslashit( ABSPATH ) . 'wp-includes/nav-menu.php';
+			if ( is_readable( $includes_nav_menu_file ) ) {
+				require_once $includes_nav_menu_file;
+			}
 		}
 
 		return function_exists( 'wp_create_nav_menu' );
@@ -2200,7 +2208,12 @@ class WordPressTools {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public static function add_nav_menu_item_from_post( array $arguments ) {
-		require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
+		if ( ! self::ensure_nav_menu_api_loaded() ) {
+			return new \WP_Error(
+				'webo_mcp_nav_menu_api_unavailable',
+				__( 'The navigation menu API could not be loaded. Check that WordPress core files are intact.', 'webo-mcp' )
+			);
+		}
 
 		$menu_id     = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
 		$post_id     = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
@@ -2297,7 +2310,12 @@ class WordPressTools {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public static function add_nav_menu_item_custom( array $arguments ) {
-		require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
+		if ( ! self::ensure_nav_menu_api_loaded() ) {
+			return new \WP_Error(
+				'webo_mcp_nav_menu_api_unavailable',
+				__( 'The navigation menu API could not be loaded. Check that WordPress core files are intact.', 'webo-mcp' )
+			);
+		}
 
 		$menu_id    = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
 		$url_raw    = isset( $arguments['url'] ) ? trim( (string) $arguments['url'] ) : '';

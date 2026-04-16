@@ -27,6 +27,17 @@ If you use this plugin, please give credit to the authors of these libraries.
 - This plugin bundles `wordpress/mcp-adapter` and enables adapter runtime by default.
 - Run `composer install` in plugin root before activation on environments that do not include `vendor/` in deployment.
 
+## External services
+
+When a client calls `seo/article-analysis` and does not set `no_autocomplete=true`, the plugin requests related keyword suggestions from Google Suggest/Autocomplete.
+
+- Service: Google Suggest (Google LLC)
+- Purpose: related keyword suggestions used in SEO analysis output
+- Data sent: query text (`q` parameter) and normal HTTP request metadata (for example IP address and User-Agent)
+- When sent: only during `seo/article-analysis` calls with autocomplete enabled
+- Terms of Service: https://policies.google.com/terms
+- Privacy Policy: https://policies.google.com/privacy
+
 ## Build release package
 
 - Windows PowerShell:

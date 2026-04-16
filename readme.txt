@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.27
+Stable tag: 2.0.28
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -60,6 +60,20 @@ The plugin stores the following options in the WordPress database when configure
 - `webo_mcp_hmac_secret`: HMAC secret used to sign and validate MCP requests.
 
 These options are removed when the plugin is uninstalled via the WordPress Plugins screen.
+
+== External services ==
+
+This plugin can connect to Google Suggest (Autocomplete) when a client calls the `seo/article-analysis` tool and does not set `no_autocomplete` to true. This external request is used to return related keyword suggestions for SEO analysis.
+
+Service provider: Google LLC (Google Suggest / Autocomplete API endpoint).
+
+Data sent and when:
+- Sent only when `seo/article-analysis` is called with autocomplete enabled.
+- Sends the analysis query text to `https://suggestqueries.google.com/complete/search` as the `q` parameter.
+- Sends standard HTTP request metadata such as IP address and User-Agent as part of the web request.
+
+Terms of Service: https://policies.google.com/terms
+Privacy Policy: https://policies.google.com/privacy
 
 == Developer Hooks ==
 
@@ -136,6 +150,10 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.0.28 =
+* WordPress.org review fixes: added explicit `External services` disclosure for Google Suggest/Autocomplete used by `seo/article-analysis` (service purpose, transmitted query data and request metadata, conditions, Terms and Privacy links).
+* Compatibility: removed use of `WPINC` for nav-menu API loading; now load nav-menu API via explicit core include paths with availability checks to reduce environment-specific path issues.
+
 = 2.0.27 =
 * Security (WordPress.org guidelines): MCP router no longer maps API keys or HMAC to arbitrary user accounts. All requests require WordPress Application Password (Basic Auth) or an existing logged-in session; optional site API key and HMAC apply only after authentication.
 * Readme: Contributors includes phuongwebo; clarify authentication in description and FAQ.
@@ -213,6 +231,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.0.28 =
+WordPress.org compliance update: readme now documents Google Suggest external service usage with Terms/Privacy links, and nav-menu API loading no longer relies on WPINC.
+
 = 2.0.27 =
 MCP clients must send WordPress Application Password (HTTP Basic) or use a logged-in session. API key/HMAC alone are no longer sufficient when calling the router.
 
