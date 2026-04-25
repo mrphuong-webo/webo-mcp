@@ -1,5 +1,5 @@
 === WEBO MCP ===
-Contributors: phuongwebo, dinhwp
+Contributors: phuongwebo
 Author URI: https://dinhwp.com
 Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
@@ -9,7 +9,7 @@ Stable tag: 2.0.28
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-MCP for WordPress: REST tools/list and tools/call; optional API key or HMAC. Hub https://webomcp.com | n8n node https://www.npmjs.com/package/n8n-nodes-webo-mcp
+MCP gateway for WordPress with JSON-RPC tools over REST API (initialize, tools/list, tools/call) and optional API key plus HMAC.
 
 == Description ==
 WEBO MCP acts as the primary standalone MCP gateway for WordPress.
