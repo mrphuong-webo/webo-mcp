@@ -159,6 +159,37 @@ function webo_mcp_rest_bootstrap_bom_guard_on_rest_load() {
 add_action( 'rest_api_init', 'webo_mcp_rest_bootstrap_bom_guard_on_rest_load', 0 );
 
 /**
+ * Start buffering very early for MCP-looking requests.
+ *
+ * Some stacks echo a BOM during plugin bootstrap or before {@see 'rest_api_init'} runs; a single
+ * {@see 'rest_api_init'} hook can be too late for the outer output buffer to capture that noise.
+ *
+ * @return void
+ */
+function webo_mcp_rest_bom_guard_plugins_loaded() {
+	if ( ! webo_mcp_rest_uri_maybe_mcp() ) {
+		return;
+	}
+	webo_mcp_rest_try_start_output_buffer();
+}
+
+add_action( 'plugins_loaded', 'webo_mcp_rest_bom_guard_plugins_loaded', -999999 );
+
+/**
+ * Second early gate: covers code that prints between {@see 'plugins_loaded'} and REST bootstrap.
+ *
+ * @return void
+ */
+function webo_mcp_rest_bom_guard_init() {
+	if ( ! webo_mcp_rest_uri_maybe_mcp() ) {
+		return;
+	}
+	webo_mcp_rest_try_start_output_buffer();
+}
+
+add_action( 'init', 'webo_mcp_rest_bom_guard_init', -999999 );
+
+/**
  * Fallback: activate by matched route once the request exists.
  *
  * @param mixed              $result  Prior result (unused).
