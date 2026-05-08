@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.5
+Stable tag: 2.1.6
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -164,6 +164,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.6 =
+* BOM guard: treat **Abilities API** REST URLs (`wp-abilities/v1`) the same as MCP router URLs — `@automattic/mcp-wordpress-remote` calls discover/execute over `wp-abilities`, which previously skipped the sanitizer.
+
 = 2.1.5 =
 * BOM guard: also start the sanitizer on `plugins_loaded` and `init` at priority `-999999` when the request URI looks MCP (covers BOM echoed before `rest_api_init`).
 
@@ -328,6 +331,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.6 =
+Use this if MCP clients still fail JSON parse on `discover-abilities` / ability tools — BOM strip now covers `wp-abilities` REST routes.
+
 = 2.1.5 =
 If MCP clients still parse-fail on BOM: this release starts the BOM-stripping buffer before `rest_api_init` for MCP-like URLs.
 

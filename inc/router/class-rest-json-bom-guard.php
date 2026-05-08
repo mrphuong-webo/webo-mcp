@@ -23,17 +23,19 @@ function webo_mcp_rest_uri_maybe_mcp() {
 	$uri_raw = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( (string) $_SERVER['REQUEST_URI'] ) : '';
 	$uri     = strtolower( $uri_raw );
 
-	if ( strpos( $uri, '/wp-json/' ) !== false && strpos( $uri, 'mcp' ) !== false ) {
+	$is_wp_json = ( strpos( $uri, '/wp-json/' ) !== false || strpos( $uri, 'wp-json.php' ) !== false );
+	if ( $is_wp_json && strpos( $uri, 'mcp' ) !== false ) {
 		return true;
 	}
 
-	if ( strpos( $uri, 'wp-json.php' ) !== false && strpos( $uri, 'mcp' ) !== false ) {
+	// MCP Adapter (@automattic/mcp-wordpress-remote) hits wp-abilities/v1 REST, not always /mcp/…
+	if ( $is_wp_json && strpos( $uri, 'wp-abilities' ) !== false ) {
 		return true;
 	}
 
 	if ( isset( $_GET['rest_route'] ) ) {
-		$rr = wp_unslash( (string) $_GET['rest_route'] );
-		if ( strtolower( $rr ) !== '' && strpos( strtolower( $rr ), 'mcp' ) !== false ) {
+		$rr_low = strtolower( wp_unslash( (string) $_GET['rest_route'] ) );
+		if ( $rr_low !== '' && ( strpos( $rr_low, 'mcp' ) !== false || strpos( $rr_low, 'wp-abilities' ) !== false ) ) {
 			return true;
 		}
 	}
@@ -62,6 +64,10 @@ function webo_mcp_rest_request_needs_bom_guard( $request ) {
 	}
 
 	if ( strpos( $r, 'webo-mcp' ) !== false ) {
+		return true;
+	}
+
+	if ( strpos( $r, 'wp-abilities' ) !== false ) {
 		return true;
 	}
 
