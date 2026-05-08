@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Heuristic: current HTTP request URI targets an MCP-ish REST endpoint.
+ * Heuristic: current HTTP request URI targets REST/JSON API (and thus needs BOM sanitization).
  *
  * Works before {@see WP_REST_Server} builds a route (BOM often prints before routes run).
  *
@@ -23,19 +23,28 @@ function webo_mcp_rest_uri_maybe_mcp() {
 	$uri_raw = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( (string) $_SERVER['REQUEST_URI'] ) : '';
 	$uri     = strtolower( $uri_raw );
 
-	$is_wp_json = ( strpos( $uri, '/wp-json/' ) !== false || strpos( $uri, 'wp-json.php' ) !== false );
-	if ( $is_wp_json && strpos( $uri, 'mcp' ) !== false ) {
+	/**
+	 * Guard all REST/JSON-style API URLs (pretty permalinks and index.php/rest_route fallback).
+	 * MCP transports and @automattic/mcp-wordpress-remote parse JSON bodies with JSON.parse(),
+	 * which fails on leading UTF-8 BOM; BOM can appear anywhere the stack echoes before JSON,
+	 * not only on MCP-prefixed routes.
+	 *
+	 * @param bool   $activate Default true.
+	 * @param string $uri_raw  Raw REQUEST_URI value.
+	 */
+	$guard_json_api_requests = apply_filters( 'webo_mcp_rest_bom_guard_json_api_requests', true, $uri_raw );
+
+	if ( $guard_json_api_requests && strpos( $uri, '/wp-json/' ) !== false ) {
 		return true;
 	}
 
-	// MCP Adapter (@automattic/mcp-wordpress-remote) hits wp-abilities/v1 REST, not always /mcp/…
-	if ( $is_wp_json && strpos( $uri, 'wp-abilities' ) !== false ) {
+	if ( $guard_json_api_requests && strpos( $uri, 'wp-json.php' ) !== false ) {
 		return true;
 	}
 
-	if ( isset( $_GET['rest_route'] ) ) {
+	if ( $guard_json_api_requests && isset( $_GET['rest_route'] ) ) {
 		$rr_low = strtolower( wp_unslash( (string) $_GET['rest_route'] ) );
-		if ( $rr_low !== '' && ( strpos( $rr_low, 'mcp' ) !== false || strpos( $rr_low, 'wp-abilities' ) !== false ) ) {
+		if ( $rr_low !== '' ) {
 			return true;
 		}
 	}
@@ -151,7 +160,7 @@ function webo_mcp_rest_try_start_output_buffer() {
 }
 
 /**
- * Start buffering as soon as REST API boots when the URL looks MCP — covers BOM echoed before routing.
+ * Start buffering as soon as REST API boots when the URL looks like REST/JSON API — covers BOM echoed before routing.
  *
  * @return void
  */
