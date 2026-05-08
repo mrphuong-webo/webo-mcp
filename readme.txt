@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.7
+Stable tag: 2.1.8
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -164,6 +164,12 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.8 =
+* BOM guard: fix PCRE — use `^(?:\xEF\xBB\xBF)+` so **multiple** UTF-8 BOMs are stripped (the old `^\xEF\xBB\xBF+` only repeated the final `0xBF` byte, breaking responses such as `wp/v2/types` on `webo.vn` for MCP clients).
+
+= 2.1.7 =
+* BOM guard: sanitize **all** REST API requests (`/wp-json/…`, `wp-json.php`, `?rest_route=`) by default (`webo_mcp_rest_bom_guard_json_api_requests` filter to disable).
+
 = 2.1.6 =
 * BOM guard: treat **Abilities API** REST URLs (`wp-abilities/v1`) the same as MCP router URLs — `@automattic/mcp-wordpress-remote` calls discover/execute over `wp-abilities`, which previously skipped the sanitizer.
 
@@ -331,6 +337,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.8 =
+Critical for `webo.vn` / multi-BOM REST bodies: fixes BOM sanitizer regex so repeated UTF-8 BOM prefixes are actually removed.
+
 = 2.1.7 =
 Recommended if MCP/remote clients still hit `Unexpected token` / invalid JSON — BOM strip now defaults on for **all** REST API responses.
 

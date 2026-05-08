@@ -112,7 +112,8 @@ function webo_mcp_rest_strip_leading_bom( $buffer ) {
 	$out = $buffer;
 	do {
 		$prev = $out;
-		$out  = preg_replace( '/^\xEF\xBB\xBF+/s', '', $out );
+		// Repeat the 3-byte UTF-8 BOM sequence; \xEF\xBB\xBF+ would wrongly repeat only 0xBF.
+		$out  = preg_replace( '/^(?:\xEF\xBB\xBF)+/s', '', $out );
 		$out  = preg_replace( '/^\x{FEFF}+/u', '', $out );
 	} while ( $out !== $prev && $out !== '' );
 
