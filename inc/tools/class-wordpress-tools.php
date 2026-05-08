@@ -1227,6 +1227,16 @@ class WordPressTools {
 		$inventory = self::plugin_query_collect_inventory();
 		$updates   = array();
 
+		// Luôn gọi wp_update_plugins() khi query là 'updates' để đảm bảo lấy thông tin mới nhất
+		if ( 'updates' === $query ) {
+			if ( ! function_exists( 'wp_update_plugins' ) ) {
+				require_once ABSPATH . WPINC . '/update.php';
+			}
+			if ( function_exists( 'wp_update_plugins' ) ) {
+				wp_update_plugins();
+			}
+		}
+
 		if ( 'updates' === $query || 'health' === $query ) {
 			$updates = self::plugin_query_collect_updates( $refresh );
 			foreach ( $updates['map'] as $plugin_file => $update_row ) {
