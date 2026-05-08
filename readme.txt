@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.3
+Stable tag: 2.1.4
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -164,6 +164,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.4 =
+* BOM guard: start output buffer at `rest_api_init` priority 0 when Request-URI/`rest_route` looks like MCP (catches BOM printed before routing); loop-strip repeated BOM/FEFF; filter `webo_mcp_rest_bom_guard_enabled` to disable.
+
 = 2.1.3 =
 * REST: strip accidental UTF-8 BOM / stray U+FEFF before JSON on MCP routes so clients no longer fail JSON parse with `Unexpected token` (defensive `ob_start` handler on `rest_pre_dispatch`).
 
@@ -322,6 +325,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.4 =
+Further hardening for leading-BOM MCP JSON failures: earlier buffer bootstrap on MCP-like REST URLs.
+
 = 2.1.3 =
 Recommended if MCP clients show JSON parse errors (leading BOM) on `tools/list` or `tools/call` — response body is sanitized for MCP REST routes.
 
