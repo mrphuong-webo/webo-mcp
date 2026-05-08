@@ -4,6 +4,12 @@ Token-optimized MCP gateway for WordPress. Unified query/mutate tools cut the `t
 
 ## Recent Changes
 
+### 2.1.2 — Restore `skills/` in git + index updates
+
+- The **`skills/`** directory (Cursor/Codex `SKILL.md` packs: guide, wordpress-content, WooCommerce, Rocket, Rank Math, Ultimo DNS checklist, …) is **tracked again** in this repository — links under [skills/README.md](skills/README.md) work from a plain `git clone`.
+- **`skills/README.md`** now indexes **WP Rocket** (`cache-query` / `cache-mutate`) and **`webo-mcp-ultimo-domain-dns-cf`** (Ultimo `checking-dns` + Cloudflare).
+- Repo **README.md** pointers updated to reflect the fuller skill catalog.
+
 ### 2.1.1 — Documentation and MCP visibility
 
 - **`docs/MCP_TOOL_MIGRATION.md`** lives in-repo: consolidated **old tool name → dispatcher + `action`** map for addons (Rank Math redirect layer, Rocket `cache-query`/`cache-mutate`, WooCommerce, Elementor, and others).
@@ -113,8 +119,8 @@ Special thanks to the authors and open source projects that contributed to this 
 
 For **Cursor**, **Codex**, or other agents that support project skills: a maintained skill maps content-editing workflows (like the [wordpress-content](https://skills.sh/jezweb/claude-skills/wordpress-content) pattern) to **`webo/*` MCP tools**.
 
-- **Documentation:** [skills/README.md](skills/README.md)
-- **Skills:** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md) (full map), [skills/webo-mcp-menu-creation/SKILL.md](skills/webo-mcp-menu-creation/SKILL.md) (create & assign menus), [skills/webo-mcp-ability-rank-math/SKILL.md](skills/webo-mcp-ability-rank-math/SKILL.md) (Rank Math SEO fields/options), [skills/webo-mcp-rank-math-redirections/SKILL.md](skills/webo-mcp-rank-math-redirections/SKILL.md) (Rank Math redirection workflows)
+- **Documentation:** [skills/README.md](skills/README.md) (full skill index — WooCommerce, **WP Rocket** `cache-query`/`cache-mutate`, WP Ultimo domain/DNS troubleshooting, Rank Math, menus, SEO, …)
+- **Skills (starting points):** [skills/webo-mcp-wordpress-content/SKILL.md](skills/webo-mcp-wordpress-content/SKILL.md) (full `webo/*` reference), [skills/webo-mcp-menu-creation/SKILL.md](skills/webo-mcp-menu-creation/SKILL.md), [skills/webo-mcp-ability-rank-math/SKILL.md](skills/webo-mcp-ability-rank-math/SKILL.md), [skills/webo-mcp-rank-math-redirections/SKILL.md](skills/webo-mcp-rank-math-redirections/SKILL.md), [skills/webo-mcp-ability-rocket/SKILL.md](skills/webo-mcp-ability-rocket/SKILL.md), [skills/webo-mcp-ultimo-domain-dns-cf/SKILL.md](skills/webo-mcp-ultimo-domain-dns-cf/SKILL.md)
 - **Rank Math (optional add-on):** [webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math) — install and activate on the WordPress site alongside WEBO MCP and [Rank Math SEO](https://rankmath.com/); exposes **`webo-rank-math/*`** tools via the [Abilities API](https://github.com/WordPress/abilities-api) bridge
 - **Install via [skills](https://github.com/vercel-labs/skills) CLI:**  
   `npx skills add https://github.com/mrphuong-webo/webo-mcp --skill webo-mcp-wordpress-content -a cursor -g -y`  

@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation, woocommerce, wordpress
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -164,6 +164,11 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.2 =
+* Restore the versioned **`skills/`** subtree in the Git repository (guides and ability-specific SKILL.md files referenced from README.md), matching the documented `npx skills add` workflows.
+* Add **`webo-mcp-ultimo-domain-dns-cf`** skill index entry (Ultimo checking-dns + Cloudflare checklist).
+* skills/README.md: document **WP Rocket** skill (`cache-query` / `cache-mutate` unified tools).
+
 = 2.1.1 =
 * Documentation: add docs/MCP_TOOL_MIGRATION.md (cross-addon dispatcher map; Rank Math + Rocket public-vs-internal discovery, WooCommerce query/mutate tool names).
 * Readme (GitHub + WordPress.org): align examples with `webo/content-query`, document `meta.mcp.public` visibility for bridged abilities, link migration doc; sync standalone tool bullets (menus, themes, plugins).
@@ -314,6 +319,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.2 =
+Restores packaged agent **`skills/`** in the upstream repo clone; upgrade if you rely on Cursor/Codex skills from GitHub.
+
 = 2.1.1 =
 Documentation-only refresh: use docs/MCP_TOOL_MIGRATION.md when mapping old MCP tool names to dispatchers + `action`. No behavioral change vs 2.1.0 expected.
 
