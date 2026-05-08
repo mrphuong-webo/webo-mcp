@@ -1,7 +1,7 @@
 === WEBO MCP ===
 Contributors: phuongwebo
 Author URI: https://dinhwp.com
-Tags: mcp, ai, json-rpc, api, automation, woocommerce, wordpress
+Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
