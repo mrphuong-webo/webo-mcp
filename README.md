@@ -4,27 +4,35 @@ Token-optimized MCP gateway for WordPress. Unified query/mutate tools cut the `t
 
 ## Recent Changes
 
+### 2.1.1 — Documentation and MCP visibility
+
+- **`docs/MCP_TOOL_MIGRATION.md`** lives in-repo: consolidated **old tool name → dispatcher + `action`** map for addons (Rank Math redirect layer, Rocket `cache-query`/`cache-mutate`, WooCommerce, Elementor, and others).
+- **Ability bridge + `meta.mcp.public`:** WEBO MCP auto-bridges WordPress abilities into tools. Addon code should expose **`public: true` only on dispatchers**. Extra granular abilities remain useful for REST or debugging but stay **MCP-internal** until `tools/list` is called with `include_internal` (see filters below).
+- **`webo-mcp-rank-math`**: public MCP surface = **ten** unified `*-query` / `*-mutate` tools; granular redirection abilities stay internal unless you widen discovery.
+- **`webo-mcp-rocket`**: public MCP surface = **`webo-rocket/cache-query`** and **`webo-rocket/cache-mutate`** only (nine legacy per-operation tool names removed from discovery).
+
 ### 2.1.0 — Ecosystem-wide enum-dispatch unification
 
 All WEBO MCP addons now follow the same query/mutate pattern as the core plugin.
 
-| Addon | Before | After | Saved |
-|-------|--------|-------|-------|
-| webo-mcp-woocommerce | 27 tools | 10 tools | −17 |
-| webo-mcp-rank-math | 18 tools | 10 tools | −8 |
-| webo-mcp-rocket | 9 tools | 2 tools | −7 |
-| **Total (with core 12)** | **~70+** | **~34** | **~36+** |
+| Addon | Before (typical) | After (dispatcher count) |
+|-------|------------------|---------------------------|
+| webo-mcp-woocommerce | many per-operation tools | **10** dispatcher tools (`webo/woo-query-*` and `webo/woo-mutate-*` per domain; each takes an `action`) |
+| webo-mcp-rank-math | many per-operation tools | 10 unified `*-query` / `*-mutate` abilities |
+| webo-mcp-rocket | 9 per-operation MCP tools | 2 unified tools (`cache-query`, `cache-mutate`) |
+| … | varies by site | **`tools/list` shrinks materially** |
 
-**What changed:** each domain now exposes two abilities — `*-query` (all reads) and `*-mutate` (all writes). The client passes a single `action` string; the server dispatches via PHP `match()`. All handler logic is unchanged — only the registration surface shrinks.
+**What changed:** each domain exposes **`*-query` / `*-mutate` style** dispatchers where appropriate. The client passes a discriminator such as **`action`**; the server dispatches (often via PHP `match()`). Implementations evolve per addon release — discovery always wins over static counts.
 
 **Why it matters for AI agents:**
 - Smaller `tools/list` payload → fewer tokens consumed from the model's context window
 - Fewer tool names to choose from → faster, more accurate tool selection
-- Consistent `action` pattern across all domains → easier agent prompting and skill authoring
+- Consistent dispatcher + `action` pattern across domains → easier agent prompting and skill authoring
 
 **Operational docs for this release:**
+- Cross-addon migration map: **`docs/MCP_TOOL_MIGRATION.md`**
 - Release notes: `docs/RELEASE_NOTES_2.1.0.md`
-- Migration map (old tool -> new tool + action): `docs/MIGRATION_GUIDE_2.1.0.md`
+- Deep-dive migration (2.1.0): `docs/MIGRATION_GUIDE_2.1.0.md`
 - tools/list benchmark runbook: `docs/BENCHMARK_TOOLS_LIST.md`
 - Agent prompt snippets (Codex/Cursor/n8n): `docs/AGENT_SNIPPETS.md`
 - Smoke test script: `scripts/smoke-unified-dispatch.ps1`
@@ -153,8 +161,11 @@ AI Agent -> MCP Request -> Tool Router -> Tool Registry -> Tool Execution
   "method": "tools/call",
   "params": {
     "session_id": "abc123",
-    "name": "webo/list-posts",
+    "name": "webo/content-query",
     "arguments": {
+      "action": "list",
+      "post_type": "post",
+      "status": "publish",
       "per_page": 10
     }
   },
@@ -320,26 +331,36 @@ Three tools align with MCP servers like [mcp-wordpress-instaWP](https://glama.ai
 
 ```php
 ToolRegistry::register([
-  'name' => 'webo/list-posts',
-  'description' => 'List WordPress posts',
-  'category' => 'wordpress',
-  'arguments' => [
-      'per_page' => [
-          'type' => 'integer',
-          'required' => false,
-          'default' => 10,
-          'min' => 1,
-          'max' => 100,
-      ],
+  'name'        => 'webo/content-query',
+  'description' => 'Unified read-only content operations. action (required): list, get, find-by-url, …',
+  'category'    => 'wordpress',
+  'arguments'   => [
+    'action'    => [
+      'type'     => 'string',
+      'required' => true,
+    ],
+    'post_type' => [
+      'type'     => 'string',
+      'required' => false,
+    ],
+    'per_page'  => [
+      'type'     => 'integer',
+      'required' => false,
+      'default'  => 10,
+      'min'      => 1,
+      'max'      => 100,
+    ],
   ],
-  'permission' => 'read',
-  'callback' => [WordPressTools::class, 'list_posts'],
+  'permission'  => 'read',
+  'callback'    => [ WordPressTools::class, 'content_query' ],
 ]);
 ```
 
 ## Register tools from addon plugin
 
-Third-party plugins can register **`webo_mcp_register_tools`** callbacks (see `examples/addon-rankmath-example.php` for a minimal pattern). Rank Math SEO integration is maintained as a separate addon: **[webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math)** (**must be activated** on the site); it registers WordPress Abilities named **`webo-rank-math/*`**, which WEBO MCP bridges into **`tools/list`** automatically.
+Third-party plugins can register **`webo_mcp_register_tools`** callbacks (see `examples/addon-rankmath-example.php` for a minimal pattern). Rank Math SEO integration is maintained as a separate addon: **[webo-mcp-rank-math](https://github.com/mrphuong-webo/webo-mcp-rank-math)** (**must be activated** on the site); it registers WordPress Abilities named **`webo-rank-math/*`**, which WEBO MCP bridges into the tool registry. **Only abilities with `meta.mcp.public === true` appear in default `tools/list`**; the maintained addon sets public on the **ten** unified dispatchers only.
+
+WP Rocket cache automation: **[webo-mcp-rocket](https://github.com/mrphuong-webo/webo-mcp-rocket)** registers **`webo-rocket/cache-query`** and **`webo-rocket/cache-mutate`** for public discovery (see **`docs/MCP_TOOL_MIGRATION.md`** for `action` values).
 
 ## tools/list output format
 
@@ -347,8 +368,8 @@ Third-party plugins can register **`webo_mcp_register_tools`** callbacks (see `e
 {
   "tools": [
     {
-      "name": "webo/list-posts",
-      "description": "List WordPress posts",
+      "name": "webo/content-query",
+      "description": "Unified read-only content operations (action: list, get, find-by-url, …)",
       "category": "wordpress"
     }
   ]

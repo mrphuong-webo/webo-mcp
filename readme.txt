@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation, woocommerce, wordpress
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,6 +39,7 @@ Always discover tools before calling them: run `tools/list`, pick an exact tool 
 - Project documentation and ecosystem notes: https://webomcp.com
 - Optional n8n community node (separate package): https://www.npmjs.com/package/n8n-nodes-webo-mcp
 - Release notes and migration map: see docs/RELEASE_NOTES_2.1.0.md and docs/MIGRATION_GUIDE_2.1.0.md in the GitHub repository
+- Cross-addon dispatcher map (granular legacy names removed from discovery): docs/MCP_TOOL_MIGRATION.md
 
 Compatibility note: any MCP-capable client can be used; which large language model runs inside the client is outside this plugin.
 
@@ -50,8 +51,9 @@ Standalone core tools included:
 - Comments: `webo/comment-query` (list, get) and `webo/comment-mutate` (update, delete)
 - Taxonomy/Terms: `webo/taxonomy-query` (discover, list, get) and `webo/taxonomy-mutate` (create, update, delete)
 - Nav menus: list menus, list menu items (menu_order, db_id), add menu link from post (explicit post_id + menu_order required)
-- Plugins: `webo/plugin-query` (list, get, activate, deactivate)
-- Themes: list installed themes, switch active theme
+- Plugins: `webo/plugin-query` (installed, active, updates, …)
+- Themes: `webo/theme-query`, `webo/theme-mutate`
+- Menus: `webo/menu-query`, `webo/menu-mutate`
 - Options: get/update (safe allowlist only), set site icon/favicon from media
 - SEO (WordPress post): seo/article-analysis — requires post_id; merges Rank Math meta when available (same data path as webo-rank-math/get-post-seo-meta); optional related-keyword suggestions via outbound request unless no_autocomplete is true
 
@@ -139,7 +141,7 @@ The project hub is https://webomcp.com. For n8n, install the community node from
 Yes. This plugin bundles Abilities API via Composer and auto-bridges registered abilities to MCP tools. You can disable auto-bridge with filter webo_mcp_auto_bridge_abilities set to false.
 
 = How do I migrate from legacy one-operation tool names? =
-Use `tools/list` to discover the unified tool names in your environment, then move calls to query/mutate tools with an explicit `action` argument. A full mapping is available in docs/MIGRATION_GUIDE_2.1.0.md in the GitHub repository.
+Use `tools/list` to discover the dispatcher tool names on your site, then pass the correct `action` (or query/mutate discriminant) for each operation. Use docs/MIGRATION_GUIDE_2.1.0.md for the 2.1.0 rollout narrative and docs/MCP_TOOL_MIGRATION.md for a consolidated addon-by-addon map (Rank Math, Rocket, WooCommerce groups, etc.).
 
 = Can I expose internal tools? =
 Yes, via filter webo_mcp_allow_internal_tools in private environments.
@@ -162,11 +164,14 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.1 =
+* Documentation: add docs/MCP_TOOL_MIGRATION.md (cross-addon dispatcher map; Rank Math + Rocket public-vs-internal discovery, WooCommerce query/mutate tool names).
+* Readme (GitHub + WordPress.org): align examples with `webo/content-query`, document `meta.mcp.public` visibility for bridged abilities, link migration doc; sync standalone tool bullets (menus, themes, plugins).
 = 2.1.0 =
 * **Token optimization — ecosystem-wide enum-dispatch unification.** All WEBO MCP addons now follow the same query/mutate pattern as the core plugin, replacing one-tool-per-operation APIs with unified abilities that accept an `action` argument:
-  * **webo-mcp-woocommerce:** 27 individual tools → 10 unified tools (`woo-query-products`, `woo-mutate-products`, `woo-query-orders`, `woo-mutate-orders`, `woo-query-customers`, `woo-mutate-customers`, `woo-query-coupons`, `woo-mutate-coupons`, `woo-query-store`, `woo-mutate-store`).
-  * **webo-mcp-rank-math:** 18 individual tools → 10 unified tools across posts, redirections, settings, schema, analytics, and keywords.
-  * **webo-mcp-rocket:** 9 individual tools → 2 unified tools (`rocket-cache-query`, `rocket-cache-mutate`).
+  * **webo-mcp-woocommerce:** 27 individual tools → 10 unified tools (`webo/woo-query-products`, `webo/woo-mutate-products`, `webo/woo-query-orders`, `webo/woo-mutate-orders`, `webo/woo-query-customers`, `webo/woo-mutate-customers`, `webo/woo-query-coupons`, `webo/woo-mutate-coupons`, `webo/woo-query-store`, `webo/woo-mutate-store`).
+  * **webo-mcp-rank-math:** 18 individual tools → 10 unified `webo-rank-math/*-query`/`*-mutate` abilities; granular abilities may stay MCP-internal (see addon `wp_register_ability_args`).
+  * **webo-mcp-rocket:** 9 individual tools → 2 unified tools (`webo-rocket/cache-query`, `webo-rocket/cache-mutate`).
 * **Impact:** with core and addons active the total tool count visible in `tools/list` drops from ~79+ to ~34. A smaller tool list means the model picks tools faster, uses less context budget per request, and makes fewer tool-name errors.
 * **Pattern:** each unified ability requires one `action` string that is dispatched server-side via PHP `match()`. All existing handler logic is preserved — only the registration surface changes.
 * Updated skills documentation for webo-mcp-ability-woocommerce, webo-mcp-ability-rank-math, webo-mcp-ability-rocket, and webo-mcp-guide.
@@ -309,6 +314,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.1 =
+Documentation-only refresh: use docs/MCP_TOOL_MIGRATION.md when mapping old MCP tool names to dispatchers + `action`. No behavioral change vs 2.1.0 expected.
+
 = 2.0.40 =
 Recommended update for MCP clients that batch process posts or rely on seo/article-analysis; list-posts pagination and H1/schema detection are more accurate.
 
