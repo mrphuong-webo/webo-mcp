@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation, woocommerce, wordpress
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -164,6 +164,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.3 =
+* REST: strip accidental UTF-8 BOM / stray U+FEFF before JSON on MCP routes so clients no longer fail JSON parse with `Unexpected token` (defensive `ob_start` handler on `rest_pre_dispatch`).
+
 = 2.1.2 =
 * Restore the versioned **`skills/`** subtree in the Git repository (guides and ability-specific SKILL.md files referenced from README.md), matching the documented `npx skills add` workflows.
 * Add **`webo-mcp-ultimo-domain-dns-cf`** skill index entry (Ultimo checking-dns + Cloudflare checklist).
@@ -319,6 +322,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.3 =
+Recommended if MCP clients show JSON parse errors (leading BOM) on `tools/list` or `tools/call` — response body is sanitized for MCP REST routes.
+
 = 2.1.2 =
 Restores packaged agent **`skills/`** in the upstream repo clone; upgrade if you rely on Cursor/Codex skills from GitHub.
 
