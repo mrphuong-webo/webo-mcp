@@ -1,5 +1,6 @@
 # Build artifacts
 /dist/*.zip
+/dist-wporg-pack/
 
 # Composer binaries (installed locally only)
 /vendor/bin/
