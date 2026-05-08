@@ -1,0 +1,22 @@
+# Build artifacts
+/dist/*.zip
+
+# Composer binaries (installed locally only)
+/vendor/bin/
+
+# IDE / Cursor (do not commit local MCP/workspace wiring)
+.cursor/
+
+# Scratch / ops notes (keep local — not shipped)
+GITHUB_RESET_STEPS.md
+n8n_ai_system_prompt.txt
+phpcs.xml.dist
+WPORG_RELEASE_CHECKLIST.md
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

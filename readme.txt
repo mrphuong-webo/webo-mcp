@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.8
+Stable tag: 2.1.9
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -164,6 +164,10 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.9 =
+* Refactor: move built-in MCP tool registration into `inc/bootstrap/class-standalone-tools.php` (smaller bootstrap; same tool names).
+* Maintainer: broaden `.gitignore` (composer `vendor/bin/`, Cursor local config, scratch files); ship `scripts/` helpers and `docs/WPORG_REVIEW_REPLY_2.0.28.md`; keep `composer.json` production-only.
+
 = 2.1.8 =
 * BOM guard: fix PCRE — use `^(?:\xEF\xBB\xBF)+` so **multiple** UTF-8 BOMs are stripped (the old `^\xEF\xBB\xBF+` only repeated the final `0xBF` byte, breaking responses such as `wp/v2/types` on `webo.vn` for MCP clients).
 
@@ -337,6 +341,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.9 =
+Internal refactor (standalone tool bootstrap file only). No MCP tool renaming; safe routine update.
+
 = 2.1.8 =
 Critical for `webo.vn` / multi-BOM REST bodies: fixes BOM sanitizer regex so repeated UTF-8 BOM prefixes are actually removed.
 

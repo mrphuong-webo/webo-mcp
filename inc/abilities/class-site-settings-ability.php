@@ -68,10 +68,10 @@ class Site_Settings_Ability {
 		wp_register_ability(
 			'core/get-site-settings',
 			array(
-				'label'       => __( 'Get Site Settings', 'webo-mcp' ),
-				'description' => __( 'Returns WordPress site-wide settings: title, URLs, locale and time formats, reading and front page, discussion defaults, search visibility, permalinks, writing defaults, and active theme. Use this for configuration and environment context — not for loading posts, pages, or user lists.', 'webo-mcp' ),
-				'category'    => 'site',
-				'input_schema' => array(
+				'label'               => __( 'Get Site Settings', 'webo-mcp' ),
+				'description'         => __( 'Returns WordPress site-wide settings: title, URLs, locale and time formats, reading and front page, discussion defaults, search visibility, permalinks, writing defaults, and active theme. Use this for configuration and environment context — not for loading posts, pages, or user lists.', 'webo-mcp' ),
+				'category'            => 'site',
+				'input_schema'        => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'sections' => array(
@@ -86,7 +86,7 @@ class Site_Settings_Ability {
 					'additionalProperties' => false,
 					'default'              => array(),
 				),
-				'output_schema' => array(
+				'output_schema'       => array(
 					'type'                 => 'object',
 					'additionalProperties' => true,
 				),
@@ -153,7 +153,7 @@ class Site_Settings_Ability {
 			);
 		}
 
-		if ( in_array( 'wordpress', $sections, true ) ) {
+		if ( in_array( 'WordPress', $sections, true ) ) {
 			$out['wordpress'] = array(
 				'version'      => get_bloginfo( 'version' ),
 				'is_multisite' => is_multisite(),
@@ -174,10 +174,10 @@ class Site_Settings_Ability {
 
 		if ( in_array( 'reading', $sections, true ) ) {
 			$out['reading'] = array(
-				'posts_per_page'  => (int) get_option( 'posts_per_page', 10 ),
-				'show_on_front'   => (string) get_option( 'show_on_front', 'posts' ),
-				'page_on_front'   => (int) get_option( 'page_on_front', 0 ),
-				'page_for_posts'  => (int) get_option( 'page_for_posts', 0 ),
+				'posts_per_page' => (int) get_option( 'posts_per_page', 10 ),
+				'show_on_front'  => (string) get_option( 'show_on_front', 'posts' ),
+				'page_on_front'  => (int) get_option( 'page_on_front', 0 ),
+				'page_for_posts' => (int) get_option( 'page_for_posts', 0 ),
 			);
 		}
 

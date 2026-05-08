@@ -22,66 +22,66 @@ class McpRouter {
 		register_rest_route(
 			'mcp/v1',
 			'/router',
-			[
-				'methods' => 'POST',
-				'callback' => [ $router, 'handle_request' ],
-				'permission_callback' => [ self::class, 'secure_permission_callback' ],
-			]
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $router, 'handle_request' ),
+				'permission_callback' => array( self::class, 'secure_permission_callback' ),
+			)
 		);
 		register_rest_route(
 			'mcp/v1',
 			'/router',
-			[
-				'methods' => 'GET',
-				'callback' => [ $router, 'handle_sse_request' ],
-				'permission_callback' => [ self::class, 'secure_permission_callback' ],
-			]
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $router, 'handle_sse_request' ),
+				'permission_callback' => array( self::class, 'secure_permission_callback' ),
+			)
 		);
 		register_rest_route(
 			'mcp/v1',
 			'/router/sse',
-			[
-				'methods' => 'GET',
-				'callback' => [ $router, 'handle_sse_request' ],
-				'permission_callback' => [ self::class, 'secure_permission_callback' ],
-			]
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $router, 'handle_sse_request' ),
+				'permission_callback' => array( self::class, 'secure_permission_callback' ),
+			)
 		);
 		register_rest_route(
 			'mcp',
 			'/mcp-adapter-default-server',
-			[
-				'methods' => 'POST',
-				'callback' => [ $router, 'handle_request' ],
-				'permission_callback' => [ self::class, 'secure_permission_callback' ],
-			]
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $router, 'handle_request' ),
+				'permission_callback' => array( self::class, 'secure_permission_callback' ),
+			)
 		);
 		register_rest_route(
 			'mcp',
 			'/mcp-adapter-default-server',
-			[
-				'methods' => 'GET',
-				'callback' => [ $router, 'handle_sse_request' ],
-				'permission_callback' => [ self::class, 'secure_permission_callback' ],
-			]
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $router, 'handle_sse_request' ),
+				'permission_callback' => array( self::class, 'secure_permission_callback' ),
+			)
 		);
 	}
 
 	public function handle_request( WP_REST_Request $request ) {
 		$raw_body = (string) $request->get_body();
-		$payload = json_decode( $raw_body, true );
+		$payload  = json_decode( $raw_body, true );
 		if ( JSON_ERROR_NONE !== json_last_error() || ! is_array( $payload ) ) {
 			return JsonRpcHelper::error( -32700, 'Parse error', null );
 		}
 		$validation = JsonRpcHelper::validateEnvelope( $payload );
 		if ( is_wp_error( $validation ) ) {
 			$error_data = $validation->get_error_data();
-			$code = isset( $error_data['code'] ) ? (int) $error_data['code'] : -32600;
-			$id = isset( $payload['id'] ) ? $payload['id'] : null;
+			$code       = isset( $error_data['code'] ) ? (int) $error_data['code'] : -32600;
+			$id         = isset( $payload['id'] ) ? $payload['id'] : null;
 			return JsonRpcHelper::error( $code, $validation->get_error_message(), $id );
 		}
 		$method = (string) $payload['method'];
-		$params = isset( $payload['params'] ) && is_array( $payload['params'] ) ? $payload['params'] : [];
-		$id = isset( $payload['id'] ) ? $payload['id'] : null;
+		$params = isset( $payload['params'] ) && is_array( $payload['params'] ) ? $payload['params'] : array();
+		$id     = isset( $payload['id'] ) ? $payload['id'] : null;
 		switch ( $method ) {
 			case 'initialize':
 				return $this->handle_initialize( $params, $id );
@@ -95,26 +95,29 @@ class McpRouter {
 	}
 
 	public function handle_initialize( array $params, $id ) {
-		$meta = [
-			'client' => isset( $params['client'] ) ? sanitize_text_field( (string) $params['client'] ) : '',
+		$meta       = array(
+			'client'  => isset( $params['client'] ) ? sanitize_text_field( (string) $params['client'] ) : '',
 			'version' => isset( $params['version'] ) ? sanitize_text_field( (string) $params['version'] ) : '',
-		];
+		);
 		$session_id = SessionManager::create( $meta );
-		return JsonRpcHelper::success([
-			'session_id' => $session_id,
-			'capabilities' => [
-				'tools' => true,
-				'methods' => [ 'initialize', 'tools/list', 'tools/call' ],
-			],
-		], $id );
+		return JsonRpcHelper::success(
+			array(
+				'session_id'   => $session_id,
+				'capabilities' => array(
+					'tools'   => true,
+					'methods' => array( 'initialize', 'tools/list', 'tools/call' ),
+				),
+			),
+			$id
+		);
 	}
 
 	public function handle_tools_list( WP_REST_Request $request, array $params, $id ) {
-		$include_internal = PolicyHelper::is_internal_allowed( $request );
+		$include_internal           = PolicyHelper::is_internal_allowed( $request );
 		$requested_include_internal = false;
-		foreach ( [ 'include_internal', 'includeinternal', 'includeInternal' ] as $key ) {
+		foreach ( array( 'include_internal', 'includeinternal', 'includeInternal' ) as $key ) {
 			if ( array_key_exists( $key, $params ) ) {
-				$requested_include_internal = filter_var( $params[$key], FILTER_VALIDATE_BOOLEAN );
+				$requested_include_internal = filter_var( $params[ $key ], FILTER_VALIDATE_BOOLEAN );
 				break;
 			}
 		}
@@ -122,29 +125,36 @@ class McpRouter {
 			$include_internal = true;
 		}
 		$category = '';
-		foreach ( [ 'category', 'Category' ] as $key ) {
+		foreach ( array( 'category', 'Category' ) as $key ) {
 			if ( array_key_exists( $key, $params ) && is_string( $params[ $key ] ) ) {
 				$category = sanitize_text_field( $params[ $key ] );
 				break;
 			}
 		}
-		$all_payload = ToolRegistry::list_tools( true, '' );
-		$payload = ToolRegistry::list_tools( $include_internal, $category );
-		$all_tools = isset( $all_payload['tools'] ) && is_array( $all_payload['tools'] ) ? $all_payload['tools'] : [];
-		$tools = isset( $payload['tools'] ) && is_array( $payload['tools'] ) ? $payload['tools'] : [];
-		$tools = array_values( array_filter( $tools, function( $tool ) use ( $request ) {
-			return is_array( $tool ) && PolicyHelper::is_public_allowed( $tool, $request );
-		} ) );
-		return JsonRpcHelper::success([
-			'tools' => $tools,
-			'meta' => [
-				'registered_total' => count( $all_tools ),
-				'returned_total' => count( $tools ),
-				'include_internal' => $include_internal,
-				'category_filter' => $category,
-				'feature_support_hint' => $this->build_missing_feature_guidance_message(),
-			],
-		], $id );
+		$payload          = ToolRegistry::list_tools( $include_internal, $category );
+		$tools            = isset( $payload['tools'] ) && is_array( $payload['tools'] ) ? $payload['tools'] : array();
+		$registered_total = isset( $payload['registered_total'] ) ? (int) $payload['registered_total'] : count( $tools );
+		$tools            = array_values(
+			array_filter(
+				$tools,
+				function ( $tool ) use ( $request ) {
+					return is_array( $tool ) && PolicyHelper::is_public_allowed( $tool, $request );
+				}
+			)
+		);
+		return JsonRpcHelper::success(
+			array(
+				'tools' => $tools,
+				'meta'  => array(
+					'registered_total'     => $registered_total,
+					'returned_total'       => count( $tools ),
+					'include_internal'     => $include_internal,
+					'category_filter'      => $category,
+					'feature_support_hint' => $this->build_missing_feature_guidance_message(),
+				),
+			),
+			$id
+		);
 	}
 
 	public function handle_tools_call( WP_REST_Request $request, array $params, $id ) {
@@ -170,7 +180,7 @@ class McpRouter {
 		if ( ! PolicyHelper::is_public_allowed( $tool_definition, $request ) ) {
 			return JsonRpcHelper::error( -32001, 'Tool is not allowed by public policy', $id );
 		}
-		$arguments = [];
+		$arguments = array();
 		if ( isset( $params['arguments'] ) ) {
 			if ( ! is_array( $params['arguments'] ) ) {
 				return JsonRpcHelper::error( -32602, 'Invalid params: arguments must be an object', $id );
@@ -183,13 +193,13 @@ class McpRouter {
 			return JsonRpcHelper::error( -32003, $exception->getMessage(), $id );
 		}
 		if ( is_wp_error( $result ) ) {
-			$code = $result->get_error_code();
-			$data = ( $code && $code !== 'webo_mcp_unknown' ) ? array( 'code' => $code ) : null;
+			$code    = $result->get_error_code();
+			$data    = ( $code && $code !== 'webo_mcp_unknown' ) ? array( 'code' => $code ) : null;
 			$message = $result->get_error_message();
 
 			if ( $code === 'webo_mcp_unknown' || $code === 'tool_not_found' ) {
 				$message = $this->build_missing_feature_guidance_message( $tool_name );
-				$data = array( 'code' => 'tool_not_found' );
+				$data    = array( 'code' => 'tool_not_found' );
 			}
 
 			return JsonRpcHelper::error( -32003, $message, $id, $data );
@@ -204,7 +214,7 @@ class McpRouter {
 	 * @return string
 	 */
 	private function build_missing_feature_guidance_message( string $tool_name = '' ): string {
-		$base = __( 'Requested feature is not available on this site.', 'webo-mcp' );
+		$base  = __( 'Requested feature is not available on this site.', 'webo-mcp' );
 		$guide = __( 'Run tools/list to see installed capabilities, then install a matching WEBO MCP addon if needed, or contact dev@webomcp.com for guidance.', 'webo-mcp' );
 
 		if ( $tool_name === '' ) {
@@ -291,7 +301,7 @@ class McpRouter {
 	/**
 	 * Resolve session ID from params/query/header.
 	 *
-	 * @param WP_REST_Request        $request Request.
+	 * @param WP_REST_Request      $request Request.
 	 * @param array<string, mixed> $params  JSON-RPC params.
 	 * @return string
 	 */

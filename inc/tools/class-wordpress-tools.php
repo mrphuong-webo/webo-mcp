@@ -158,8 +158,8 @@ class WordPressTools {
 		);
 
 		if ( 'page' === $post->post_type ) {
-			$show_on_front = (string) get_option( 'show_on_front', 'posts' );
-			$page_on_front = (int) get_option( 'page_on_front', 0 );
+			$show_on_front  = (string) get_option( 'show_on_front', 'posts' );
+			$page_on_front  = (int) get_option( 'page_on_front', 0 );
 			$page_for_posts = (int) get_option( 'page_for_posts', 0 );
 			$out['reading'] = array(
 				'is_static_front_page' => ( 'page' === $show_on_front && $page_on_front === (int) $post->ID ),
@@ -185,9 +185,9 @@ class WordPressTools {
 		if ( ! in_array( $match, array( 'content', 'title', 'title_and_content' ), true ) ) {
 			$match = 'content';
 		}
-		$max_posts = isset( $arguments['max_posts'] ) ? (int) $arguments['max_posts'] : 200;
-		$max_posts = max( 1, min( 500, $max_posts ) );
-		$offset    = isset( $arguments['offset'] ) ? max( 0, (int) $arguments['offset'] ) : 0;
+		$max_posts  = isset( $arguments['max_posts'] ) ? (int) $arguments['max_posts'] : 200;
+		$max_posts  = max( 1, min( 500, $max_posts ) );
+		$offset     = isset( $arguments['offset'] ) ? max( 0, (int) $arguments['offset'] ) : 0;
 		$skip_empty = ! array_key_exists( 'skip_empty', $arguments ) || (bool) $arguments['skip_empty'];
 
 		$query = new \WP_Query(
@@ -203,8 +203,8 @@ class WordPressTools {
 			)
 		);
 
-		$buckets  = array();
-		$scanned  = 0;
+		$buckets            = array();
+		$scanned            = 0;
 		$skipped_permission = 0;
 		foreach ( $query->posts as $post ) {
 			if ( ! $post instanceof \WP_Post ) {
@@ -257,13 +257,13 @@ class WordPressTools {
 		$dup_ids = array_values( array_unique( array_map( 'intval', $dup_ids ) ) );
 
 		return array(
-			'tool'                 => 'webo/find-duplicate-posts',
-			'groups'               => $groups,
-			'group_count'          => count( $groups ),
-			'duplicate_post_ids'   => $dup_ids,
-			'scanned_post_count'   => $scanned,
-			'skipped_no_permission'=> $skipped_permission,
-			'applied'              => array(
+			'tool'                  => 'webo/find-duplicate-posts',
+			'groups'                => $groups,
+			'group_count'           => count( $groups ),
+			'duplicate_post_ids'    => $dup_ids,
+			'scanned_post_count'    => $scanned,
+			'skipped_no_permission' => $skipped_permission,
+			'applied'               => array(
 				'post_type'  => $post_type,
 				'status'     => $status,
 				'match'      => $match,
@@ -291,15 +291,15 @@ class WordPressTools {
 	 * Build signature string or null if skipped.
 	 *
 	 * @param \WP_Post $post       Post object.
-	 * @param string   $match      content|title|title_and_content.
+	 * @param string   $match_mode content|title|title_and_content.
 	 * @param bool     $skip_empty Whether to omit empty signatures.
 	 * @return string|null
 	 */
-	private static function duplicate_post_signature_data( \WP_Post $post, string $match, bool $skip_empty ): ?string {
+	private static function duplicate_post_signature_data( \WP_Post $post, string $match_mode, bool $skip_empty ): ?string {
 		$title   = self::normalize_for_duplicate_match( get_the_title( $post ) );
 		$content = self::normalize_for_duplicate_match( (string) $post->post_content );
 
-		switch ( $match ) {
+		switch ( $match_mode ) {
 			case 'title':
 				$blob = $title;
 				break;
@@ -420,8 +420,8 @@ class WordPressTools {
 				$payload['post_status'] = sanitize_key( (string) $update['status'] );
 			}
 			if ( count( $payload ) > 1 && ! is_wp_error( wp_update_post( $payload, true ) ) ) {
-				$post    = get_post( $post->ID );
-				$result  = array(
+				$post   = get_post( $post->ID );
+				$result = array(
 					'id'      => $post->ID,
 					'title'   => get_the_title( $post ),
 					'content' => $post->post_content,
@@ -688,11 +688,11 @@ class WordPressTools {
 		$items = array();
 		foreach ( $comments as $comment ) {
 			$items[] = array(
-				'id'        => (int) $comment->comment_ID,
-				'post_id'   => (int) $comment->comment_post_ID,
-				'author'    => (string) $comment->comment_author,
-				'content'   => (string) $comment->comment_content,
-				'approved'  => (string) $comment->comment_approved,
+				'id'       => (int) $comment->comment_ID,
+				'post_id'  => (int) $comment->comment_post_ID,
+				'author'   => (string) $comment->comment_author,
+				'content'  => (string) $comment->comment_content,
+				'approved' => (string) $comment->comment_approved,
 			);
 		}
 
@@ -1288,8 +1288,8 @@ class WordPressTools {
 					$inventory,
 					$arguments
 				);
-				$items       = self::plugin_query_normalize_external_items( $rental_items, $inventory );
-				$items       = self::plugin_query_filter_by_scope( $items, $effective_scope );
+				$items        = self::plugin_query_normalize_external_items( $rental_items, $inventory );
+				$items        = self::plugin_query_filter_by_scope( $items, $effective_scope );
 				break;
 
 			case 'health':
@@ -1308,17 +1308,17 @@ class WordPressTools {
 		$items = self::plugin_query_project_fields( $items, $fields );
 
 		$response = array(
-			'items'    => $items,
-			'total'    => count( $items ),
-			'tool'     => 'webo/plugin-query',
-			'applied'  => array(
+			'items'   => $items,
+			'total'   => count( $items ),
+			'tool'    => 'webo/plugin-query',
+			'applied' => array(
 				'query'   => $query,
 				'scope'   => $effective_scope,
 				'refresh' => $refresh,
 				'fields'  => $fields,
 			),
-			'queries'  => $allowed_queries,
-			'scopes'   => $allowed_scopes,
+			'queries' => $allowed_queries,
+			'scopes'  => $allowed_scopes,
 		);
 
 		if ( ! empty( $ignored_fields ) ) {
@@ -1533,7 +1533,7 @@ class WordPressTools {
 	 * Filter plugin items by scope.
 	 *
 	 * @param array<int, array<string, mixed>> $items Items.
-	 * @param string                            $scope Scope value.
+	 * @param string                           $scope Scope value.
 	 * @return array<int, array<string, mixed>>
 	 */
 	private static function plugin_query_filter_by_scope( array $items, string $scope ) {
@@ -1692,9 +1692,9 @@ class WordPressTools {
 	/**
 	 * Determine dependency status for one plugin from RequiresPlugins slugs.
 	 *
-	 * @param array<int, string>                        $requires_plugins Dependency slugs.
-	 * @param array<string, array<int, string>>         $slug_to_plugins   Slug to plugin file map.
-	 * @param array<string, array<string, mixed>>       $inventory         Plugin inventory.
+	 * @param array<int, string>                  $requires_plugins Dependency slugs.
+	 * @param array<string, array<int, string>>   $slug_to_plugins   Slug to plugin file map.
+	 * @param array<string, array<string, mixed>> $inventory         Plugin inventory.
 	 * @return array{missing: array<int, string>, inactive: array<int, string>}
 	 */
 	private static function plugin_query_dependency_status( array $requires_plugins, array $slug_to_plugins, array $inventory ) {
@@ -1734,8 +1734,8 @@ class WordPressTools {
 	/**
 	 * Normalize addon-provided rental candidate rows.
 	 *
-	 * @param mixed                                   $items     External items from filter.
-	 * @param array<string, array<string, mixed>>     $inventory Canonical inventory.
+	 * @param mixed                               $items     External items from filter.
+	 * @param array<string, array<string, mixed>> $inventory Canonical inventory.
 	 * @return array<int, array<string, mixed>>
 	 */
 	private static function plugin_query_normalize_external_items( $items, array $inventory ) {
@@ -1887,22 +1887,22 @@ class WordPressTools {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public static function get_homepage_info( array $arguments ) {
-		$include_excerpt  = ! empty( $arguments['include_excerpt'] );
-		$include_content  = ! empty( $arguments['include_content'] );
+		$include_excerpt   = ! empty( $arguments['include_excerpt'] );
+		$include_content   = ! empty( $arguments['include_content'] );
 		$requested_post_id = self::resolve_post_id_argument( $arguments );
 
-		$show_on_front   = (string) get_option( 'show_on_front', 'posts' );
-		$page_on_front   = (int) get_option( 'page_on_front', 0 );
-		$page_for_posts  = (int) get_option( 'page_for_posts', 0 );
+		$show_on_front  = (string) get_option( 'show_on_front', 'posts' );
+		$page_on_front  = (int) get_option( 'page_on_front', 0 );
+		$page_for_posts = (int) get_option( 'page_for_posts', 0 );
 
 		$out = array(
-			'tool'               => 'webo/get-homepage-info',
-			'home_url'           => home_url( '/' ),
-			'show_on_front'      => $show_on_front,
-			'posts_per_page'     => (int) get_option( 'posts_per_page', 10 ),
-			'is_posts_front'     => ( 'posts' === $show_on_front ),
-			'page_on_front_id'   => $page_on_front,
-			'page_for_posts_id'  => $page_for_posts,
+			'tool'              => 'webo/get-homepage-info',
+			'home_url'          => home_url( '/' ),
+			'show_on_front'     => $show_on_front,
+			'posts_per_page'    => (int) get_option( 'posts_per_page', 10 ),
+			'is_posts_front'    => ( 'posts' === $show_on_front ),
+			'page_on_front_id'  => $page_on_front,
+			'page_for_posts_id' => $page_for_posts,
 		);
 
 		if ( 'page' === $show_on_front ) {
@@ -1936,7 +1936,7 @@ class WordPressTools {
 					false
 				);
 			} else {
-				$out['posts_page']          = null;
+				$out['posts_page']         = null;
 				$out['posts_page_missing'] = true;
 			}
 		} else {
@@ -1959,14 +1959,14 @@ class WordPressTools {
 				);
 			}
 
-			$by_id = self::homepage_info_format_post(
+			$by_id                             = self::homepage_info_format_post(
 				$resolved,
 				$include_excerpt,
 				$include_content,
 				true
 			);
 			$by_id['is_configured_front_page'] = ( 'page' === $show_on_front && $page_on_front === $requested_post_id );
-			$by_id['is_configured_posts_page']  = ( $page_for_posts === $requested_post_id );
+			$by_id['is_configured_posts_page'] = ( $page_for_posts === $requested_post_id );
 			$out['by_post_id']                 = $by_id;
 		}
 
@@ -2000,7 +2000,7 @@ class WordPressTools {
 		if ( $include_featured ) {
 			$thumb_id = (int) get_post_thumbnail_id( $post );
 			if ( $thumb_id > 0 ) {
-				$url = wp_get_attachment_image_url( $thumb_id, 'full' );
+				$url                   = wp_get_attachment_image_url( $thumb_id, 'full' );
 				$row['featured_image'] = array(
 					'id'  => $thumb_id,
 					'url' => $url ? (string) $url : '',
@@ -2037,8 +2037,8 @@ class WordPressTools {
 			'tag_base',
 		);
 
-		$updated = array();
-		$skipped = array();
+		$updated             = array();
+		$skipped             = array();
 		$flush_rewrite_rules = false;
 		foreach ( $options as $option_name => $option_value ) {
 			$option_name = sanitize_key( (string) $option_name );
@@ -2064,10 +2064,10 @@ class WordPressTools {
 		}
 
 		return array(
-			'updated' => $updated,
-			'skipped' => $skipped,
+			'updated'         => $updated,
+			'skipped'         => $skipped,
 			'rewrite_flushed' => $flush_rewrite_rules,
-			'tool'    => 'webo/update-options',
+			'tool'            => 'webo/update-options',
 		);
 	}
 
@@ -2106,8 +2106,8 @@ class WordPressTools {
 	/**
 	 * Sanitizes values for the safe options allowlist used by webo/update-options.
 	 *
-	 * @param string               $option_name Option key.
-	 * @param mixed                $value       Raw value.
+	 * @param string $option_name Option key.
+	 * @param mixed  $value       Raw value.
 	 * @return mixed|\WP_Error
 	 */
 	private static function sanitize_safe_option_value( string $option_name, $value ) {
@@ -2186,7 +2186,7 @@ class WordPressTools {
 				if ( ! is_scalar( $value ) && null !== $value ) {
 					return new \WP_Error( 'webo_mcp_invalid_option', 'Value must be scalar' );
 				}
-				$s = trim( (string) $value );
+				$s                  = trim( (string) $value );
 				$allowed_structures = array(
 					'',
 					'/%year%/%monthnum%/%day%/%postname%/',
@@ -2238,7 +2238,7 @@ class WordPressTools {
 			return new \WP_Error( 'webo_mcp_invalid_url', 'Only http and https are allowed' );
 		}
 
-		$host = strtolower( (string) $parsed['host'] );
+		$host      = strtolower( (string) $parsed['host'] );
 		$host_trim = trim( $host, '[]' );
 
 		$blocked = array( 'localhost', '127.0.0.1', '0.0.0.0', '::1', '0000::1' );
@@ -2289,12 +2289,22 @@ class WordPressTools {
 			if ( $post_id <= 0 || ! get_post( $post_id ) ) {
 				continue;
 			}
-			$result = wp_update_post( array( 'ID' => $post_id, 'post_status' => $status ), true );
+			$result = wp_update_post(
+				array(
+					'ID'          => $post_id,
+					'post_status' => $status,
+				),
+				true
+			);
 			if ( ! is_wp_error( $result ) && $result ) {
-				$updated++;
+				++$updated;
 			}
 		}
-		return array( 'updated' => $updated, 'status' => $status, 'tool' => 'webo/bulk-update-post-status' );
+		return array(
+			'updated' => $updated,
+			'status'  => $status,
+			'tool'    => 'webo/bulk-update-post-status',
+		);
 	}
 
 	/**
@@ -2312,13 +2322,17 @@ class WordPressTools {
 		$items     = array();
 		foreach ( $revisions as $rev ) {
 			$items[] = array(
-				'id'         => (int) $rev->ID,
-				'post_id'    => $post_id,
-				'date'       => $rev->post_modified,
-				'author_id'  => (int) $rev->post_author,
+				'id'        => (int) $rev->ID,
+				'post_id'   => $post_id,
+				'date'      => $rev->post_modified,
+				'author_id' => (int) $rev->post_author,
 			);
 		}
-		return array( 'items' => $items, 'total' => count( $items ), 'tool' => 'webo/list-revisions' );
+		return array(
+			'items' => $items,
+			'total' => count( $items ),
+			'tool'  => 'webo/list-revisions',
+		);
 	}
 
 	/**
@@ -2341,7 +2355,13 @@ class WordPressTools {
 		if ( ! $restored ) {
 			return new \WP_Error( 'webo_mcp_restore_failed', 'Failed to restore revision' );
 		}
-		return array( 'id' => $post_id, 'post_id' => $post_id, 'revision_id' => $revision_id, 'restored' => true, 'tool' => 'webo/restore-revision' );
+		return array(
+			'id'          => $post_id,
+			'post_id'     => $post_id,
+			'revision_id' => $revision_id,
+			'restored'    => true,
+			'tool'        => 'webo/restore-revision',
+		);
 	}
 
 	/**
@@ -2396,7 +2416,11 @@ class WordPressTools {
 			if ( ! $post || strpos( $post->post_content, $search ) === false ) {
 				continue;
 			}
-			$affected[] = array( 'id' => (int) $post_id, 'post_id' => (int) $post_id, 'title' => get_the_title( $post_id ) );
+			$affected[] = array(
+				'id'      => (int) $post_id,
+				'post_id' => (int) $post_id,
+				'title'   => get_the_title( $post_id ),
+			);
 			if ( ! $dry_run ) {
 				$new_content = str_replace( $search, $replace, $post->post_content );
 				wp_update_post(
@@ -2413,15 +2437,15 @@ class WordPressTools {
 		$has_more    = $next_offset < $total_posts;
 
 		return array(
-			'affected'      => $affected,
-			'count'         => count( $affected ),
-			'dry_run'       => $dry_run,
-			'offset'        => $offset,
-			'max_scan_posts'=> $limit,
-			'total_posts'   => $total_posts,
-			'has_more'      => $has_more,
-			'next_offset'   => $has_more ? $next_offset : null,
-			'tool'          => 'webo/search-replace-posts',
+			'affected'       => $affected,
+			'count'          => count( $affected ),
+			'dry_run'        => $dry_run,
+			'offset'         => $offset,
+			'max_scan_posts' => $limit,
+			'total_posts'    => $total_posts,
+			'has_more'       => $has_more,
+			'next_offset'    => $has_more ? $next_offset : null,
+			'tool'           => 'webo/search-replace-posts',
 		);
 	}
 
@@ -2445,20 +2469,26 @@ class WordPressTools {
 		$slug        = isset( $arguments['slug'] ) ? sanitize_title( (string) $arguments['slug'] ) : '';
 		$description = isset( $arguments['description'] ) ? sanitize_textarea_field( (string) $arguments['description'] ) : '';
 		$parent_id   = isset( $arguments['parent_id'] ) ? max( 0, (int) $arguments['parent_id'] ) : 0;
-		$result      = wp_insert_term( $name, $taxonomy, array_filter( array(
-			'slug'        => $slug ?: null,
-			'description' => $description ?: '',
-			'parent'      => $parent_id > 0 ? $parent_id : 0,
-		) ) );
+		$result      = wp_insert_term(
+			$name,
+			$taxonomy,
+			array_filter(
+				array(
+					'slug'        => ( '' !== $slug ) ? $slug : null,
+					'description' => ( '' !== $description ) ? $description : '',
+					'parent'      => $parent_id > 0 ? $parent_id : 0,
+				)
+			)
+		);
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 		return array(
-			'id'        => (int) $result['term_id'],
-			'term_id'   => (int) $result['term_id'],
-			'taxonomy'  => $taxonomy,
+			'id'               => (int) $result['term_id'],
+			'term_id'          => (int) $result['term_id'],
+			'taxonomy'         => $taxonomy,
 			'term_taxonomy_id' => (int) $result['term_taxonomy_id'],
-			'tool'      => 'webo/create-term',
+			'tool'             => 'webo/create-term',
 		);
 	}
 
@@ -2494,7 +2524,13 @@ class WordPressTools {
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
-		return array( 'id' => $term_id, 'term_id' => $term_id, 'taxonomy' => $taxonomy, 'updated' => true, 'tool' => 'webo/update-term' );
+		return array(
+			'id'       => $term_id,
+			'term_id'  => $term_id,
+			'taxonomy' => $taxonomy,
+			'updated'  => true,
+			'tool'     => 'webo/update-term',
+		);
 	}
 
 	/**
@@ -2513,7 +2549,13 @@ class WordPressTools {
 		if ( is_wp_error( $result ) || ! $result ) {
 			return new \WP_Error( 'webo_mcp_delete_failed', 'Failed to delete term' );
 		}
-		return array( 'id' => $term_id, 'term_id' => $term_id, 'taxonomy' => $taxonomy, 'deleted' => true, 'tool' => 'webo/delete-term' );
+		return array(
+			'id'       => $term_id,
+			'term_id'  => $term_id,
+			'taxonomy' => $taxonomy,
+			'deleted'  => true,
+			'tool'     => 'webo/delete-term',
+		);
 	}
 
 	/**
@@ -2530,11 +2572,11 @@ class WordPressTools {
 
 		foreach ( $taxonomies as $taxonomy ) {
 			$items[] = array(
-				'name'          => $taxonomy->name,
-				'label'         => $taxonomy->label,
-				'description'   => isset( $taxonomy->description ) ? (string) $taxonomy->description : '',
-				'object_type'   => (array) $taxonomy->object_type,
-				'hierarchical'  => (bool) $taxonomy->hierarchical,
+				'name'         => $taxonomy->name,
+				'label'        => $taxonomy->label,
+				'description'  => isset( $taxonomy->description ) ? (string) $taxonomy->description : '',
+				'object_type'  => (array) $taxonomy->object_type,
+				'hierarchical' => (bool) $taxonomy->hierarchical,
 			);
 		}
 
@@ -2587,9 +2629,9 @@ class WordPressTools {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public static function assign_terms_to_content( array $arguments ) {
-		$post_id   = self::resolve_post_id_argument( $arguments );
-		$taxonomy  = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : '';
-		$term_ids  = isset( $arguments['term_ids'] ) && is_array( $arguments['term_ids'] ) ? $arguments['term_ids'] : array();
+		$post_id  = self::resolve_post_id_argument( $arguments );
+		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : '';
+		$term_ids = isset( $arguments['term_ids'] ) && is_array( $arguments['term_ids'] ) ? $arguments['term_ids'] : array();
 
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
@@ -2608,12 +2650,12 @@ class WordPressTools {
 		}
 
 		return array(
-			'id'        => $post_id,
-			'post_id'   => $post_id,
-			'taxonomy'  => $taxonomy,
-			'term_ids'  => $term_ids,
-			'assigned'  => true,
-			'tool'      => 'webo/assign-terms-to-content',
+			'id'       => $post_id,
+			'post_id'  => $post_id,
+			'taxonomy' => $taxonomy,
+			'term_ids' => $term_ids,
+			'assigned' => true,
+			'tool'     => 'webo/assign-terms-to-content',
 		);
 	}
 
@@ -2645,10 +2687,10 @@ class WordPressTools {
 		$items = array();
 		foreach ( $all_terms as $term ) {
 			$items[] = array(
-				'id'          => (int) $term->term_id,
-				'name'        => (string) $term->name,
-				'slug'        => (string) $term->slug,
-				'taxonomy'    => (string) $term->taxonomy,
+				'id'       => (int) $term->term_id,
+				'name'     => (string) $term->name,
+				'slug'     => (string) $term->slug,
+				'taxonomy' => (string) $term->taxonomy,
 			);
 		}
 
@@ -2691,7 +2733,7 @@ class WordPressTools {
 			'name'     => isset( $arguments['filename'] ) ? sanitize_file_name( (string) $arguments['filename'] ) : basename( wp_parse_url( $image_url, PHP_URL_PATH ) ),
 			'tmp_name' => $tmp,
 		);
-		$post_data = array();
+		$post_data  = array();
 		if ( isset( $arguments['title'] ) ) {
 			$post_data['post_title'] = sanitize_text_field( (string) $arguments['title'] );
 		}
@@ -2731,12 +2773,12 @@ class WordPressTools {
 		return array(
 			'id'            => (int) $post->ID,
 			'attachment_id' => (int) $post->ID,
-			'title'        => $post->post_title,
-			'alt_text'     => (string) get_post_meta( $post->ID, '_wp_attachment_image_alt', true ),
-			'caption'      => (string) $post->post_excerpt,
-			'url'          => wp_get_attachment_url( $post->ID ),
-			'mime_type'    => $post->post_mime_type,
-			'tool'         => 'webo/get-media',
+			'title'         => $post->post_title,
+			'alt_text'      => (string) get_post_meta( $post->ID, '_wp_attachment_image_alt', true ),
+			'caption'       => (string) $post->post_excerpt,
+			'url'           => wp_get_attachment_url( $post->ID ),
+			'mime_type'     => $post->post_mime_type,
+			'tool'          => 'webo/get-media',
 		);
 	}
 
@@ -2753,7 +2795,12 @@ class WordPressTools {
 		}
 		$updated = array();
 		if ( array_key_exists( 'title', $arguments ) ) {
-			wp_update_post( array( 'ID' => $attachment_id, 'post_title' => sanitize_text_field( (string) $arguments['title'] ) ) );
+			wp_update_post(
+				array(
+					'ID'         => $attachment_id,
+					'post_title' => sanitize_text_field( (string) $arguments['title'] ),
+				)
+			);
 			$updated[] = 'title';
 		}
 		if ( array_key_exists( 'alt_text', $arguments ) ) {
@@ -2761,10 +2808,20 @@ class WordPressTools {
 			$updated[] = 'alt_text';
 		}
 		if ( array_key_exists( 'caption', $arguments ) ) {
-			wp_update_post( array( 'ID' => $attachment_id, 'post_excerpt' => sanitize_textarea_field( (string) $arguments['caption'] ) ) );
+			wp_update_post(
+				array(
+					'ID'           => $attachment_id,
+					'post_excerpt' => sanitize_textarea_field( (string) $arguments['caption'] ),
+				)
+			);
 			$updated[] = 'caption';
 		}
-		return array( 'id' => $attachment_id, 'attachment_id' => $attachment_id, 'updated' => $updated, 'tool' => 'webo/update-media' );
+		return array(
+			'id'            => $attachment_id,
+			'attachment_id' => $attachment_id,
+			'updated'       => $updated,
+			'tool'          => 'webo/update-media',
+		);
 	}
 
 	/**
@@ -2782,7 +2839,12 @@ class WordPressTools {
 		if ( ! $result ) {
 			return new \WP_Error( 'webo_mcp_delete_failed', 'Failed to delete attachment' );
 		}
-		return array( 'id' => $attachment_id, 'attachment_id' => $attachment_id, 'deleted' => true, 'tool' => 'webo/delete-media' );
+		return array(
+			'id'            => $attachment_id,
+			'attachment_id' => $attachment_id,
+			'deleted'       => true,
+			'tool'          => 'webo/delete-media',
+		);
 	}
 
 	// ----- Comments -----
@@ -2832,16 +2894,23 @@ class WordPressTools {
 		}
 		if ( ! empty( $arguments['reply'] ) ) {
 			$parent = get_comment( $comment_id );
-			wp_insert_comment( array(
-				'comment_post_ID'  => (int) $parent->comment_post_ID,
-				'comment_parent'   => $comment_id,
-				'comment_content'  => sanitize_textarea_field( (string) $arguments['reply'] ),
-				'user_id'          => get_current_user_id(),
-				'comment_author'   => wp_get_current_user()->display_name,
-				'comment_approved' => '1',
-			) );
+			wp_insert_comment(
+				array(
+					'comment_post_ID'  => (int) $parent->comment_post_ID,
+					'comment_parent'   => $comment_id,
+					'comment_content'  => sanitize_textarea_field( (string) $arguments['reply'] ),
+					'user_id'          => get_current_user_id(),
+					'comment_author'   => wp_get_current_user()->display_name,
+					'comment_approved' => '1',
+				)
+			);
 		}
-		return array( 'id' => $comment_id, 'comment_id' => $comment_id, 'updated' => true, 'tool' => 'webo/update-comment' );
+		return array(
+			'id'         => $comment_id,
+			'comment_id' => $comment_id,
+			'updated'    => true,
+			'tool'       => 'webo/update-comment',
+		);
 	}
 
 	/**
@@ -2859,7 +2928,12 @@ class WordPressTools {
 		if ( ! $result ) {
 			return new \WP_Error( 'webo_mcp_delete_failed', 'Failed to delete comment' );
 		}
-		return array( 'id' => $comment_id, 'comment_id' => $comment_id, 'deleted' => true, 'tool' => 'webo/delete-comment' );
+		return array(
+			'id'         => $comment_id,
+			'comment_id' => $comment_id,
+			'deleted'    => true,
+			'tool'       => 'webo/delete-comment',
+		);
 	}
 
 	/**
@@ -3075,8 +3149,8 @@ class WordPressTools {
 			if ( '' === $slug || $menu_id <= 0 ) {
 				continue;
 			}
-			$menu    = wp_get_nav_menu_object( $menu_id );
-			$label   = isset( $registered[ $slug ] ) ? (string) $registered[ $slug ] : $slug;
+			$menu              = wp_get_nav_menu_object( $menu_id );
+			$label             = isset( $registered[ $slug ] ) ? (string) $registered[ $slug ] : $slug;
 			$assigned[ $slug ] = array(
 				'location_label' => $label,
 				'menu_id'        => $menu_id,
@@ -3088,7 +3162,7 @@ class WordPressTools {
 		// Include registered slots with no menu assigned.
 		$registered_out = array();
 		foreach ( $registered as $slug => $label ) {
-			$slug = sanitize_key( (string) $slug );
+			$slug                    = sanitize_key( (string) $slug );
 			$registered_out[ $slug ] = (string) $label;
 		}
 
@@ -3159,7 +3233,7 @@ class WordPressTools {
 	/**
 	 * Resolve a theme menu location slug against register_nav_menus(), with fallbacks when "primary" does not exist.
 	 *
-	 * @param string               $requested  Requested slug (will be sanitize_key internally).
+	 * @param string                $requested  Requested slug (will be sanitize_key internally).
 	 * @param array<string, string> $registered Slug => label from get_registered_nav_menus().
 	 * @return array{slug: string, resolution: string}|\WP_Error
 	 */
@@ -3277,8 +3351,8 @@ class WordPressTools {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public static function assign_nav_menu_to_location( array $arguments ) {
-		$menu_id = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
-		$by_name = isset( $arguments['menu_name'] ) ? sanitize_text_field( trim( (string) $arguments['menu_name'] ) ) : '';
+		$menu_id                = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
+		$by_name                = isset( $arguments['menu_name'] ) ? sanitize_text_field( trim( (string) $arguments['menu_name'] ) ) : '';
 		$assigned_via_menu_name = false;
 
 		if ( $menu_id <= 0 ) {
@@ -3298,8 +3372,8 @@ class WordPressTools {
 			if ( ! $resolved_menu instanceof \WP_Term ) {
 				return new \WP_Error( 'webo_mcp_menu_not_found', __( 'Navigation menu not found for the given menu_name', 'webo-mcp' ) );
 			}
-			$menu_id                  = (int) $resolved_menu->term_id;
-			$assigned_via_menu_name   = true;
+			$menu_id                = (int) $resolved_menu->term_id;
+			$assigned_via_menu_name = true;
 		} elseif ( ! wp_get_nav_menu_object( $menu_id ) ) {
 			return new \WP_Error( 'webo_mcp_menu_not_found', __( 'Navigation menu not found', 'webo-mcp' ) );
 		}
@@ -3480,16 +3554,16 @@ class WordPressTools {
 			if ( ! $row instanceof \WP_Post ) {
 				continue;
 			}
-			$db_id = (int) $row->ID;
+			$db_id   = (int) $row->ID;
 			$items[] = array(
-				'db_id'         => $db_id,
-				'title'         => isset( $row->title ) && is_string( $row->title ) ? $row->title : (string) $row->post_title,
-				'menu_order'    => (int) $row->menu_order,
-				'parent_db_id'  => (int) get_post_meta( $db_id, '_menu_item_menu_item_parent', true ),
-				'object_id'     => (int) get_post_meta( $db_id, '_menu_item_object_id', true ),
-				'object'        => (string) get_post_meta( $db_id, '_menu_item_object', true ),
-				'type'          => (string) get_post_meta( $db_id, '_menu_item_type', true ),
-				'url'           => isset( $row->url ) && is_string( $row->url ) ? $row->url : '',
+				'db_id'        => $db_id,
+				'title'        => isset( $row->title ) && is_string( $row->title ) ? $row->title : (string) $row->post_title,
+				'menu_order'   => (int) $row->menu_order,
+				'parent_db_id' => (int) get_post_meta( $db_id, '_menu_item_menu_item_parent', true ),
+				'object_id'    => (int) get_post_meta( $db_id, '_menu_item_object_id', true ),
+				'object'       => (string) get_post_meta( $db_id, '_menu_item_object', true ),
+				'type'         => (string) get_post_meta( $db_id, '_menu_item_type', true ),
+				'url'          => isset( $row->url ) && is_string( $row->url ) ? $row->url : '',
 			);
 		}
 
@@ -3516,12 +3590,12 @@ class WordPressTools {
 			);
 		}
 
-		$menu_id     = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
-		$post_id     = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
-		$menu_order  = isset( $arguments['menu_order'] ) ? (int) $arguments['menu_order'] : 0;
-		$post_type   = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : '';
-		$parent_id   = isset( $arguments['parent_db_id'] ) ? (int) $arguments['parent_db_id'] : 0;
-		$title       = isset( $arguments['menu_item_title'] ) ? sanitize_text_field( (string) $arguments['menu_item_title'] ) : '';
+		$menu_id    = isset( $arguments['menu_id'] ) ? (int) $arguments['menu_id'] : 0;
+		$post_id    = isset( $arguments['post_id'] ) ? (int) $arguments['post_id'] : 0;
+		$menu_order = isset( $arguments['menu_order'] ) ? (int) $arguments['menu_order'] : 0;
+		$post_type  = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : '';
+		$parent_id  = isset( $arguments['parent_db_id'] ) ? (int) $arguments['parent_db_id'] : 0;
+		$title      = isset( $arguments['menu_item_title'] ) ? sanitize_text_field( (string) $arguments['menu_item_title'] ) : '';
 
 		if ( $menu_id <= 0 ) {
 			return new \WP_Error( 'webo_mcp_missing_argument', 'menu_id (nav menu term ID from list-nav-menus) is required' );
@@ -3576,12 +3650,12 @@ class WordPressTools {
 		}
 
 		$args = array(
-			'menu-item-object-id'  => $post_id,
-			'menu-item-object'     => $post_type,
-			'menu-item-type'       => 'post_type',
-			'menu-item-status'     => 'publish',
-			'menu-item-position'   => $menu_order,
-			'menu-item-parent-id'  => max( 0, $parent_id ),
+			'menu-item-object-id' => $post_id,
+			'menu-item-object'    => $post_type,
+			'menu-item-type'      => 'post_type',
+			'menu-item-status'    => 'publish',
+			'menu-item-position'  => $menu_order,
+			'menu-item-parent-id' => max( 0, $parent_id ),
 		);
 		if ( '' !== $title ) {
 			$args['menu-item-title'] = $title;

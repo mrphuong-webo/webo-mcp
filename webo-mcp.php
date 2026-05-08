@@ -1,11 +1,13 @@
 <?php
 /**
+ * WEBO MCP - Model Context Protocol bridge for WordPress (JSON-RPC tools via REST).
+ *
  * @wordpress-plugin
  *
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.1.8
+ * Version: 2.1.9
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -14,6 +16,8 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: webo-mcp
  * Domain Path: /languages
+ *
+ * @package WeboMCP
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -31,7 +35,7 @@ function webo_mcp_migrate_legacy_storage() {
 	}
 	$pairs = array(
 		'webo_wordpress_mcp_api_key'               => 'webo_mcp_api_key',
-		'webo_wordpress_mcp_hmac_secret'         => 'webo_mcp_hmac_secret',
+		'webo_wordpress_mcp_hmac_secret'           => 'webo_mcp_hmac_secret',
 		'webo_wordpress_mcp_public_tool_allowlist' => 'webo_mcp_public_tool_allowlist',
 	);
 	foreach ( $pairs as $old_key => $new_key ) {
@@ -165,16 +169,16 @@ require_once __DIR__ . '/inc/registry/class-tool-registry.php';
 require_once __DIR__ . '/inc/abilities/class-site-settings-ability.php';
 require_once __DIR__ . '/inc/tools/class-wordpress-tools.php';
 require_once __DIR__ . '/inc/tools/class-seo-article-analysis.php';
+require_once __DIR__ . '/inc/bootstrap/class-standalone-tools.php';
 require_once __DIR__ . '/inc/session/class-session-manager.php';
 require_once __DIR__ . '/inc/router/class-mcp-router.php';
 require_once __DIR__ . '/inc/router/class-rest-json-bom-guard.php';
 
 use WeboMCP\Core\Abilities\Site_Settings_Ability;
+use WeboMCP\Core\Bootstrap\Standalone_Tools;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Router\AccessHelper;
 use WeboMCP\Core\Router\McpRouter;
-use WeboMCP\Core\Tools\SeoArticleAnalysis;
-use WeboMCP\Core\Tools\WordPressTools;
 use WP\MCP\Abilities\DiscoverAbilitiesAbility;
 use WP\MCP\Abilities\ExecuteAbilityAbility;
 use WP\MCP\Abilities\GetAbilityInfoAbility;
@@ -384,7 +388,7 @@ function webo_mcp_register_wordpress_abilities() {
 		}
 
 		$input_schema = method_exists( $ability, 'get_input_schema' ) ? $ability->get_input_schema() : array();
-		$category     = method_exists( $ability, 'get_category' ) ? (string) $ability->get_category() : 'wordpress';
+		$category     = method_exists( $ability, 'get_category' ) ? (string) $ability->get_category() : 'WordPress';
 		$description  = (string) $ability->get_description();
 
 		$visibility = 'internal';
@@ -455,287 +459,12 @@ function webo_mcp_should_bridge_ability( string $ability_name ) {
 }
 
 /**
- * Registers standalone WordPress.org-safe tools.
+ * Registers standalone tools, bridges abilities, fires extension hooks.
  *
  * @return void
  */
-function webo_mcp_register_standalone_core_tools() {
-	$tools = array(
-		array(
-			'name'        => 'webo/content-query',
-			'description' => 'Unified read-only content operations. action (required): list — list posts (args: post_type, status, per_page, page, offset, search, orderby, order); get — get post by id/post_id (args: post_id|id, post_type); find-by-url — resolve URL (args: url, update); find-by-slug — resolve slug (args: slug, post_type); get-homepage — reading settings (args: post_id|id, include_excerpt, include_content); discover-types — list post types; list-revisions — revisions for post (args: post_id|id); find-duplicates — duplicate groups (args: post_type, status, match, max_posts, offset, skip_empty); get-terms — terms on post (args: post_id|id, taxonomy). Response always includes id as primary field.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'          => array( 'type' => 'string', 'required' => true ),
-				'post_id'         => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'id'              => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'post_type'       => array( 'type' => 'string', 'required' => false ),
-				'status'          => array( 'type' => 'string', 'required' => false ),
-				'per_page'        => array( 'type' => 'integer', 'required' => false ),
-				'page'            => array( 'type' => 'integer', 'required' => false ),
-				'offset'          => array( 'type' => 'integer', 'required' => false ),
-				'search'          => array( 'type' => 'string', 'required' => false ),
-				'orderby'         => array( 'type' => 'string', 'required' => false ),
-				'order'           => array( 'type' => 'string', 'required' => false ),
-				'url'             => array( 'type' => 'string', 'required' => false ),
-				'update'          => array( 'type' => 'array', 'required' => false ),
-				'slug'            => array( 'type' => 'string', 'required' => false ),
-				'include_excerpt' => array( 'type' => 'boolean', 'required' => false ),
-				'include_content' => array( 'type' => 'boolean', 'required' => false ),
-				'match'           => array( 'type' => 'string', 'required' => false ),
-				'max_posts'       => array( 'type' => 'integer', 'required' => false ),
-				'skip_empty'      => array( 'type' => 'boolean', 'required' => false ),
-				'taxonomy'        => array( 'type' => 'string', 'required' => false ),
-			),
-			'permission'  => 'read',
-			'callback'    => array( WordPressTools::class, 'content_query' ),
-		),
-		array(
-			'name'        => 'webo/content-mutate',
-			'description' => 'Unified write content operations. action (required): create — new post (args: title, content, post_type, status); update — update post (args: post_id|id, title, content, excerpt, status); delete — delete post (args: post_id|id, force); restore-revision — restore revision (args: revision_id); bulk-update-status — change status for many posts (args: post_ids[], status); search-replace — find/replace in content (args: search, replace, dry_run, offset, limit); set-featured-image — set thumbnail (args: post_id|id, attachment_id, remove); assign-terms — assign taxonomy terms (args: post_id|id, taxonomy, term_ids[]). Response always includes id as primary field.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'        => array( 'type' => 'string', 'required' => true ),
-				'post_id'       => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'id'            => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'title'         => array( 'type' => 'string', 'required' => false ),
-				'content'       => array( 'type' => 'string', 'required' => false ),
-				'excerpt'       => array( 'type' => 'string', 'required' => false ),
-				'status'        => array( 'type' => 'string', 'required' => false ),
-				'post_type'     => array( 'type' => 'string', 'required' => false ),
-				'force'         => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
-				'revision_id'   => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'post_ids'      => array( 'type' => 'array', 'required' => false ),
-				'search'        => array( 'type' => 'string', 'required' => false ),
-				'replace'       => array( 'type' => 'string', 'required' => false ),
-				'dry_run'       => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
-				'offset'        => array( 'type' => 'integer', 'required' => false ),
-				'limit'         => array( 'type' => 'integer', 'required' => false ),
-				'attachment_id' => array( 'type' => 'integer', 'required' => false, 'min' => 0 ),
-				'remove'        => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
-				'taxonomy'      => array( 'type' => 'string', 'required' => false ),
-				'term_ids'      => array( 'type' => 'array', 'required' => false ),
-			),
-			'permission'  => 'edit_posts',
-			'callback'    => array( WordPressTools::class, 'content_mutate' ),
-		),
-		array(
-			'name'        => 'webo/list-users',
-			'description' => 'List users (limited)',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'per_page' => array( 'type' => 'integer', 'required' => false, 'default' => 20, 'min' => 1, 'max' => 100 ),
-				'search'   => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-			),
-			'permission'  => 'list_users',
-			'callback'    => array( WordPressTools::class, 'list_users' ),
-		),
-		array(
-			'name'        => 'webo/media-query',
-			'description' => 'Unified read-only media operations. action (required): list (per_page), get (attachment_id).',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'        => array( 'type' => 'string', 'required' => true ),
-				'per_page'      => array( 'type' => 'integer', 'required' => false, 'default' => 20, 'min' => 1, 'max' => 100 ),
-				'attachment_id' => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-			),
-			'permission'  => 'upload_files',
-			'callback'    => array( WordPressTools::class, 'media_query' ),
-		),
-		array(
-			'name'        => 'webo/media-mutate',
-			'description' => 'Unified media write operations. action (required): upload (image_url, optional filename/title/alt_text), update (attachment_id + title/alt_text/caption), delete (attachment_id).',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'        => array( 'type' => 'string', 'required' => true ),
-				'attachment_id' => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'image_url'     => array( 'type' => 'string', 'required' => false ),
-				'filename'      => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'title'         => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'alt_text'      => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'caption'       => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-			),
-			'permission'  => 'upload_files',
-			'callback'    => array( WordPressTools::class, 'media_mutate' ),
-		),
-		array(
-			'name'        => 'webo/comment-query',
-			'description' => 'Unified read-only comment operations. action (required): list (per_page, status), get (comment_id).',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'     => array( 'type' => 'string', 'required' => true ),
-				'comment_id' => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'per_page'   => array( 'type' => 'integer', 'required' => false, 'default' => 20, 'min' => 1, 'max' => 100 ),
-				'status'     => array( 'type' => 'string', 'required' => false, 'default' => 'approve' ),
-			),
-			'permission'  => 'moderate_comments',
-			'callback'    => array( WordPressTools::class, 'comment_query' ),
-		),
-		array(
-			'name'        => 'webo/comment-mutate',
-			'description' => 'Unified comment write operations. action (required): update (comment_id, optional status/reply), delete (comment_id).',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'     => array( 'type' => 'string', 'required' => true ),
-				'comment_id' => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
-				'status'     => array( 'type' => 'string', 'required' => false ),
-				'reply'      => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-			),
-			'permission'  => 'moderate_comments',
-			'callback'    => array( WordPressTools::class, 'comment_mutate' ),
-		),
-		array(
-			'name'        => 'webo/taxonomy-query',
-			'description' => 'Unified read-only taxonomy operations. action (required): discover, list (taxonomy, per_page), get (term_id, taxonomy).',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'   => array( 'type' => 'string', 'required' => true ),
-				'term_id'  => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'taxonomy' => array( 'type' => 'string', 'required' => false, 'default' => 'category' ),
-				'per_page' => array( 'type' => 'integer', 'required' => false, 'default' => 50, 'min' => 1, 'max' => 100 ),
-			),
-			'permission'  => 'manage_categories',
-			'callback'    => array( WordPressTools::class, 'taxonomy_query' ),
-		),
-		array(
-			'name'        => 'webo/taxonomy-mutate',
-			'description' => 'Unified taxonomy write operations. action (required): create, update, delete.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'      => array( 'type' => 'string', 'required' => true ),
-				'term_id'     => array( 'type' => 'integer', 'required' => false, 'min' => 1 ),
-				'taxonomy'    => array( 'type' => 'string', 'required' => false, 'default' => 'category' ),
-				'name'       => array( 'type' => 'string', 'required' => false ),
-				'slug'       => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'description'=> array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'parent_id'  => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
-			),
-			'permission'  => 'manage_categories',
-			'callback'    => array( WordPressTools::class, 'taxonomy_mutate' ),
-		),
-		array(
-			'name'        => 'webo/menu-query',
-			'description' => 'Unified navigation menu read-only tool. action must be one of: list (list all menus), list-items (inspect links in a menu), list-locations (discover theme menu slots). For list-items, requires menu_id from webo/menu-mutate create or list. Returns term_id, name, slug, item count for list; db_id, title, menu_order, parent_db_id, object_id, object, type for list-items; registered_locations and assigned for list-locations. Requires edit_posts for list/list-items, edit_posts for list-locations.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'   => array( 'type' => 'string', 'required' => true ),
-				'menu_id'  => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
-				'include_inactive' => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
-			),
-			'permission'  => 'edit_posts',
-			'callback'    => array( WordPressTools::class, 'menu_query' ),
-		),
-		array(
-			'name'        => 'webo/menu-mutate',
-			'description' => 'Unified navigation menu mutation tool. action must be one of: create (new empty menu), create-and-assign (create and assign to theme location), assign (assign existing menu to location), add-item (add page/post link), add-custom-item (add custom URL link). Each action has its own required/optional arguments. See skill docs for examples. Requires edit_theme_options.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'             => array( 'type' => 'string', 'required' => true ),
-				'menu_id'            => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
-				'menu_name'          => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'theme_location'     => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'replace'            => array( 'type' => 'boolean', 'required' => false, 'default' => true ),
-				'post_id'            => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
-				'post_type'          => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'menu_order'         => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
-				'parent_db_id'       => array( 'type' => 'integer', 'required' => false, 'default' => 0, 'min' => 0 ),
-				'menu_item_title'    => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'url'                => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-				'title'              => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-			),
-			'permission'  => 'edit_theme_options',
-			'callback'    => array( WordPressTools::class, 'menu_mutate' ),
-		),
-		array(
-			'name'        => 'webo/theme-query',
-			'description' => 'List installed themes and active status. Optional include_inactive=true to include inactive themes.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'           => array( 'type' => 'string', 'required' => false, 'default' => 'list' ),
-				'include_inactive'  => array( 'type' => 'boolean', 'required' => false, 'default' => false ),
-			),
-			'permission'  => 'switch_themes',
-			'callback'    => array( WordPressTools::class, 'theme_query' ),
-		),
-		array(
-			'name'        => 'webo/theme-mutate',
-			'description' => 'Switch the active WordPress theme by stylesheet slug (theme directory name). action must be switch. stylesheet is required.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'action'     => array( 'type' => 'string', 'required' => true ),
-				'stylesheet' => array( 'type' => 'string', 'required' => false, 'default' => '' ),
-			),
-			'permission'  => 'switch_themes',
-			'callback'    => array( WordPressTools::class, 'theme_mutate' ),
-		),
-		array(
-			'name'        => 'webo/get-options',
-			'description' => 'Read selected safe options',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'names' => array( 'type' => 'array', 'required' => true ),
-			),
-			'permission'  => 'manage_options',
-			'callback'    => array( WordPressTools::class, 'get_options' ),
-		),
-		array(
-			'name'        => 'webo/update-options',
-			'description' => 'Update selected safe options',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'options' => array( 'type' => 'array', 'required' => true ),
-			),
-			'permission'  => 'manage_options',
-			'callback'    => array( WordPressTools::class, 'update_options' ),
-		),
-		array(
-			'name'        => 'webo/set-site-icon',
-			'description' => 'Set the WordPress site icon/favicon from an existing image attachment ID.',
-			'category'    => 'wordpress',
-			'arguments'   => array(
-				'attachment_id' => array( 'type' => 'integer', 'required' => true, 'min' => 1 ),
-			),
-			'permission'  => 'manage_options',
-			'callback'    => array( WordPressTools::class, 'set_site_icon' ),
-		),
-		array(
-			'name'        => 'seo/article-analysis',
-			'description' => 'WordPress-only SEO analysis for one post by post_id (rendered the_content + Rank Math in synthetic head). No URL or raw HTML input. Merges webo-rank-math/get-post-seo-meta when registered; optional keyword, no_autocomplete, include_rank_math. Returns seo_score, issues, content_gaps, rank_math, integration tool names.',
-			'category'    => 'seo',
-			'arguments'   => array(
-				'post_id'           => array(
-					'type'     => 'integer',
-					'required' => true,
-					'min'      => 1,
-				),
-				'keyword'           => array(
-					'type'     => 'string',
-					'required' => false,
-					'default'  => '',
-				),
-				'no_autocomplete'   => array(
-					'type'     => 'boolean',
-					'required' => false,
-					'default'  => false,
-				),
-				'include_rank_math' => array(
-					'type'     => 'boolean',
-					'required' => false,
-					'default'  => true,
-				),
-			),
-			'permission'  => 'edit_posts',
-			'callback'    => array( SeoArticleAnalysis::class, 'analyze_tool' ),
-		),
-	);
-
-	foreach ( $tools as $tool ) {
-		ToolRegistry::register( $tool );
-	}
-}
-
 function webo_mcp_bootstrap() {
-	webo_mcp_register_standalone_core_tools();
+	Standalone_Tools::register();
 
 	do_action( 'webo_mcp_register_tools' );
 
@@ -799,16 +528,15 @@ function webo_mcp_register_rest_routes() {
 					$include_internal = filter_var( $request->get_param( 'include_internal' ), FILTER_VALIDATE_BOOLEAN );
 				}
 
-				$all_payload = ToolRegistry::list_tools( true );
-				$payload     = ToolRegistry::list_tools( $include_internal );
-				$all_tools   = isset( $all_payload['tools'] ) && is_array( $all_payload['tools'] ) ? $all_payload['tools'] : array();
-				$tools       = isset( $payload['tools'] ) && is_array( $payload['tools'] ) ? $payload['tools'] : array();
+				$payload          = ToolRegistry::list_tools( $include_internal );
+				$tools            = isset( $payload['tools'] ) && is_array( $payload['tools'] ) ? $payload['tools'] : array();
+				$registered_total = isset( $payload['registered_total'] ) ? (int) $payload['registered_total'] : count( $tools );
 
 				return rest_ensure_response(
 					array(
 						'tools' => $tools,
 						'meta'  => array(
-							'registered_total' => count( $all_tools ),
+							'registered_total' => $registered_total,
 							'returned_total'   => count( $tools ),
 							'include_internal' => $include_internal,
 						),

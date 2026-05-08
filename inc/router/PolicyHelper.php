@@ -17,6 +17,7 @@ class PolicyHelper {
 	}
 
 	public static function is_public_allowed( array $tool, WP_REST_Request $request ) {
+
 		$visibility = isset( $tool['visibility'] ) ? (string) $tool['visibility'] : 'public';
 		if ( $visibility === 'internal' && ! self::is_internal_allowed( $request ) ) {
 			return false;

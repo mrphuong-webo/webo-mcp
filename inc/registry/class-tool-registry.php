@@ -93,11 +93,11 @@ class ToolRegistry {
 	 *
 	 * @param bool   $include_internal Include internal tools.
 	 * @param string $category         Optional. Filter by category (empty = all).
-	 * @return array<string, mixed>
+	 * @return array<string, mixed> Keys: tools, registered_total.
 	 */
 	public static function list_tools( bool $include_internal = false, string $category = '' ) {
-		$items = array();
 		$source = ( '' !== $category ) ? self::list_by_category( $category ) : array_values( self::$tools );
+		$items  = array();
 
 		foreach ( $source as $tool ) {
 			$visibility = isset( $tool['visibility'] ) ? (string) $tool['visibility'] : 'public';
@@ -117,7 +117,10 @@ class ToolRegistry {
 			$items[] = $item;
 		}
 
-		return array( 'tools' => $items );
+		return array(
+			'tools'            => $items,
+			'registered_total' => count( $source ),
+		);
 	}
 
 	/**
@@ -231,7 +234,7 @@ class ToolRegistry {
 	 * Validates and sanitizes arguments against schema.
 	 *
 	 * @param array<string, array<string, mixed>> $schema    Arguments schema.
-	 * @param array<string, mixed>                 $arguments Input arguments.
+	 * @param array<string, mixed>                $arguments Input arguments.
 	 * @return array<string, mixed>|WP_Error
 	 */
 	private static function validate_arguments( array $schema, array $arguments ) {

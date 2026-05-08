@@ -113,8 +113,8 @@ function webo_mcp_rest_strip_leading_bom( $buffer ) {
 	do {
 		$prev = $out;
 		// Repeat the 3-byte UTF-8 BOM sequence; \xEF\xBB\xBF+ would wrongly repeat only 0xBF.
-		$out  = preg_replace( '/^(?:\xEF\xBB\xBF)+/s', '', $out );
-		$out  = preg_replace( '/^\x{FEFF}+/u', '', $out );
+		$out = preg_replace( '/^(?:\xEF\xBB\xBF)+/s', '', $out );
+		$out = preg_replace( '/^\x{FEFF}+/u', '', $out );
 	} while ( $out !== $prev && $out !== '' );
 
 	return $out;
@@ -208,9 +208,9 @@ add_action( 'init', 'webo_mcp_rest_bom_guard_init', -999999 );
 /**
  * Fallback: activate by matched route once the request exists.
  *
- * @param mixed              $result  Prior result (unused).
- * @param \WP_REST_Server    $server  REST server.
- * @param \WP_REST_Request   $request Request.
+ * @param mixed            $result  Prior result (unused).
+ * @param \WP_REST_Server  $server  REST server.
+ * @param \WP_REST_Request $request Request.
  * @return mixed Unchanged.
  */
 function webo_mcp_rest_bom_guard_pre_dispatch( $result, $server, $request ) {

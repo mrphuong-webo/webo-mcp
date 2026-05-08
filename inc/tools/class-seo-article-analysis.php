@@ -92,17 +92,15 @@ class SeoArticleAnalysis {
 			$schema_script = '<script type="application/ld+json">' . $schema_json_ld . '</script>';
 		}
 
-		$html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'
-			. esc_html( $head_title )
+		$html          = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'
+		. esc_html( $head_title )
 			. '</title>'
 			. $head_meta
 			. $schema_script
 			. '</head><body><article class="entry-content post-content">'
 			. $body
 			. '</article></body></html>';
-
 		$effective_url = is_string( $permalink ) ? $permalink : '';
-
 
 		try {
 			$extracted       = self::extract_content( $html );
@@ -116,8 +114,8 @@ class SeoArticleAnalysis {
 			);
 			$full_text       = implode( ' ', $all_parts );
 			$readability     = self::compute_readability( $full_text );
-			$extracted_kws = self::extract_keywords_frequency( $full_text );
-			$target_kw     = '' !== trim( $keyword ) ? strtolower( trim( $keyword ) ) : ( $extracted_kws[0] ?? '' );
+			$extracted_kws   = self::extract_keywords_frequency( $full_text );
+			$target_kw       = '' !== trim( $keyword ) ? strtolower( trim( $keyword ) ) : ( $extracted_kws[0] ?? '' );
 
 			if ( '' === $target_kw && $include_rank_math ) {
 				$rm_kw = isset( $rank_bundle['seo_meta']['rank_math_focus_keyword'] ) ? $rank_bundle['seo_meta']['rank_math_focus_keyword'] : '';
@@ -148,9 +146,9 @@ class SeoArticleAnalysis {
 			}
 			$related_kws = array_slice( $related_kws, 0, 15 );
 
-			$issues        = self::detect_seo_issues( $extracted, $structured_data, $readability );
-			$seo_score     = self::compute_seo_score( $issues );
-			$content_gaps  = self::compute_content_gaps( strtolower( $full_text ), $related_kws, $extracted_kws, $extracted, $readability );
+			$issues       = self::detect_seo_issues( $extracted, $structured_data, $readability );
+			$seo_score    = self::compute_seo_score( $issues );
+			$content_gaps = self::compute_content_gaps( strtolower( $full_text ), $related_kws, $extracted_kws, $extracted, $readability );
 
 			$rank_math_block = self::build_rank_math_result_block( $include_rank_math, $rank_bundle );
 
@@ -185,10 +183,10 @@ class SeoArticleAnalysis {
 					'content_gaps'       => $content_gaps,
 					'rank_math'          => $rank_math_block,
 					'integration'        => array(
-						'ability_get_post_seo_meta' => 'webo-rank-math/get-post-seo-meta',
+						'ability_get_post_seo_meta'    => 'webo-rank-math/get-post-seo-meta',
 						'ability_update_post_seo_meta' => 'webo-rank-math/update-post-seo-meta',
-						'wordpress_get_post'         => 'webo/get-post',
-						'wordpress_update_post'      => 'webo/update-post',
+						'wordpress_get_post'           => 'webo/get-post',
+						'wordpress_update_post'        => 'webo/update-post',
 					),
 				),
 			);
@@ -220,15 +218,15 @@ class SeoArticleAnalysis {
 			if ( is_string( $d ) && '' !== $d ) {
 				$extracted['publish_date'] = self::mb_limit( $d, 50 );
 			} else {
-				$extracted['publish_date'] = self::mb_limit( (string) $post->post_date, 50 );
+					$extracted['publish_date'] = self::mb_limit( (string) $post->post_date, 50 );
 			}
 		}
 		if ( empty( $extracted['h1'] ) || ! is_array( $extracted['h1'] ) ) {
 			$title = get_the_title( $post );
 			if ( is_string( $title ) && '' !== trim( $title ) ) {
-				$extracted['h1']              = array( self::mb_limit( wp_strip_all_tags( $title ), 160 ) );
-				$extracted['h1_source']       = 'post_title';
-				$extracted['h1_source_note']  = 'Synthetic analysis uses the WordPress post title as the page H1 when rendered content excludes the theme template title.';
+				$extracted['h1']             = array( self::mb_limit( wp_strip_all_tags( $title ), 160 ) );
+				$extracted['h1_source']      = 'post_title';
+				$extracted['h1_source_note'] = 'Synthetic analysis uses the WordPress post title as the page H1 when rendered content excludes the theme template title.';
 			}
 		}
 		return $extracted;
@@ -244,9 +242,10 @@ class SeoArticleAnalysis {
 	 * @return string JSON-LD or empty string.
 	 */
 	private static function build_article_schema_json_ld( WP_Post $post, string $permalink, string $title, array $rm ) {
+
 		$schema_type = isset( $rm['rank_math_schema_type'] ) && is_string( $rm['rank_math_schema_type'] )
 			? trim( $rm['rank_math_schema_type'] )
-			: 'Article';
+		: 'Article';
 		if ( '' === $schema_type ) {
 			$schema_type = 'Article';
 		}
@@ -291,7 +290,6 @@ class SeoArticleAnalysis {
 		$json = wp_json_encode( array_filter( $schema ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		return is_string( $json ) ? $json : '';
 	}
-
 	/**
 	 * @param int $post_id Post ID.
 	 * @return list<string>
@@ -576,7 +574,7 @@ class SeoArticleAnalysis {
 	 * @return int
 	 */
 	private static function count_syllables( string $word ) {
-		$word = strtolower( rtrim( $word, ".,!?;:" ) );
+		$word = strtolower( rtrim( $word, '.,!?;:' ) );
 		if ( strlen( $word ) <= 3 ) {
 			return 1;
 		}
@@ -585,8 +583,8 @@ class SeoArticleAnalysis {
 		$prev_vowel = false;
 		$len        = strlen( $word );
 		for ( $i = 0; $i < $len; $i++ ) {
-			$ch      = $word[ $i ];
-			$is_v    = false !== strpos( $vowels, $ch );
+			$ch   = $word[ $i ];
+			$is_v = false !== strpos( $vowels, $ch );
 			if ( $is_v && ! $prev_vowel ) {
 				++$count;
 			}
@@ -614,7 +612,7 @@ class SeoArticleAnalysis {
 			);
 		}
 
-		$parts    = preg_split( '/[.!?]+/', $text, -1, PREG_SPLIT_NO_EMPTY );
+		$parts     = preg_split( '/[.!?]+/', $text, -1, PREG_SPLIT_NO_EMPTY );
 		$sentences = array();
 		foreach ( $parts as $s ) {
 			$s = trim( $s );
@@ -624,18 +622,18 @@ class SeoArticleAnalysis {
 		}
 		$sentence_count = max( 1, count( $sentences ) );
 		preg_match_all( "/[\p{L}\p{M}\p{N}]+(?:['’\-][\p{L}\p{M}\p{N}]+)*/u", $text, $mw );
-		$words = $mw[0] ?? array();
-		$word_count = max( 1, self::estimate_word_count( $text, count( $words ) ) );
+		$words          = $mw[0] ?? array();
+		$word_count     = max( 1, self::estimate_word_count( $text, count( $words ) ) );
 		$syllable_count = 0;
 		foreach ( $words as $w ) {
 			$syllable_count += self::count_syllables( $w );
 		}
 		$avg_sentence_len       = $word_count / $sentence_count;
 		$avg_syllables_per_word = $syllable_count / $word_count;
-		$fre                      = 206.835 - 1.015 * $avg_sentence_len - 84.6 * $avg_syllables_per_word;
-		$fkgl                     = 0.39 * $avg_sentence_len + 11.8 * $avg_syllables_per_word - 15.59;
-		$fre                      = round( max( 0, min( 100, $fre ) ), 1 );
-		$fkgl                     = round( max( 0, $fkgl ), 1 );
+		$fre                    = 206.835 - 1.015 * $avg_sentence_len - 84.6 * $avg_syllables_per_word;
+		$fkgl                   = 0.39 * $avg_sentence_len + 11.8 * $avg_syllables_per_word - 15.59;
+		$fre                    = round( max( 0, min( 100, $fre ) ), 1 );
+		$fkgl                   = round( max( 0, $fkgl ), 1 );
 
 		if ( $fre >= 70 ) {
 			$grade = 'Easy (suitable for general audience)';
@@ -646,12 +644,12 @@ class SeoArticleAnalysis {
 		}
 
 		return array(
-			'flesch_reading_ease'   => $fre,
-			'fkgl'                  => $fkgl,
-			'grade_label'           => $grade,
-			'word_count'            => $word_count,
-			'sentence_count'        => $sentence_count,
-			'avg_sentence_length'   => round( $avg_sentence_len, 1 ),
+			'flesch_reading_ease'    => $fre,
+			'fkgl'                   => $fkgl,
+			'grade_label'            => $grade,
+			'word_count'             => $word_count,
+			'sentence_count'         => $sentence_count,
+			'avg_sentence_length'    => round( $avg_sentence_len, 1 ),
 			'avg_syllables_per_word' => round( $avg_syllables_per_word, 2 ),
 		);
 	}
@@ -664,16 +662,17 @@ class SeoArticleAnalysis {
 	 * @return int
 	 */
 	private static function estimate_word_count( string $text, int $base_count ) {
+
 		$estimated = max( 0, $base_count );
 		$groups    = array(
 			'/[\x{3400}-\x{9FFF}\x{F900}-\x{FAFF}\x{3040}-\x{30FF}]/u' => 2,
-			'/[\x{AC00}-\x{D7AF}\x{1100}-\x{11FF}]/u'                 => 3,
-			'/[\x{0E00}-\x{0E7F}]/u'                                   => 4,
-			'/[\x{1780}-\x{17FF}]/u'                                   => 4,
-			'/[\x{0E80}-\x{0EFF}]/u'                                   => 4,
-			'/[\x{1000}-\x{109F}]/u'                                   => 4,
-			'/[\x{0900}-\x{097F}]/u'                                   => 4,
-			'/[\x{0980}-\x{09FF}]/u'                                   => 4,
+			'/[\x{AC00}-\x{D7AF}\x{1100}-\x{11FF}]/u' => 3,
+			'/[\x{0E00}-\x{0E7F}]/u'                  => 4,
+			'/[\x{1780}-\x{17FF}]/u'                  => 4,
+			'/[\x{0E80}-\x{0EFF}]/u'                  => 4,
+			'/[\x{1000}-\x{109F}]/u'                  => 4,
+			'/[\x{0900}-\x{097F}]/u'                  => 4,
+			'/[\x{0980}-\x{09FF}]/u'                  => 4,
 		);
 
 		foreach ( $groups as $pattern => $chars_per_word ) {
@@ -690,24 +689,104 @@ class SeoArticleAnalysis {
 	 */
 	private static function stop_words() {
 		return array(
-			'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-			'with', 'by', 'of', 'from', 'as', 'is', 'are', 'was', 'were', 'be',
-			'been', 'this', 'that', 'these', 'those', 'it', 'he', 'she', 'they',
-			'we', 'you', 'i', 'your', 'my', 'their', 'our', 'its', 'which', 'who',
-			'whom', 'whose', 'what', 'where', 'when', 'why', 'how', 'all', 'any',
-			'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no',
-			'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'can',
-			'will', 'just', 'should', 'have', 'has', 'had', 'do', 'does', 'did',
-			'get', 'got', 'make', 'use', 'used', 'also', 'about', 'into', 'then',
-			'there', 'would', 'could', 'here',
+			'the',
+			'a',
+			'an',
+			'and',
+			'or',
+			'but',
+			'in',
+			'on',
+			'at',
+			'to',
+			'for',
+			'with',
+			'by',
+			'of',
+			'from',
+			'as',
+			'is',
+			'are',
+			'was',
+			'were',
+			'be',
+			'been',
+			'this',
+			'that',
+			'these',
+			'those',
+			'it',
+			'he',
+			'she',
+			'they',
+			'we',
+			'you',
+			'i',
+			'your',
+			'my',
+			'their',
+			'our',
+			'its',
+			'which',
+			'who',
+			'whom',
+			'whose',
+			'what',
+			'where',
+			'when',
+			'why',
+			'how',
+			'all',
+			'any',
+			'both',
+			'each',
+			'few',
+			'more',
+			'most',
+			'other',
+			'some',
+			'such',
+			'no',
+			'nor',
+			'not',
+			'only',
+			'own',
+			'same',
+			'so',
+			'than',
+			'too',
+			'very',
+			'can',
+			'will',
+			'just',
+			'should',
+			'have',
+			'has',
+			'had',
+			'do',
+			'does',
+			'did',
+			'get',
+			'got',
+			'make',
+			'use',
+			'used',
+			'also',
+			'about',
+			'into',
+			'then',
+			'there',
+			'would',
+			'could',
+			'here',
 		);
 	}
 
-	/**
-	 * @param string $text Text.
-	 * @param int    $top_n Top.
-	 * @return list<string>
-	 */
+		/**
+		 * @param string $text Text.
+		 * @param int    $top_n Top.
+		 * @return list<string>
+		 */
 	private static function extract_keywords_frequency( string $text, int $top_n = 12 ) {
 		preg_match_all( '/\b[a-z]{3,}\b/', strtolower( $text ), $m );
 		$words    = $m[0] ?? array();
@@ -755,21 +834,21 @@ class SeoArticleAnalysis {
 			}
 		}
 
-		usort(
-			$scored,
-			static function ( $a, $b ) {
-				if ( $a[1] === $b[1] ) {
-					return 0;
+			usort(
+				$scored,
+				static function ( $a, $b ) {
+					if ( $a[1] === $b[1] ) {
+						return 0;
+					}
+					return ( $a[1] < $b[1] ) ? 1 : -1;
 				}
-				return ( $a[1] < $b[1] ) ? 1 : -1;
-			}
-		);
+			);
 
-		$all_terms = array();
+			$all_terms = array();
 		foreach ( $scored as $row ) {
 			$all_terms[] = $row[0];
 		}
-		$final = array();
+			$final = array();
 		foreach ( $scored as $row ) {
 			$term = $row[0];
 			$skip = false;
@@ -786,13 +865,13 @@ class SeoArticleAnalysis {
 				break;
 			}
 		}
-		return $final;
+			return $final;
 	}
 
-	/**
-	 * @param string $query Query.
-	 * @return list<string>
-	 */
+		/**
+		 * @param string $query Query.
+		 * @return list<string>
+		 */
 	private static function get_google_autocomplete( string $query ) {
 		$url = 'https://suggestqueries.google.com/complete/search?client=chrome&q=' . rawurlencode( $query );
 		$r   = wp_remote_get(
@@ -817,12 +896,12 @@ class SeoArticleAnalysis {
 		return $list;
 	}
 
-	/**
-	 * @param array<string, mixed>        $content         Extracted content.
-	 * @param list<array<string, mixed>> $structured_data LD blocks.
-	 * @param array<string, mixed>       $readability     Metrics.
-	 * @return list<array<string, string>>
-	 */
+		/**
+		 * @param array<string, mixed>       $content         Extracted content.
+		 * @param list<array<string, mixed>> $structured_data LD blocks.
+		 * @param array<string, mixed>       $readability     Metrics.
+		 * @return list<array<string, string>>
+		 */
 	private static function detect_seo_issues( array $content, array $structured_data, array $readability ) {
 		$issues     = array();
 		$title      = isset( $content['title'] ) ? (string) $content['title'] : '';
@@ -855,7 +934,6 @@ class SeoArticleAnalysis {
 				'fix'      => 'Keep title under 60 characters.',
 			);
 		}
-
 		if ( '' === $meta ) {
 			$issues[] = array(
 				'severity' => 'Warning',
@@ -878,7 +956,6 @@ class SeoArticleAnalysis {
 				'fix'      => 'Keep under 155 characters.',
 			);
 		}
-
 		if ( count( $h1s ) === 0 ) {
 			$issues[] = array(
 				'severity' => 'Critical',
@@ -999,10 +1076,10 @@ class SeoArticleAnalysis {
 		return $issues;
 	}
 
-	/**
-	 * @param list<array<string, string>> $issues Issues.
-	 * @return array<string, int|string>
-	 */
+		/**
+		 * @param list<array<string, string>> $issues Issues.
+		 * @return array<string, int|string>
+		 */
 	private static function compute_seo_score( array $issues ) {
 		$crit = 0;
 		$warn = 0;
@@ -1020,22 +1097,22 @@ class SeoArticleAnalysis {
 		$raw   = 100 - ( $crit * 18 ) - ( $warn * 7 ) - ( $info * 2 );
 		$value = (int) max( 0, min( 100, round( $raw ) ) );
 		return array(
-			'value'           => $value,
-			'scale'           => '0-100',
-			'critical_count'  => $crit,
-			'warning_count'   => $warn,
-			'info_count'      => $info,
+			'value'          => $value,
+			'scale'          => '0-100',
+			'critical_count' => $crit,
+			'warning_count'  => $warn,
+			'info_count'     => $info,
 		);
 	}
 
-	/**
-	 * @param string                     $full_text_lower Lowercase full text.
-	 * @param list<string>               $related_kws     Related keywords.
-	 * @param list<string>               $extracted_kws   Extracted.
-	 * @param array<string, mixed>       $content         Content blob.
-	 * @param array<string, mixed>       $readability     Readability.
-	 * @return list<string>
-	 */
+		/**
+		 * @param string               $full_text_lower Lowercase full text.
+		 * @param list<string>         $related_kws     Related keywords.
+		 * @param list<string>         $extracted_kws   Extracted.
+		 * @param array<string, mixed> $content         Content blob.
+		 * @param array<string, mixed> $readability     Readability.
+		 * @return list<string>
+		 */
 	private static function compute_content_gaps(
 		string $full_text_lower,
 		array $related_kws,
@@ -1081,12 +1158,12 @@ class SeoArticleAnalysis {
 		return $gaps;
 	}
 
-	/**
-	 * Rank Math SEO meta: prefer Abilities API tool parity via `webo-rank-math/get-post-seo-meta`, then addon helper, then raw post_meta.
-	 *
-	 * @param int $post_id Post ID.
-	 * @return array{seo_meta: array<string, mixed>, source: string}
-	 */
+		/**
+		 * Rank Math SEO meta: prefer Abilities API tool parity via `webo-rank-math/get-post-seo-meta`, then addon helper, then raw post_meta.
+		 *
+		 * @param int $post_id Post ID.
+		 * @return array{seo_meta: array<string, mixed>, source: string}
+		 */
 	private static function collect_rank_math_bundle( int $post_id ) {
 		$bundle = array(
 			'seo_meta' => array(),
@@ -1121,11 +1198,11 @@ class SeoArticleAnalysis {
 		return apply_filters( 'webo_mcp_seo_article_rank_math_bundle', $bundle, $post_id );
 	}
 
-	/**
-	 * Known Rank Math post meta keys (aligned with webo-mcp-rank-math helpers).
-	 *
-	 * @return list<string>
-	 */
+		/**
+		 * Known Rank Math post meta keys (aligned with webo-mcp-rank-math helpers).
+		 *
+		 * @return list<string>
+		 */
 	private static function rank_math_meta_key_list() {
 		return array(
 			'rank_math_title',
@@ -1149,10 +1226,10 @@ class SeoArticleAnalysis {
 		);
 	}
 
-	/**
-	 * @param int $post_id Post ID.
-	 * @return array<string, mixed>
-	 */
+		/**
+		 * @param int $post_id Post ID.
+		 * @return array<string, mixed>
+		 */
 	private static function rank_math_meta_from_post( int $post_id ) {
 		$out = array();
 		foreach ( self::rank_math_meta_key_list() as $key ) {
@@ -1164,11 +1241,11 @@ class SeoArticleAnalysis {
 		return $out;
 	}
 
-	/**
-	 * @param bool  $include_flag Whether Rank Math was requested.
-	 * @param array $rank_bundle  Bundle from collect_rank_math_bundle.
-	 * @return array<string, mixed>
-	 */
+		/**
+		 * @param bool  $include_flag Whether Rank Math was requested.
+		 * @param array $rank_bundle  Bundle from collect_rank_math_bundle.
+		 * @return array<string, mixed>
+		 */
 	private static function build_rank_math_result_block( bool $include_flag, array $rank_bundle ) {
 		if ( ! $include_flag ) {
 			return array(
@@ -1187,12 +1264,13 @@ class SeoArticleAnalysis {
 		);
 	}
 
-	/**
-	 * @param string $s   String.
-	 * @param int    $max Max length.
-	 * @return string
-	 */
+		/**
+		 * @param string $s   String.
+		 * @param int    $max Max length.
+		 * @return string
+		 */
 	private static function mb_limit( string $s, int $max ) {
+
 		if ( function_exists( 'mb_substr' ) ) {
 			return (string) mb_substr( $s, 0, $max );
 		}
@@ -1204,6 +1282,7 @@ class SeoArticleAnalysis {
 	 * @return int
 	 */
 	private static function mb_length( string $s ) {
+
 		if ( function_exists( 'mb_strlen' ) ) {
 			return (int) mb_strlen( $s );
 		}
