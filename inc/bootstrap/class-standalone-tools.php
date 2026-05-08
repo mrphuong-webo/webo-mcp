@@ -577,6 +577,31 @@ final class Standalone_Tools {
 				'callback'    => array( WordPressTools::class, 'theme_mutate' ),
 			),
 			array(
+				'name'        => 'webo/plugin-query',
+				'description' => 'Unified read-only plugin inspection: installed, active, updates (uses wp_update_plugins + update_plugins transient when refresh=true), network-active, rental-candidates, health. Optional scope (all, active, network-active) and fields projection.',
+				'category'    => 'wordpress',
+				'arguments'   => array(
+					'query'   => array(
+						'type'     => 'string',
+						'required' => true,
+					),
+					'scope'   => array(
+						'type'     => 'string',
+						'required' => false,
+					),
+					'refresh' => array(
+						'type'     => 'boolean',
+						'required' => false,
+					),
+					'fields'  => array(
+						'type'     => 'array',
+						'required' => false,
+					),
+				),
+				'permission'  => 'update_plugins',
+				'callback'    => array( WordPressTools::class, 'plugin_query' ),
+			),
+			array(
 				'name'        => 'webo/get-options',
 				'description' => 'Read selected safe options',
 				'category'    => 'wordpress',

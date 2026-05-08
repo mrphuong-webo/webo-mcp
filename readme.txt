@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.9
+Stable tag: 2.1.10
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -164,6 +164,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.10 =
+* Fix: register **`webo/plugin-query`** in `Standalone_Tools` so MCP clients can list plugin updates (`query=updates`, optional `refresh=true`) and other inspection modes.
+
 = 2.1.9 =
 * Refactor: move built-in MCP tool registration into `inc/bootstrap/class-standalone-tools.php` (smaller bootstrap; same tool names).
 * Maintainer: broaden `.gitignore` (composer `vendor/bin/`, Cursor local config, scratch files); ship `scripts/` helpers and `docs/WPORG_REVIEW_REPLY_2.0.28.md`; keep `composer.json` production-only.
@@ -341,6 +344,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.10 =
+Registers the missing **`webo/plugin-query`** tool (plugin inventory and updates via MCP). Recommended for automation that lists pending plugin updates.
+
 = 2.1.9 =
 Internal refactor (standalone tool bootstrap file only). No MCP tool renaming; safe routine update.
 
