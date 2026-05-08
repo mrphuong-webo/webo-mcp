@@ -1,0 +1,56 @@
+name: WEBO Plugin CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout plugin repo
+        uses: actions/checkout@v4
+
+      - name: Detect plugin name
+        id: vars
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          echo "plugin_name=$REPO_NAME" >> $GITHUB_OUTPUT
+
+      - name: Prepare remote plugin folder
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            PLUGIN_DIR="${{ secrets.WP_PATH }}/wp-content/plugins/${{ steps.vars.outputs.plugin_name }}"
+            mkdir -p "$PLUGIN_DIR"
+            rm -rf "$PLUGIN_DIR"/*
+
+      - name: Upload plugin files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."
+          target: "${{ secrets.WP_PATH }}/wp-content/plugins/${{ steps.vars.outputs.plugin_name }}"
+          rm: false
+          strip_components: 0
+
+      - name: Fix permission
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            PLUGIN_DIR="${{ secrets.WP_PATH }}/wp-content/plugins/${{ steps.vars.outputs.plugin_name }}"
+            find "$PLUGIN_DIR" -type d -exec chmod 755 {} \;
+            find "$PLUGIN_DIR" -type f -exec chmod 644 {} \;
+            chown -R www:www "$PLUGIN_DIR" || true
+            echo "Deploy completed: $PLUGIN_DIR"
