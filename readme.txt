@@ -1,0 +1,392 @@
+=== WEBO MCP ===
+Contributors: phuongwebo
+Author URI: https://dinhwp.com
+Tags: mcp, ai, json-rpc, api, automation, woocommerce, wordpress
+Requires at least: 6.0
+Tested up to: 6.9
+Requires PHP: 7.4
+Stable tag: 2.1.0
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Token-optimized MCP gateway for WordPress: unified query/mutate tools cut context-window usage by up to 70% vs. per-operation APIs.
+
+== Description ==
+WEBO MCP is a standalone MCP gateway for WordPress. It lets compatible clients call well-defined tools over REST using JSON-RPC, instead of scraping the admin or sharing broad credentials beyond what you intend.
+
+**What you get**
+
+- **Token-optimized unified tools:** every domain exposes two abilities — `*-query` (all reads) and `*-mutate` (all writes) — with a single `action` discriminator. `tools/list` payload is up to 70% smaller than per-operation APIs, which means less of the model's context window is consumed by tool schemas, lower cost per session, and fewer hallucinated tool names.
+- Primary router endpoint: `POST /wp-json/mcp/v1/router`
+- Standard MCP-style flow: `initialize` → `tools/list` → `tools/call`
+- Session lifecycle for clients (pass `session_id` or `Mcp-Session-Id` after `initialize`)
+- Built-in tool registry for common WordPress operations (posts, media, terms, menus, options, and more)
+- Bundled Abilities API + MCP Adapter integration, with automatic bridging from registered abilities to MCP tools (configurable)
+- Public tool policy controls (category filters and optional allowlists) plus optional internal tool exposure for private environments
+
+**Security model (high level)**
+
+- MCP access requires a real WordPress user context: Application Password over HTTP Basic, or an existing logged-in session.
+- Optional site-wide or per-user API key and HMAC can be enabled in Settings as an additional gate (they do not replace WordPress authentication).
+- Default access expectations for the router and `GET /wp-json/webo-mcp/v1/tools`: users who are super admins, can `manage_options`, or can `edit_posts`, consistent with typical site operator and editor workflows (filterable).
+
+**Client guidance**
+
+Always discover tools before calling them: run `tools/list`, pick an exact tool name from the response, validate required arguments, then call `tools/call`. This reduces mistakes and keeps automation predictable in production.
+
+**Further documentation and optional integrations**
+
+- Project documentation and ecosystem notes: https://webomcp.com
+- Optional n8n community node (separate package): https://www.npmjs.com/package/n8n-nodes-webo-mcp
+- Release notes and migration map: see docs/RELEASE_NOTES_2.1.0.md and docs/MIGRATION_GUIDE_2.1.0.md in the GitHub repository
+
+Compatibility note: any MCP-capable client can be used; which large language model runs inside the client is outside this plugin.
+
+Standalone core tools included:
+- Site info
+- Content (posts/pages): `webo/content-query` (list, get, find-by-url, search-replace, list-revisions, get-revision) and `webo/content-mutate` (create, update, delete, bulk-update-status, restore-revision)
+- Users: list
+- Media: `webo/media-query` (list, get) and `webo/media-mutate` (upload, update, delete)
+- Comments: `webo/comment-query` (list, get) and `webo/comment-mutate` (update, delete)
+- Taxonomy/Terms: `webo/taxonomy-query` (discover, list, get) and `webo/taxonomy-mutate` (create, update, delete)
+- Nav menus: list menus, list menu items (menu_order, db_id), add menu link from post (explicit post_id + menu_order required)
+- Plugins: `webo/plugin-query` (list, get, activate, deactivate)
+- Themes: list installed themes, switch active theme
+- Options: get/update (safe allowlist only), set site icon/favicon from media
+- SEO (WordPress post): seo/article-analysis — requires post_id; merges Rank Math meta when available (same data path as webo-rank-math/get-post-seo-meta); optional related-keyword suggestions via outbound request unless no_autocomplete is true
+
+Excluded by default in standalone-safe mode:
+- Bulk/mass execution tools
+- Plugin/theme write-management abilities
+- Multisite-specific abilities
+
+== Privacy ==
+
+This plugin does not phone home or send telemetry. MCP traffic is initiated by clients you configure. Some tools may perform outbound HTTP requests only when a client invokes them (for example seo/article-analysis may request keyword suggestions from a third-party suggest API unless you pass no_autocomplete).
+
+The plugin stores the following options in the WordPress database when configured:
+- `webo_mcp_api_key`: API key used to authenticate MCP requests.
+- `webo_mcp_hmac_secret`: HMAC secret used to sign and validate MCP requests.
+
+These options are removed when the plugin is uninstalled via the WordPress Plugins screen.
+
+== External services ==
+
+This plugin can connect to Google Suggest (Autocomplete) when a client calls the `seo/article-analysis` tool and does not set `no_autocomplete` to true. This external request is used to return related keyword suggestions for SEO analysis.
+
+Service provider: Google LLC (Google Suggest / Autocomplete API endpoint).
+
+Data sent and when:
+- Sent only when `seo/article-analysis` is called with autocomplete enabled.
+- Sends the analysis query text to `https://suggestqueries.google.com/complete/search` as the `q` parameter.
+- Sends standard HTTP request metadata such as IP address and User-Agent as part of the web request.
+
+Terms of Service: https://policies.google.com/terms
+Privacy Policy: https://policies.google.com/privacy
+
+== Developer Hooks ==
+
+The plugin exposes the following actions and filters for developers:
+
+=== Actions ===
+
+- `webo_mcp_register_tools`  
+  Fired during plugin bootstrap after standalone tools are registered. Use this to register custom MCP tools from other plugins.
+
+=== Filters ===
+
+- `webo_mcp_current_user_can_use_mcp` (bool $allowed, int $user_id)  
+  Gate for all MCP REST access. Default: super admin OR `manage_options` OR `edit_posts`. Override to tighten (e.g. super-admin only) in hardened installs.
+
+- `webo_mcp_allow_internal_tools` (bool $allow_internal, WP_REST_Request $request)  
+  Controls whether internal tools are included in tools/list responses. Defaults to false for public environments.
+
+- `webo_mcp_public_categories` (array $categories, WP_REST_Request $request, array $tool)  
+  Filters which tool categories are exposed as public. Defaults to array( 'wordpress' ).
+
+- `webo_mcp_public_tool_allowlist` (array $names, WP_REST_Request $request, array $tool)  
+  Optional allowlist of specific tool names that are always considered public.
+
+- `webo_mcp_bridge_deny_patterns` (array $patterns)  
+  Controls which abilities are excluded when auto-bridging abilities into MCP tools (e.g. bulk, plugins/, themes/, multisite/).
+
+- `webo_mcp_auto_bridge_abilities` (bool $enabled)  
+  Enables or disables automatic bridging of registered abilities into MCP tools. Defaults to true.
+
+- `webo_mcp_enable_adapter` (bool $enabled)  
+  Enables or disables the bundled WordPress MCP Adapter runtime. Defaults to true.
+
+- `webo_mcp_validate_media_fetch_url` (true|\WP_Error $ok, string $url, array $parsed)  
+  Reject unsafe URLs for webo/media-mutate upload action (return WP_Error to block).
+
+== Installation ==
+1. Upload the plugin folder to /wp-content/plugins/webo-mcp
+2. Run composer install inside the plugin folder
+3. Activate the plugin in WordPress Admin
+4. Send JSON-RPC requests to POST /wp-json/mcp/v1/router
+
+For release packaging, use scripts/build-release.ps1 to create a clean zip with .distignore exclusions.
+
+== Frequently Asked Questions ==
+
+= Which endpoint should MCP clients use? =
+POST /wp-json/mcp/v1/router
+
+= Where is the official website and the n8n package? =
+The project hub is https://webomcp.com. For n8n, install the community node from npm: https://www.npmjs.com/package/n8n-nodes-webo-mcp
+
+= Can this run WordPress abilities by itself? =
+Yes. This plugin bundles Abilities API via Composer and auto-bridges registered abilities to MCP tools. You can disable auto-bridge with filter webo_mcp_auto_bridge_abilities set to false.
+
+= How do I migrate from legacy one-operation tool names? =
+Use `tools/list` to discover the unified tool names in your environment, then move calls to query/mutate tools with an explicit `action` argument. A full mapping is available in docs/MIGRATION_GUIDE_2.1.0.md in the GitHub repository.
+
+= Can I expose internal tools? =
+Yes, via filter webo_mcp_allow_internal_tools in private environments.
+
+= Can I limit public tools by category? =
+Yes, via filter webo_mcp_public_categories.
+
+= Can I keep only WordPress.org-safe features? =
+Yes. Default bridge rules exclude patterns for bulk, plugins/themes, and multisite abilities.
+
+= Is this plugin suitable for production? =
+Yes, when used with proper authentication, TLS, and a limited tool exposure policy.
+
+= How do I authenticate MCP clients? =
+Use a WordPress **Application Password** (Users → Profile → Application Passwords) and send it with HTTP Basic Auth (username = WordPress username, password = the application password). You can combine that with the optional **API Key** and **HMAC** values from Settings → WEBO MCP when those fields are set.
+
+== Screenshots ==
+1. MCP endpoint working in a REST client (initialize)
+2. tools/list response with public tools
+3. tools/call response for a WordPress tool
+
+== Changelog ==
+= 2.1.0 =
+* **Token optimization — ecosystem-wide enum-dispatch unification.** All WEBO MCP addons now follow the same query/mutate pattern as the core plugin, replacing one-tool-per-operation APIs with unified abilities that accept an `action` argument:
+  * **webo-mcp-woocommerce:** 27 individual tools → 10 unified tools (`woo-query-products`, `woo-mutate-products`, `woo-query-orders`, `woo-mutate-orders`, `woo-query-customers`, `woo-mutate-customers`, `woo-query-coupons`, `woo-mutate-coupons`, `woo-query-store`, `woo-mutate-store`).
+  * **webo-mcp-rank-math:** 18 individual tools → 10 unified tools across posts, redirections, settings, schema, analytics, and keywords.
+  * **webo-mcp-rocket:** 9 individual tools → 2 unified tools (`rocket-cache-query`, `rocket-cache-mutate`).
+* **Impact:** with core and addons active the total tool count visible in `tools/list` drops from ~79+ to ~34. A smaller tool list means the model picks tools faster, uses less context budget per request, and makes fewer tool-name errors.
+* **Pattern:** each unified ability requires one `action` string that is dispatched server-side via PHP `match()`. All existing handler logic is preserved — only the registration surface changes.
+* Updated skills documentation for webo-mcp-ability-woocommerce, webo-mcp-ability-rank-math, webo-mcp-ability-rocket, and webo-mcp-guide.
+
+= 2.0.45 =
+* Refactor: unify media tools into `webo/media-query` (list, get) and `webo/media-mutate` (upload, update, delete); removes 5 legacy media tools.
+* Refactor: unify taxonomy/term tools into `webo/taxonomy-query` (discover, list, get) and `webo/taxonomy-mutate` (create, update, delete); removes 6 legacy term tools.
+* Refactor: unify comment tools into `webo/comment-query` (list, get) and `webo/comment-mutate` (update, delete); removes 4 legacy comment tools.
+* Refactor: unify post/content tools into `webo/content-query` and `webo/content-mutate`; removes 17 legacy post tools.
+* Refactor: replace `webo/list-active-plugins` with unified `webo/plugin-query` (list, get, activate, deactivate).
+* All unified tools normalize the `id` field as the primary response identifier; domain aliases (attachment_id, term_id, comment_id) are kept for backward compatibility.
+* SEO: improved Unicode word count using Unicode ranges for multilingual content; non-spaced scripts (CJK, Thai) now estimate word count via character-based heuristics.
+
+= 2.0.44 =
+* SEO readability: estimate word count for non-spaced scripts (CJK, Thai, Khmer) via character-based heuristics.
+
+= 2.0.43 =
+* SEO readability: count Unicode title and meta description lengths correctly for non-ASCII characters.
+
+= 2.0.42 =
+* SEO readability: count Unicode words correctly for multilingual content.
+
+= 2.0.41 =
+* Media/site settings: add `webo/set-site-icon` to set the WordPress site icon/favicon from an existing image attachment.
+
+= 2.0.40 =
+* MCP post tools: add page, offset, orderby, and order support to webo/list-posts responses for reliable batch processing.
+* SEO analyzer: infer the WordPress post title as the primary H1 when content omits an H1, and include Article JSON-LD from post/Rank Math metadata for more accurate schema checks.
+
+= 2.0.39 =
+* Options: allow safe permalink/category/tag base updates through MCP and flush rewrite rules after URL setting changes.
+
+= 2.0.38 =
+* MCP post tools: preserve safe HTML for post content/excerpt arguments so SEO headings, lists, tables, and images can be authored through create/update calls.
+
+= 2.0.35 =
+* New site-management tools: `webo/list-themes` and `webo/switch-theme` for discovering installed themes and switching the active theme by stylesheet slug.
+* Readme: release includes the shortened WordPress.org short description, keeping the short description under the 150 character import limit.
+
+= 2.0.34 =
+* Options: allow `webo/update-options` and `webo/get-options` to handle `show_on_front` and `page_on_front`.
+* Safety: validate `show_on_front` as `posts|page` and ensure `page_on_front` references a valid Page ID (or 0).
+
+= 2.0.33 =
+* Readme: refresh WordPress.org-facing description for clarity; lead with product value and protocol workflow, move ecosystem links to a secondary section.
+
+= 2.0.32 =
+* Fix: avoid WP 6.9 Abilities API incorrect-usage notices by hardening adapter category/ability registration order and late-boot recovery.
+* Docs: add AGENTS.md workflow guidance and prioritize guide-first structure in README/readme.txt.
+
+= 2.0.31 =
+* Maintenance: version bump.
+
+= 2.0.30 =
+* Maintenance: version bump.
+
+= 2.0.29 =
+* Reliability: harden MCP adapter bootstrap and schema type handling (supports array/nullable type definitions safely).
+* WP-CLI noise reduction: register core mcp-adapter abilities before bridge wiring and suppress default adapter server bootstrap in CLI mode to avoid false missing-ability errors.
+* Release notice: users running WEBO MCP Pro should update Pro package compatibility notes from the official docs/release channel before production rollout.
+
+= 2.0.28 =
+* WordPress.org review fixes: added explicit `External services` disclosure for Google Suggest/Autocomplete used by `seo/article-analysis` (service purpose, transmitted query data and request metadata, conditions, Terms and Privacy links).
+* Compatibility: removed use of `WPINC` for nav-menu API loading; now load nav-menu API via explicit core include paths with availability checks to reduce environment-specific path issues.
+
+= 2.0.27 =
+* Security (WordPress.org guidelines): MCP router no longer maps API keys or HMAC to arbitrary user accounts. All requests require WordPress Application Password (Basic Auth) or an existing logged-in session; optional site API key and HMAC apply only after authentication.
+* Readme: Contributors includes phuongwebo; clarify authentication in description and FAQ.
+
+= 2.0.26 =
+* New MCP tool seo/article-analysis (category seo, edit_posts): WordPress-only on-page SEO signals for a post via post_id — rendered content, Rank Math merge, readability, issues, content_gaps. Agent documentation: skills/webo-mcp-seo-article/SKILL.md in the GitHub repo (not bundled in the WordPress.org zip).
+* Readme: Stable tag sync, privacy note for optional outbound tool requests.
+
+= 2.0.25 =
+* list-posts: document defaults (publish + post type post); response includes applied filters so empty results are easier to explain. Models should pass status draft (etc.) and post_type page when listing those.
+
+= 2.0.24 =
+* Nav menus: list-nav-menu-locations response includes note explaining slug vs label; MCP descriptions tell models to call this tool first to discover theme_location keys.
+
+= 2.0.23 =
+* Nav menus: list-nav-menus response includes menu_id (same as term_id) and clearer MCP tool descriptions so clients list menus without asking users for menu_id first.
+
+= 2.0.22 =
+* Nav menus: if create-nav-menu / create-nav-menu-for-location targets a name that already exists, reuse the existing menu term and continue (reused_existing_menu in JSON). Return a clear error if core nav-menu.php cannot be loaded. Expanded primary fallback slugs (primary-menu, header-menu, mobile). assign-nav-menu-to-location accepts menu_name when menu_id is omitted (assigned_via_menu_name in response).
+
+= 2.0.21 =
+* Nav menus: resolve theme location when slug primary is missing (single registered slot, or common slugs main/header/menu-1/navigation). Load wp-includes/nav-menu.php before wp_create_nav_menu in REST context. Response field theme_location_resolution indicates how the slug was chosen.
+
+= 2.0.20 =
+* Access: MCP router gate allows `manage_options` and `edit_posts` (Editors, site admins on multisite), not only `is_super_admin`; fixes list-nav-menus / tools/call failing for non-administrator users. Multisite API key/HMAC falls back to first site Administrator if no Super Admin login exists. Error code `webo_mcp_access_denied` replaces misleading super-admin-only message.
+
+= 2.0.15 =
+* Nav menus: list-nav-menus, list-nav-menu-items (db_id, menu_order, object_id, parent_db_id), add-nav-menu-item-from-post with required post_id, post_type, and menu_order (explicit developer values; no auto placement).
+
+= 2.0.14 =
+* Security: MCP JSON-RPC router, SecurityHelper, tools discovery, and internal-tool policy default to network Super Admin on multisite (`is_super_admin`). Single-site installs use WordPress core’s `is_super_admin()` behavior (typically full administrators). Global API key/HMAC elevates to the first Super Admin user on multisite.
+
+= 2.0.7 =
+* Readme: highlight https://webomcp.com and n8n community node https://www.npmjs.com/package/n8n-nodes-webo-mcp; short description and FAQ; README.md aligned.
+
+= 2.0.6 =
+* License: plugin header uses the same wording as readme.txt ("GPL v2 or later") to satisfy WordPress.org declared-license checks.
+
+= 2.0.5 =
+* Plugin header: @wordpress-plugin marker for strict scanners; License line uses GPLv2 or later slug (Plugin Handbook).
+
+= 2.0.4 =
+* Plugin header: handbook field order, shorter Description line, License text "GPL v2 or later", Domain Path for translations.
+
+= 2.0.3 =
+* WordPress.org / Plugin Check: include composer.json when vendor is bundled; replace unlink with wp_delete_file for temp uploads; remove load_plugin_textdomain (core loads translations); resolve API key usermeta via get_users instead of direct $wpdb; readme short description, allowed Tags, Stable tag sync.
+
+= 2.0.2 =
+* WordPress.org packaging: release zip excludes dotfiles and all .github trees; readme Tested up to 6.9.
+
+= 2.0.1 =
+* Hardening: HMAC auth passes REST permission layer; SSRF guard for upload-media-from-url; paginated search-replace (max 500 posts per call); sanitized safe option updates; removed duplicate unused settings class.
+
+= 2.0.0 =
+* Plugin renamed to WEBO MCP; folder and main file: webo-mcp/webo-mcp.php.
+* Text domain, REST namespace webo-mcp/v1, hooks webo_mcp_* (breaking for custom code using old hook names).
+* Options and API-key usermeta migrate automatically from webo-wordpress-mcp keys on first load.
+
+= 1.1.1 =
+* Added empty input_schema definitions for core/get-user-info and core/get-environment-info.
+* Fixes MCP tools/call validation errors when invoking these no-input core tools.
+
+= 1.0.2 =
+* Added new read-only tool: webo/list-active-plugins.
+* Enables MCP clients to verify active plugins with capability check.
+
+= 1.0.1 =
+* Metadata refresh release to ensure dependency headers are reloaded correctly.
+* tools/list compatibility improvements for include_internal aliases and legacy endpoint support.
+
+= 1.0.0 =
+* Initial stable public release.
+* MCP JSON-RPC router with initialize, tools/list, tools/call.
+* Tool registry integration and public visibility policy controls.
+* Session management and optional API key/HMAC security.
+
+== Upgrade Notice ==
+= 2.0.40 =
+Recommended update for MCP clients that batch process posts or rely on seo/article-analysis; list-posts pagination and H1/schema detection are more accurate.
+
+= 2.0.35 =
+Adds theme discovery and theme switching tools for MCP clients. This release also carries the shortened WordPress.org short description into the new tagged version.
+
+= 2.0.34 =
+Recommended update if you manage homepage reading settings via MCP; adds safe support for `show_on_front` and `page_on_front` updates.
+
+= 2.0.33 =
+Documentation-only refresh on WordPress.org listings; recommended if you rely on the plugin directory description for onboarding.
+
+= 2.0.32 =
+Recommended update for WP 6.9+ sites using Abilities API and MCP adapter integration.
+
+= 2.0.31 =
+Maintenance update.
+
+= 2.0.30 =
+Maintenance update.
+
+= 2.0.29 =
+Maintenance update for runtime stability and cleaner CLI output. If you use WEBO MCP Pro, review/update the Pro package compatibility notice before deploying this version to production.
+
+= 2.0.28 =
+WordPress.org compliance update: readme now documents Google Suggest external service usage with Terms/Privacy links, and nav-menu API loading no longer relies on WPINC.
+
+= 2.0.27 =
+MCP clients must send WordPress Application Password (HTTP Basic) or use a logged-in session. API key/HMAC alone are no longer sufficient when calling the router.
+
+= 2.0.26 =
+Adds seo/article-analysis for post-level SEO diagnostics (optional outbound suggest API; set no_autocomplete to skip).
+
+= 2.0.7 =
+Readme and GitHub README now link webomcp.com and the n8n-nodes-webo-mcp npm package.
+
+= 2.0.6 =
+License declaration aligned between readme and main plugin file for WordPress.org review.
+
+= 2.0.5 =
+Plugin header updates for Plugin Check and WordPress.org tooling (@wordpress-plugin, GPLv2 license slug).
+
+= 2.0.4 =
+Plugin header formatting for WordPress.org Plugin Check (Description, Version, License).
+
+= 2.0.3 =
+Plugin Check and packaging fixes; upload the release zip from scripts/build-release.ps1 for WordPress.org.
+
+= 2.0.2 =
+Packaging and readme updates for WordPress.org review. Always upload the zip from scripts/build-release.ps1, not the raw git folder.
+
+= 2.0.0 =
+Major rename: reinstall from folder webo-mcp (or deploy to new path), then activate WEBO MCP. Settings are preserved via migration.
+
+= 1.1.1 =
+Recommended update to fix tools/call validation for core tools with no input.
+
+= 1.0.2 =
+Recommended update to support active plugin verification via MCP tool.
+
+= 1.0.1 =
+Recommended update to refresh plugin metadata and improve tools/list compatibility.
+
+= 1.0.0 =
+Initial public release of WEBO MCP (formerly WEBO WordPress MCP).
+
+== Credits ==
+Special thanks to the authors and open source projects that contributed to this plugin:
+- WordPress (https://wordpress.org)
+- Abilities API (https://github.com/WordPress/abilities-api)
+  Reference: https://make.wordpress.org/ai/2025/07/17/abilities-api/
+- MCP Adapter (https://github.com/WordPress/mcp-adapter)
+  Reference: https://make.wordpress.org/ai/2025/07/17/mcp-adapter/
+- Composer (https://getcomposer.org)
+- Other PHP and JS libraries from the community
+
+If you use this plugin, please give credit to the authors of these libraries.
+
+== License ==
+This plugin is licensed under the GPLv2 or later.
+See https://www.gnu.org/licenses/gpl-2.0.html for details.
