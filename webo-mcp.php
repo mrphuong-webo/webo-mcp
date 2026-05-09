@@ -459,6 +459,22 @@ function webo_mcp_should_bridge_ability( string $ability_name ) {
 }
 
 /**
+ * Prime the Abilities registry so {@see 'wp_abilities_api_init'} runs before {@see 'webo_mcp_bootstrap'} (init:20).
+ *
+ * On normal front-end requests nothing else may call {@see WP_Abilities_Registry::get_instance()} early; addons that
+ * hook {@see 'webo_mcp_register_tools'} would otherwise hit {@see wp_register_ability()} before the API init hook.
+ *
+ * @return void
+ */
+function webo_mcp_prime_abilities_registry_early() {
+	if ( ! class_exists( 'WP_Abilities_Registry', false ) ) {
+		return;
+	}
+	WP_Abilities_Registry::get_instance();
+}
+add_action( 'init', 'webo_mcp_prime_abilities_registry_early', 2 );
+
+/**
  * Registers standalone tools, bridges abilities, fires extension hooks.
  *
  * @return void

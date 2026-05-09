@@ -166,6 +166,7 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 == Changelog ==
 = 2.1.10 =
 * Fix: register **`webo/plugin-query`** in `Standalone_Tools` so MCP clients can list plugin updates (`query=updates`, optional `refresh=true`) and other inspection modes.
+* Bootstrap: prime `WP_Abilities_Registry` at `init:2` so `wp_abilities_api_init` runs before MCP bootstrap (`init:20`), preventing `_doing_it_wrong` when abilities register on `webo_mcp_register_tools`.
 
 = 2.1.9 =
 * Refactor: move built-in MCP tool registration into `inc/bootstrap/class-standalone-tools.php` (smaller bootstrap; same tool names).
