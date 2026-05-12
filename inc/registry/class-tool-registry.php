@@ -105,6 +105,11 @@ class ToolRegistry {
 				continue;
 			}
 
+			$permission = isset( $tool['permission'] ) ? (string) $tool['permission'] : '';
+			if ( '' !== $permission && ! current_user_can( $permission ) ) {
+				continue;
+			}
+
 			$item = array(
 				'name'        => $tool['name'],
 				'description' => $tool['description'],

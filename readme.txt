@@ -23,6 +23,7 @@ WEBO MCP is a standalone MCP gateway for WordPress. It lets compatible clients c
 - Built-in tool registry for common WordPress operations (posts, media, terms, menus, options, and more)
 - Bundled Abilities API + MCP Adapter integration, with automatic bridging from registered abilities to MCP tools (configurable)
 - Public tool policy controls (category filters and optional allowlists) plus optional internal tool exposure for private environments
+- Bounded MCP audit log, optional per-user/role/client tool allowlists, and a read-only administrator health/status tool
 
 **Security model (high level)**
 
@@ -51,7 +52,8 @@ Standalone core tools included:
 - Comments: `webo/comment-query` (list, get) and `webo/comment-mutate` (update, delete)
 - Taxonomy/Terms: `webo/taxonomy-query` (discover, list, get) and `webo/taxonomy-mutate` (create, update, delete)
 - Nav menus: list menus, list menu items (menu_order, db_id), add menu link from post (explicit post_id + menu_order required)
-- Plugins: `webo/plugin-query` (installed, active, updates, …) and `webo/plugin-mutate` (install, activate, deactivate)
+- Plugins: `webo/plugin-query` (installed, active, updates, …) and `webo/plugin-mutate` (install, activate, deactivate; supports child-site `site_id` / `blog_id` activation for network admins)
+- Health: `webo/health-status` (REST/router status, Application Password support, permalinks, cron, object cache, plugin update summary, WordPress/PHP versions, and redacted MCP config)
 - Themes: `webo/theme-query`, `webo/theme-mutate`
 - Menus: `webo/menu-query`, `webo/menu-mutate`
 - Options: get/update (safe allowlist only), set site icon/favicon from media
@@ -69,6 +71,8 @@ This plugin does not phone home or send telemetry. MCP traffic is initiated by c
 The plugin stores the following options in the WordPress database when configured:
 - `webo_mcp_api_key`: API key used to authenticate MCP requests.
 - `webo_mcp_hmac_secret`: HMAC secret used to sign and validate MCP requests.
+- `webo_mcp_tool_allowlist_enabled` and `webo_mcp_tool_allowlist_rules`: optional administrator-configured MCP tool allowlist policy.
+- `webo_mcp_audit_log_enabled`, `webo_mcp_audit_log_max_entries`, and `webo_mcp_audit_log`: bounded MCP tool-call audit log settings and compact audit events. Audit entries include user/tool/action/status data, anonymized IPs, and hashed session IDs; they do not store request payloads, API keys, HMAC secrets, or Application Passwords.
 
 These options are removed when the plugin is uninstalled via the WordPress Plugins screen.
 
@@ -92,34 +96,37 @@ The plugin exposes the following actions and filters for developers:
 
 === Actions ===
 
-- `webo_mcp_register_tools`  
+- `webo_mcp_register_tools`
   Fired during plugin bootstrap after standalone tools are registered. Use this to register custom MCP tools from other plugins.
 
 === Filters ===
 
-- `webo_mcp_current_user_can_use_mcp` (bool $allowed, int $user_id)  
+- `webo_mcp_current_user_can_use_mcp` (bool $allowed, int $user_id)
   Gate for all MCP REST access. Default: super admin OR `manage_options` OR `edit_posts`. Override to tighten (e.g. super-admin only) in hardened installs.
 
-- `webo_mcp_allow_internal_tools` (bool $allow_internal, WP_REST_Request $request)  
+- `webo_mcp_allow_internal_tools` (bool $allow_internal, WP_REST_Request $request)
   Controls whether internal tools are included in tools/list responses. Defaults to false for public environments.
 
-- `webo_mcp_public_categories` (array $categories, WP_REST_Request $request, array $tool)  
+- `webo_mcp_public_categories` (array $categories, WP_REST_Request $request, array $tool)
   Filters which tool categories are exposed as public. Defaults to array( 'wordpress' ).
 
-- `webo_mcp_public_tool_allowlist` (array $names, WP_REST_Request $request, array $tool)  
+- `webo_mcp_public_tool_allowlist` (array $names, WP_REST_Request $request, array $tool)
   Optional allowlist of specific tool names that are always considered public.
 
-- `webo_mcp_bridge_deny_patterns` (array $patterns)  
+- `webo_mcp_bridge_deny_patterns` (array $patterns)
   Controls which abilities are excluded when auto-bridging abilities into MCP tools (e.g. bulk, plugins/, themes/, multisite/).
 
-- `webo_mcp_auto_bridge_abilities` (bool $enabled)  
+- `webo_mcp_auto_bridge_abilities` (bool $enabled)
   Enables or disables automatic bridging of registered abilities into MCP tools. Defaults to true.
 
-- `webo_mcp_enable_adapter` (bool $enabled)  
+- `webo_mcp_enable_adapter` (bool $enabled)
   Enables or disables the bundled WordPress MCP Adapter runtime. Defaults to true.
 
-- `webo_mcp_validate_media_fetch_url` (true|\WP_Error $ok, string $url, array $parsed)  
+- `webo_mcp_validate_media_fetch_url` (true|\WP_Error $ok, string $url, array $parsed)
   Reject unsafe URLs for webo/media-mutate upload action (return WP_Error to block).
+
+- `webo_mcp_tool_allowlist_allowed` (bool $allowed, string $tool_name, WP_REST_Request $request, array $params, array $allowed_tools)
+  Filters the optional per-user/role/client allowlist decision.
 
 == Installation ==
 1. Upload the plugin folder to /wp-content/plugins/webo-mcp
@@ -165,12 +172,19 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 
 == Changelog ==
 = 2.1.13 =
-* Feature: `webo/plugin-mutate` now accepts `site_id` or `blog_id` so network admins can activate or deactivate plugins for a specific multisite child site from the network MCP endpoint.
-* Safety: rejects conflicting `site_id/blog_id` plus `network_activate/network_wide` requests so child-site activation and network-wide activation stay explicit.
+* Added `webo/plugin-mutate` for WordPress.org plugin install, activation, and deactivation through the core plugin endpoint.
+* Added `site_id` / `blog_id` support so network admins can activate or deactivate plugins for one multisite child site from the network MCP endpoint.
+* Safety: rejects conflicting `site_id` / `blog_id` plus `network_activate` / `network_wide` requests so child-site activation and network-wide activation stay explicit.
+
+= 2.1.12 =
+* Added a bounded, admin-readable MCP audit log for `tools/call` events with user, tool/action, object ID when available, anonymized IP, hashed session ID, status, and compact result/error summaries.
+* Added optional per-user, per-role, and per-client/Application Password tool allowlists. Enforcement is disabled by default to preserve existing access until an administrator opts in.
+* Added read-only administrator tool `webo/health-status` covering REST/router status, Application Password support, permalinks, cron, object cache, plugin update summary, WordPress/PHP versions, and redacted MCP config status.
 
 = 2.1.11 =
-* Feature: add **`webo/plugin-mutate`** to install WordPress.org plugins by slug and optionally activate them site-wide or network-wide when permissions and filesystem settings allow it.
-* Compatibility: `webo-mcp-ultimo` can delegate its legacy install-plugin flow to the core plugin mutation tool.
+* Security: enforce object-level capabilities for MCP content/media mutations, including `edit_post`, `delete_post`, publish/private status changes, and taxonomy-specific term capabilities.
+* Security: filter read tools by `read_post` and hide tools from `tools/list` when the authenticated user lacks the tool capability.
+* Hardening: use WordPress safe HTTP validation for optional Google Suggest requests in `seo/article-analysis`.
 
 = 2.1.10 =
 * Fix: register **`webo/plugin-query`** in `Standalone_Tools` so MCP clients can list plugin updates (`query=updates`, optional `refresh=true`) and other inspection modes.
@@ -354,10 +368,13 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 
 == Upgrade Notice ==
 = 2.1.13 =
-Adds child-site plugin activation/deactivation via `site_id` or `blog_id` for multisite network admins.
+Adds core plugin mutation plus child-site plugin activation/deactivation via `site_id` or `blog_id` for multisite network admins.
+
+= 2.1.12 =
+Adds MCP audit logging, optional tool allowlists, and an administrator health/status tool. Existing MCP access remains unchanged unless allowlist enforcement is enabled in Settings.
 
 = 2.1.11 =
-Adds **`webo/plugin-mutate`** for WordPress.org plugin install and activation through the core MCP plugin endpoint.
+Recommended security hardening release: MCP tools now enforce object-level post/media/term capabilities and only list tools the current user can call.
 
 = 2.1.10 =
 Registers the missing **`webo/plugin-query`** tool (plugin inventory and updates via MCP). Recommended for automation that lists pending plugin updates.

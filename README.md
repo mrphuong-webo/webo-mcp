@@ -4,6 +4,18 @@ Token-optimized MCP gateway for WordPress. Unified query/mutate tools cut the `t
 
 ## Recent Changes
 
+### 2.1.13 — Plugin mutation + multisite child activation
+
+- Added `webo/plugin-mutate` as the unified plugin write tool (`install`, `activate`, `deactivate`).
+- Added `site_id` / `blog_id` support so network admins can activate or deactivate a plugin for one child site from the network MCP endpoint.
+- Kept the 2.1.12 SVN audit/health release changes in Git so the next release includes both tracks.
+
+### 2.1.12 — Audit log, allowlists, and health status
+
+- Added bounded MCP `tools/call` audit logging.
+- Added optional per-user, per-role, and per-client/Application Password tool allowlists.
+- Added `webo/health-status` for administrator diagnostics.
+
 ### 2.1.2 — Restore `skills/` in git + index updates
 
 - The **`skills/`** directory (Cursor/Codex `SKILL.md` packs: guide, wordpress-content, WooCommerce, Rocket, Rank Math, Ultimo DNS checklist, …) is **tracked again** in this repository — links under [skills/README.md](skills/README.md) work from a plain `git clone`.

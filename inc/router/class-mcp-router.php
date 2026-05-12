@@ -2,11 +2,13 @@
 
 namespace WeboMCP\Core\Router;
 
+use WeboMCP\Core\Audit\Audit_Log;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Session\SessionManager;
 use WP_Error;
 use WP_REST_Request;
 
+require_once dirname( __DIR__ ) . '/audit/class-audit-log.php';
 require_once __DIR__ . '/JsonRpcHelper.php';
 require_once __DIR__ . '/SecurityHelper.php';
 require_once __DIR__ . '/PolicyHelper.php';
@@ -137,8 +139,8 @@ class McpRouter {
 		$tools            = array_values(
 			array_filter(
 				$tools,
-				function ( $tool ) use ( $request ) {
-					return is_array( $tool ) && PolicyHelper::is_public_allowed( $tool, $request );
+				function ( $tool ) use ( $request, $params ) {
+					return is_array( $tool ) && PolicyHelper::is_public_allowed( $tool, $request, $params );
 				}
 			)
 		);
@@ -158,39 +160,50 @@ class McpRouter {
 	}
 
 	public function handle_tools_call( WP_REST_Request $request, array $params, $id ) {
+		$tool_name = isset( $params['name'] ) ? sanitize_text_field( (string) $params['name'] ) : '';
+		$arguments = array();
+		if ( isset( $params['arguments'] ) && is_array( $params['arguments'] ) ) {
+			$arguments = $params['arguments'];
+		}
+
+		$session_id = $this->resolve_session_id( $request, $params );
+		$audit_base = array(
+			'tool_name'  => $tool_name,
+			'arguments'  => $arguments,
+			'session_id' => $session_id,
+			'client'     => $this->resolve_session_client( $session_id ),
+		);
+
 		$security = SecurityHelper::validate( $request );
 		if ( is_wp_error( $security ) ) {
-			return JsonRpcHelper::error( -32001, $security->get_error_message(), $id );
+			return $this->audit_and_error( $request, $audit_base, 'denied', -32001, $security->get_error_message(), $id, array( 'code' => $security->get_error_code() ) );
 		}
-		$session_id = $this->resolve_session_id( $request, $params );
 		if ( $session_id === '' || ! SessionManager::validate( $session_id ) ) {
-			return JsonRpcHelper::error( -32002, 'Invalid or missing session', $id );
+			return $this->audit_and_error( $request, $audit_base, 'denied', -32002, 'Invalid or missing session', $id, array( 'code' => 'webo_mcp_invalid_session' ) );
 		}
-		$tool_name = isset( $params['name'] ) ? sanitize_text_field( (string) $params['name'] ) : '';
 		if ( $tool_name === '' ) {
-			return JsonRpcHelper::error( -32602, 'Invalid params: missing tool name', $id );
+			return $this->audit_and_error( $request, $audit_base, 'error', -32602, 'Invalid params: missing tool name', $id, array( 'code' => 'webo_mcp_missing_tool_name' ) );
 		}
 		$tool_definition = ToolRegistry::get( $tool_name );
 		if ( ! $tool_definition ) {
-			return JsonRpcHelper::error( -32602, $this->build_missing_feature_guidance_message( $tool_name ), $id, array( 'code' => 'tool_not_found' ) );
+			return $this->audit_and_error( $request, $audit_base, 'error', -32602, $this->build_missing_feature_guidance_message( $tool_name ), $id, array( 'code' => 'tool_not_found' ) );
 		}
 		if ( ToolRegistry::is_internal( $tool_name ) && ! PolicyHelper::is_internal_allowed( $request ) ) {
-			return JsonRpcHelper::error( -32001, 'Internal tool is not available for this client', $id );
+			return $this->audit_and_error( $request, $audit_base, 'denied', -32001, 'Internal tool is not available for this client', $id, array( 'code' => 'webo_mcp_internal_tool_denied' ) );
 		}
-		if ( ! PolicyHelper::is_public_allowed( $tool_definition, $request ) ) {
-			return JsonRpcHelper::error( -32001, 'Tool is not allowed by public policy', $id );
+		if ( ! PolicyHelper::is_public_allowed( $tool_definition, $request, $params ) ) {
+			return $this->audit_and_error( $request, $audit_base, 'denied', -32001, 'Tool is not allowed by MCP policy', $id, array( 'code' => 'webo_mcp_tool_policy_denied' ) );
 		}
-		$arguments = array();
 		if ( isset( $params['arguments'] ) ) {
 			if ( ! is_array( $params['arguments'] ) ) {
-				return JsonRpcHelper::error( -32602, 'Invalid params: arguments must be an object', $id );
+				return $this->audit_and_error( $request, $audit_base, 'error', -32602, 'Invalid params: arguments must be an object', $id, array( 'code' => 'webo_mcp_invalid_arguments' ) );
 			}
 			$arguments = $params['arguments'];
 		}
 		try {
 			$result = ToolRegistry::call( $tool_name, $arguments );
 		} catch ( \Exception $exception ) {
-			return JsonRpcHelper::error( -32003, $exception->getMessage(), $id );
+			return $this->audit_and_error( $request, $audit_base, 'error', -32003, $exception->getMessage(), $id, array( 'code' => 'webo_mcp_tool_exception' ) );
 		}
 		if ( is_wp_error( $result ) ) {
 			$code    = $result->get_error_code();
@@ -202,9 +215,49 @@ class McpRouter {
 				$data    = array( 'code' => 'tool_not_found' );
 			}
 
-			return JsonRpcHelper::error( -32003, $message, $id, $data );
+			return $this->audit_and_error( $request, $audit_base, 'error', -32003, $message, $id, is_array( $data ) ? $data : array() );
 		}
+
+		Audit_Log::record(
+			$request,
+			array_merge(
+				$audit_base,
+				array(
+					'status' => 'success',
+					'result' => $result,
+				)
+			)
+		);
+
 		return JsonRpcHelper::success( $result, $id );
+	}
+
+	/**
+	 * Record a tool call failure and return a JSON-RPC error response.
+	 *
+	 * @param WP_REST_Request      $request    Request.
+	 * @param array<string, mixed> $audit_base Base audit context.
+	 * @param string               $status     Audit status.
+	 * @param int                  $code       JSON-RPC error code.
+	 * @param string               $message    Error message.
+	 * @param mixed                $id         JSON-RPC ID.
+	 * @param array<string, mixed> $data       JSON-RPC data.
+	 * @return mixed
+	 */
+	private function audit_and_error( WP_REST_Request $request, array $audit_base, string $status, int $code, string $message, $id, array $data = array() ) {
+		Audit_Log::record(
+			$request,
+			array_merge(
+				$audit_base,
+				array(
+					'status'        => $status,
+					'error_code'    => isset( $data['code'] ) ? (string) $data['code'] : '',
+					'error_message' => $message,
+				)
+			)
+		);
+
+		return JsonRpcHelper::error( $code, $message, $id, empty( $data ) ? null : $data );
 	}
 
 	/**
@@ -318,6 +371,21 @@ class McpRouter {
 		}
 
 		return $session_id;
+	}
+
+	/**
+	 * Resolve the sanitized MCP client label from session metadata.
+	 *
+	 * @param string $session_id Session ID.
+	 * @return string
+	 */
+	private function resolve_session_client( string $session_id ): string {
+		$session = SessionManager::get( $session_id );
+		if ( ! is_array( $session ) || ! isset( $session['client'] ) ) {
+			return '';
+		}
+
+		return sanitize_text_field( (string) $session['client'] );
 	}
 
 	public static function secure_permission_callback( WP_REST_Request $request ) {

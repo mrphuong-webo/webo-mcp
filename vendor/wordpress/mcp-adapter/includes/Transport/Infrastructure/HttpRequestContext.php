@@ -58,28 +58,8 @@ class HttpRequestContext {
 	public function __construct( \WP_REST_Request $request ) {
 		$this->request       = $request;
 		$this->method        = $request->get_method();
+		$this->session_id    = $request->get_header( 'Mcp-Session-Id' );
 		$this->accept_header = $request->get_header( 'accept' );
 		$this->body          = 'POST' === $this->method ? $request->get_json_params() : null;
-
-		$header_session_id = $request->get_header( 'Mcp-Session-Id' );
-		if ( is_string( $header_session_id ) && '' !== trim( $header_session_id ) ) {
-			$this->session_id = trim( $header_session_id );
-			return;
-		}
-
-		/*
-		 * Compatibility fallback: some MCP clients send session_id inside JSON-RPC
-		 * params (tools/call, resources/read, prompts/get) instead of HTTP header.
-		 */
-		$body_params = is_array( $this->body ) && isset( $this->body['params'] ) && is_array( $this->body['params'] )
-			? $this->body['params']
-			: array();
-
-		if ( isset( $body_params['session_id'] ) && is_string( $body_params['session_id'] ) && '' !== trim( $body_params['session_id'] ) ) {
-			$this->session_id = trim( $body_params['session_id'] );
-			return;
-		}
-
-		$this->session_id = null;
 	}
 }

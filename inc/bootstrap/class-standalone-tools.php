@@ -8,6 +8,7 @@
 namespace WeboMCP\Core\Bootstrap;
 
 use WeboMCP\Core\Registry\ToolRegistry;
+use WeboMCP\Core\Tools\HealthStatusTool;
 use WeboMCP\Core\Tools\SeoArticleAnalysis;
 use WeboMCP\Core\Tools\WordPressTools;
 
@@ -651,6 +652,20 @@ final class Standalone_Tools {
 				),
 				'permission'  => 'install_plugins',
 				'callback'    => array( WordPressTools::class, 'plugin_mutate' ),
+			),
+			array(
+				'name'        => 'webo/health-status',
+				'description' => 'Read-only administrator health report for REST routing, Application Password support, permalinks, cron, object cache, plugin update summary, WordPress/PHP versions, and WEBO MCP router/config status. Does not expose API keys or HMAC secrets.',
+				'category'    => 'wordpress',
+				'arguments'   => array(
+					'refresh_updates' => array(
+						'type'     => 'boolean',
+						'required' => false,
+						'default'  => false,
+					),
+				),
+				'permission'  => 'manage_options',
+				'callback'    => array( HealthStatusTool::class, 'run' ),
 			),
 			array(
 				'name'        => 'webo/get-options',

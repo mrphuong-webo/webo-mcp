@@ -874,7 +874,11 @@ class SeoArticleAnalysis {
 		 */
 	private static function get_google_autocomplete( string $query ) {
 		$url = 'https://suggestqueries.google.com/complete/search?client=chrome&q=' . rawurlencode( $query );
-		$r   = wp_remote_get(
+		if ( ! wp_http_validate_url( $url ) ) {
+			return array();
+		}
+
+		$r = wp_safe_remote_get(
 			$url,
 			array(
 				'timeout'    => 6,

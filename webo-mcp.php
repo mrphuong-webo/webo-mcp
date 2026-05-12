@@ -54,6 +54,7 @@ add_action( 'plugins_loaded', 'webo_mcp_migrate_legacy_storage', 1 );
 // Settings UI for the plugin.
 add_action( 'admin_menu', 'webo_mcp_add_settings_menu' );
 add_action( 'admin_init', 'webo_mcp_register_settings' );
+add_action( 'admin_post_webo_mcp_clear_audit_log', 'webo_mcp_handle_clear_audit_log' );
 
 /**
  * Registers settings page under Settings menu.
@@ -91,6 +92,42 @@ function webo_mcp_register_settings() {
 			'sanitize_callback' => 'sanitize_text_field',
 		)
 	);
+
+	register_setting(
+		'webo_mcp_settings',
+		'webo_mcp_tool_allowlist_enabled',
+		array(
+			'sanitize_callback' => static function ( $value ) {
+				return ! empty( $value ) ? '1' : '0';
+			},
+		)
+	);
+
+	register_setting(
+		'webo_mcp_settings',
+		'webo_mcp_tool_allowlist_rules',
+		array(
+			'sanitize_callback' => array( \WeboMCP\Core\Router\ClientToolPolicy::class, 'sanitize_rules_option' ),
+		)
+	);
+
+	register_setting(
+		'webo_mcp_settings',
+		'webo_mcp_audit_log_enabled',
+		array(
+			'sanitize_callback' => static function ( $value ) {
+				return ! empty( $value ) ? '1' : '0';
+			},
+		)
+	);
+
+	register_setting(
+		'webo_mcp_settings',
+		'webo_mcp_audit_log_max_entries',
+		array(
+			'sanitize_callback' => array( \WeboMCP\Core\Audit\Audit_Log::class, 'sanitize_max_entries' ),
+		)
+	);
 }
 
 /**
@@ -99,12 +136,15 @@ function webo_mcp_register_settings() {
  * @return void
  */
 function webo_mcp_render_settings_page() {
+	$allowlist_rules = \WeboMCP\Core\Router\ClientToolPolicy::get_rules_option();
+	$audit_entries   = \WeboMCP\Core\Audit\Audit_Log::get_entries( 25 );
 	?>
 	<div class="wrap">
 		<h1><?php echo esc_html( __( 'WEBO MCP Settings', 'webo-mcp' ) ); ?></h1>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'webo_mcp_settings' ); ?>
 			<?php do_settings_sections( 'webo_mcp_settings' ); ?>
+			<h2><?php echo esc_html( __( 'Authentication', 'webo-mcp' ) ); ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
@@ -139,6 +179,121 @@ function webo_mcp_render_settings_page() {
 					</td>
 				</tr>
 			</table>
+			<h2><?php echo esc_html( __( 'MCP Tool Allowlist', 'webo-mcp' ) ); ?></h2>
+			<p>
+				<?php
+				echo esc_html__(
+					'Disabled by default. When enabled, only tools listed for the authenticated user, role, Application Password, or MCP client label are available.',
+					'webo-mcp'
+				);
+				?>
+			</p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row">
+						<?php echo esc_html( __( 'Enable allowlist enforcement', 'webo-mcp' ) ); ?>
+					</th>
+					<td>
+						<label>
+							<input
+								type="checkbox"
+								name="webo_mcp_tool_allowlist_enabled"
+								value="1"
+								<?php checked( get_option( 'webo_mcp_tool_allowlist_enabled', '0' ), '1' ); ?>
+							/>
+							<?php echo esc_html( __( 'Restrict MCP tools to matching allowlist rules.', 'webo-mcp' ) ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="webo_mcp_tool_allowlist_users">
+							<?php echo esc_html( __( 'User rules', 'webo-mcp' ) ); ?>
+						</label>
+					</th>
+					<td>
+						<textarea
+							id="webo_mcp_tool_allowlist_users"
+							name="webo_mcp_tool_allowlist_rules[users]"
+							rows="4"
+							class="large-text code"
+							placeholder="<?php echo esc_attr( __( '123 = webo/content-query, webo/media-query', 'webo-mcp' ) ); ?>"
+						><?php echo esc_textarea( $allowlist_rules['users'] ); ?></textarea>
+						<p class="description"><?php echo esc_html( __( 'One rule per line. Identifier may be a user ID or login. Use * to allow every registered tool for that identity.', 'webo-mcp' ) ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="webo_mcp_tool_allowlist_roles">
+							<?php echo esc_html( __( 'Role rules', 'webo-mcp' ) ); ?>
+						</label>
+					</th>
+					<td>
+						<textarea
+							id="webo_mcp_tool_allowlist_roles"
+							name="webo_mcp_tool_allowlist_rules[roles]"
+							rows="4"
+							class="large-text code"
+							placeholder="<?php echo esc_attr( __( 'editor = webo/content-query, webo/media-query', 'webo-mcp' ) ); ?>"
+						><?php echo esc_textarea( $allowlist_rules['roles'] ); ?></textarea>
+						<p class="description"><?php echo esc_html( __( 'Role identifiers use WordPress role slugs such as administrator, editor, author, or a custom role slug.', 'webo-mcp' ) ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="webo_mcp_tool_allowlist_clients">
+							<?php echo esc_html( __( 'Client rules', 'webo-mcp' ) ); ?>
+						</label>
+					</th>
+					<td>
+						<textarea
+							id="webo_mcp_tool_allowlist_clients"
+							name="webo_mcp_tool_allowlist_rules[clients]"
+							rows="4"
+							class="large-text code"
+							placeholder="<?php echo esc_attr( __( 'cursor = webo/content-query, webo/health-status', 'webo-mcp' ) ); ?>"
+						><?php echo esc_textarea( $allowlist_rules['clients'] ); ?></textarea>
+						<p class="description"><?php echo esc_html( __( 'Client identifiers may match an Application Password UUID, app ID, Application Password name, or the client label sent during initialize.', 'webo-mcp' ) ); ?></p>
+					</td>
+				</tr>
+			</table>
+			<h2><?php echo esc_html( __( 'Audit Log', 'webo-mcp' ) ); ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row">
+						<?php echo esc_html( __( 'Enable audit log', 'webo-mcp' ) ); ?>
+					</th>
+					<td>
+						<label>
+							<input
+								type="checkbox"
+								name="webo_mcp_audit_log_enabled"
+								value="1"
+								<?php checked( get_option( 'webo_mcp_audit_log_enabled', '1' ), '1' ); ?>
+							/>
+							<?php echo esc_html( __( 'Record compact MCP tools/call events.', 'webo-mcp' ) ); ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="webo_mcp_audit_log_max_entries">
+							<?php echo esc_html( __( 'Maximum stored entries', 'webo-mcp' ) ); ?>
+						</label>
+					</th>
+					<td>
+						<input
+							type="number"
+							id="webo_mcp_audit_log_max_entries"
+							name="webo_mcp_audit_log_max_entries"
+							min="25"
+							max="1000"
+							value="<?php echo esc_attr( \WeboMCP\Core\Audit\Audit_Log::max_entries() ); ?>"
+						/>
+						<p class="description"><?php echo esc_html( __( 'The log is stored in a bounded WordPress option with anonymized IPs and hashed session IDs.', 'webo-mcp' ) ); ?></p>
+					</td>
+				</tr>
+			</table>
 			<?php submit_button(); ?>
 		</form>
 		<p>
@@ -151,8 +306,65 @@ function webo_mcp_render_settings_page() {
 				?>
 			</em>
 		</p>
+		<h2><?php echo esc_html( __( 'Recent MCP Audit Events', 'webo-mcp' ) ); ?></h2>
+		<?php if ( empty( $audit_entries ) ) : ?>
+			<p><?php echo esc_html( __( 'No MCP tool call events recorded yet.', 'webo-mcp' ) ); ?></p>
+		<?php else : ?>
+			<table class="widefat striped">
+				<thead>
+					<tr>
+						<th><?php echo esc_html( __( 'Time (GMT)', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'User', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'Tool', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'Action', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'Object', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'Status', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'Result', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'IP', 'webo-mcp' ) ); ?></th>
+						<th><?php echo esc_html( __( 'Session', 'webo-mcp' ) ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $audit_entries as $entry ) : ?>
+						<tr>
+							<td><?php echo esc_html( isset( $entry['timestamp_gmt'] ) ? (string) $entry['timestamp_gmt'] : '' ); ?></td>
+							<td><?php echo esc_html( isset( $entry['user_login'] ) && '' !== $entry['user_login'] ? (string) $entry['user_login'] : (string) ( $entry['user_id'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $entry['tool'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $entry['action'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $entry['object_id'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $entry['status'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $entry['result_summary'] ?? $entry['error_message'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $entry['ip'] ?? '' ) ); ?></td>
+							<td><?php echo esc_html( (string) ( $entry['session_hash'] ?? '' ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endif; ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="webo_mcp_clear_audit_log" />
+			<?php wp_nonce_field( 'webo_mcp_clear_audit_log' ); ?>
+			<?php submit_button( __( 'Clear audit log', 'webo-mcp' ), 'secondary', 'submit', false ); ?>
+		</form>
 	</div>
 	<?php
+}
+
+/**
+ * Handles audit log clearing from the settings page.
+ *
+ * @return void
+ */
+function webo_mcp_handle_clear_audit_log() {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You do not have permission to clear the MCP audit log.', 'webo-mcp' ) );
+	}
+
+	check_admin_referer( 'webo_mcp_clear_audit_log' );
+	\WeboMCP\Core\Audit\Audit_Log::clear();
+
+	wp_safe_redirect( admin_url( 'options-general.php?page=webo-mcp-settings&webo_mcp_audit_cleared=1' ) );
+	exit;
 }
 
 $webo_mcp_autoloader = __DIR__ . '/vendor/autoload.php';
@@ -166,11 +378,14 @@ if ( file_exists( $webo_mcp_abilities_api ) ) {
 }
 
 require_once __DIR__ . '/inc/registry/class-tool-registry.php';
+require_once __DIR__ . '/inc/audit/class-audit-log.php';
 require_once __DIR__ . '/inc/abilities/class-site-settings-ability.php';
+require_once __DIR__ . '/inc/session/class-session-manager.php';
+require_once __DIR__ . '/inc/router/ClientToolPolicy.php';
 require_once __DIR__ . '/inc/tools/class-wordpress-tools.php';
 require_once __DIR__ . '/inc/tools/class-seo-article-analysis.php';
+require_once __DIR__ . '/inc/tools/class-health-status-tool.php';
 require_once __DIR__ . '/inc/bootstrap/class-standalone-tools.php';
-require_once __DIR__ . '/inc/session/class-session-manager.php';
 require_once __DIR__ . '/inc/router/class-mcp-router.php';
 require_once __DIR__ . '/inc/router/class-rest-json-bom-guard.php';
 
@@ -185,6 +400,7 @@ use WP\MCP\Abilities\GetAbilityInfoAbility;
 use WP\MCP\Core\McpAdapter;
 
 Site_Settings_Ability::hook();
+add_action( 'application_password_did_authenticate', array( \WeboMCP\Core\Router\ClientToolPolicy::class, 'capture_application_password' ), 10, 2 );
 
 /**
  * Converts Abilities API input schema to ToolRegistry arguments schema.
@@ -547,6 +763,14 @@ function webo_mcp_register_rest_routes() {
 				$payload          = ToolRegistry::list_tools( $include_internal );
 				$tools            = isset( $payload['tools'] ) && is_array( $payload['tools'] ) ? $payload['tools'] : array();
 				$registered_total = isset( $payload['registered_total'] ) ? (int) $payload['registered_total'] : count( $tools );
+				$tools            = array_values(
+					array_filter(
+						$tools,
+						static function ( $tool ) use ( $request ) {
+							return is_array( $tool ) && \WeboMCP\Core\Router\PolicyHelper::is_public_allowed( $tool, $request );
+						}
+					)
+				);
 
 				return rest_ensure_response(
 					array(

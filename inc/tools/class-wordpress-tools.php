@@ -41,6 +41,7 @@ class WordPressTools {
 			's'              => $search,
 			'orderby'        => $orderby,
 			'order'          => $order,
+			'perm'           => 'readable',
 			'no_found_rows'  => false,
 			'fields'         => 'ids',
 		);
@@ -55,6 +56,9 @@ class WordPressTools {
 
 		$items = array();
 		foreach ( $query->posts as $post_id ) {
+			if ( ! current_user_can( 'read_post', (int) $post_id ) ) {
+				continue;
+			}
 			$items[] = array(
 				'id'    => $post_id,
 				'title' => get_the_title( $post_id ),
@@ -106,6 +110,151 @@ class WordPressTools {
 	}
 
 	/**
+	 * Require read permission for a concrete post object.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return true|\WP_Error
+	 */
+	private static function require_read_post( int $post_id ) {
+		if ( ! current_user_can( 'read_post', $post_id ) ) {
+			return new \WP_Error(
+				'webo_mcp_cannot_read_post',
+				'You do not have permission to read this post',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Require edit permission for a concrete post object.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return true|\WP_Error
+	 */
+	private static function require_edit_post( int $post_id ) {
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return new \WP_Error(
+				'webo_mcp_permission_denied',
+				'You do not have permission to edit this post',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Require delete permission for a concrete post object.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return true|\WP_Error
+	 */
+	private static function require_delete_post( int $post_id ) {
+		if ( ! current_user_can( 'delete_post', $post_id ) ) {
+			return new \WP_Error(
+				'webo_mcp_permission_denied',
+				'You do not have permission to delete this post',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Require permission to create a post of a given type.
+	 *
+	 * @param string $post_type Post type key.
+	 * @return \WP_Post_Type|\WP_Error
+	 */
+	private static function require_create_post_type( string $post_type ) {
+		$post_type_object = get_post_type_object( $post_type );
+		if ( ! $post_type_object instanceof \WP_Post_Type ) {
+			return new \WP_Error(
+				'webo_mcp_post_type_not_found',
+				'Post type not found',
+				array( 'post_type' => $post_type )
+			);
+		}
+
+		$create_cap = isset( $post_type_object->cap->create_posts ) ? (string) $post_type_object->cap->create_posts : 'edit_posts';
+		if ( ! current_user_can( $create_cap ) ) {
+			return new \WP_Error(
+				'webo_mcp_permission_denied',
+				'You do not have permission to create this post type',
+				array( 'status' => 403 )
+			);
+		}
+
+		return $post_type_object;
+	}
+
+	/**
+	 * Require extra capability for publishing/private/trashing transitions.
+	 *
+	 * @param string $post_type Post type key.
+	 * @param string $status    Target post status.
+	 * @param int    $post_id   Optional existing post ID.
+	 * @return true|\WP_Error
+	 */
+	private static function require_post_status_capability( string $post_type, string $status, int $post_id = 0 ) {
+		if ( 'trash' === $status && $post_id > 0 ) {
+			return self::require_delete_post( $post_id );
+		}
+
+		if ( ! in_array( $status, array( 'publish', 'private' ), true ) ) {
+			return true;
+		}
+
+		$post_type_object = get_post_type_object( $post_type );
+		if ( ! $post_type_object instanceof \WP_Post_Type ) {
+			return new \WP_Error(
+				'webo_mcp_post_type_not_found',
+				'Post type not found',
+				array( 'post_type' => $post_type )
+			);
+		}
+
+		$publish_cap = isset( $post_type_object->cap->publish_posts ) ? (string) $post_type_object->cap->publish_posts : 'publish_posts';
+		if ( ! current_user_can( $publish_cap ) ) {
+			return new \WP_Error(
+				'webo_mcp_permission_denied',
+				'You do not have permission to publish this post type',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Require a taxonomy capability for taxonomy mutations.
+	 *
+	 * @param string $taxonomy Taxonomy key.
+	 * @param string $cap_key  Capability key on WP_Taxonomy::cap.
+	 * @return true|\WP_Error
+	 */
+	private static function require_taxonomy_capability( string $taxonomy, string $cap_key ) {
+		$taxonomy_object = get_taxonomy( $taxonomy );
+		if ( ! $taxonomy_object instanceof \WP_Taxonomy ) {
+			return new \WP_Error( 'webo_mcp_taxonomy_not_found', 'Taxonomy not found' );
+		}
+
+		$capability = isset( $taxonomy_object->cap->{$cap_key} ) ? (string) $taxonomy_object->cap->{$cap_key} : 'manage_categories';
+		if ( ! current_user_can( $capability ) ) {
+			return new \WP_Error(
+				'webo_mcp_permission_denied',
+				'You do not have permission for this taxonomy action',
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Get a single post by ID.
 	 *
 	 * @param array<string, mixed> $arguments Tool arguments.
@@ -119,12 +268,9 @@ class WordPressTools {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
-		if ( ! current_user_can( 'read_post', $post_id ) ) {
-			return new \WP_Error(
-				'webo_mcp_cannot_read_post',
-				'You do not have permission to read this post',
-				array( 'status' => 403 )
-			);
+		$read_check = self::require_read_post( $post_id );
+		if ( is_wp_error( $read_check ) ) {
+			return $read_check;
 		}
 
 		$expected_type = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : '';
@@ -391,6 +537,11 @@ class WordPressTools {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
+		$read_check = self::require_read_post( $post_id );
+		if ( is_wp_error( $read_check ) ) {
+			return $read_check;
+		}
+
 		$result = array(
 			'id'      => $post->ID,
 			'title'   => get_the_title( $post ),
@@ -406,8 +557,9 @@ class WordPressTools {
 		// Optional: update the post in the same call (requires edit_posts).
 		$update = isset( $arguments['update'] ) && is_array( $arguments['update'] ) ? $arguments['update'] : null;
 		if ( ! empty( $update ) ) {
-			if ( ! current_user_can( 'edit_posts' ) ) {
-				return new \WP_Error( 'webo_mcp_permission_denied', 'Cannot update content: edit_posts capability required' );
+			$edit_check = self::require_edit_post( (int) $post->ID );
+			if ( is_wp_error( $edit_check ) ) {
+				return $edit_check;
 			}
 			$payload = array( 'ID' => $post->ID );
 			if ( isset( $update['title'] ) ) {
@@ -418,6 +570,10 @@ class WordPressTools {
 			}
 			if ( isset( $update['status'] ) ) {
 				$payload['post_status'] = sanitize_key( (string) $update['status'] );
+				$status_check           = self::require_post_status_capability( (string) $post->post_type, $payload['post_status'], (int) $post->ID );
+				if ( is_wp_error( $status_check ) ) {
+					return $status_check;
+				}
 			}
 			if ( count( $payload ) > 1 && ! is_wp_error( wp_update_post( $payload, true ) ) ) {
 				$post   = get_post( $post->ID );
@@ -477,6 +633,11 @@ class WordPressTools {
 			if ( ! empty( $query->posts ) ) {
 				$post = get_post( $query->posts[0] );
 				if ( $post ) {
+					$read_check = self::require_read_post( (int) $post->ID );
+					if ( is_wp_error( $read_check ) ) {
+						return $read_check;
+					}
+
 					return array(
 						'id'      => $post->ID,
 						'title'   => get_the_title( $post ),
@@ -507,6 +668,20 @@ class WordPressTools {
 		$content   = isset( $arguments['content'] ) ? wp_kses_post( (string) $arguments['content'] ) : '';
 		$status    = isset( $arguments['status'] ) ? sanitize_key( (string) $arguments['status'] ) : 'draft';
 
+		if ( ! in_array( $status, array( 'draft', 'pending', 'publish', 'private' ), true ) ) {
+			return new \WP_Error( 'webo_mcp_invalid_status', 'Invalid status for post creation' );
+		}
+
+		$post_type_object = self::require_create_post_type( $post_type );
+		if ( is_wp_error( $post_type_object ) ) {
+			return $post_type_object;
+		}
+
+		$status_check = self::require_post_status_capability( $post_type, $status );
+		if ( is_wp_error( $status_check ) ) {
+			return $status_check;
+		}
+
 		$post_id = wp_insert_post(
 			array(
 				'post_type'    => $post_type,
@@ -536,8 +711,14 @@ class WordPressTools {
 	 */
 	public static function update_post( array $arguments ) {
 		$post_id = self::resolve_post_id_argument( $arguments );
-		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
+		$post    = $post_id > 0 ? get_post( $post_id ) : null;
+		if ( ! $post instanceof \WP_Post ) {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
+		}
+
+		$edit_check = self::require_edit_post( $post_id );
+		if ( is_wp_error( $edit_check ) ) {
+			return $edit_check;
 		}
 
 		$payload = array(
@@ -558,6 +739,10 @@ class WordPressTools {
 
 		if ( isset( $arguments['status'] ) ) {
 			$payload['post_status'] = sanitize_key( (string) $arguments['status'] );
+			$status_check           = self::require_post_status_capability( (string) $post->post_type, $payload['post_status'], $post_id );
+			if ( is_wp_error( $status_check ) ) {
+				return $status_check;
+			}
 		}
 
 		$result = wp_update_post( $payload, true );
@@ -584,6 +769,11 @@ class WordPressTools {
 
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
+		}
+
+		$delete_check = self::require_delete_post( $post_id );
+		if ( is_wp_error( $delete_check ) ) {
+			return $delete_check;
 		}
 
 		$result = wp_delete_post( $post_id, $force );
@@ -654,6 +844,9 @@ class WordPressTools {
 
 		$items = array();
 		foreach ( $query->posts as $attachment_id ) {
+			if ( ! current_user_can( 'read_post', (int) $attachment_id ) ) {
+				continue;
+			}
 			$items[] = array(
 				'id'    => (int) $attachment_id,
 				'title' => get_the_title( $attachment_id ),
@@ -2416,12 +2609,17 @@ class WordPressTools {
 			if ( $page_on_front > 0 ) {
 				$post = get_post( $page_on_front );
 				if ( $post instanceof \WP_Post ) {
-					$out['front_page'] = self::homepage_info_format_post(
-						$post,
-						$include_excerpt,
-						$include_content,
-						true
-					);
+					if ( current_user_can( 'read_post', (int) $post->ID ) ) {
+						$out['front_page'] = self::homepage_info_format_post(
+							$post,
+							$include_excerpt,
+							$include_content,
+							true
+						);
+					} else {
+						$out['front_page']            = null;
+						$out['front_page_unreadable'] = true;
+					}
 				} else {
 					$out['front_page']         = null;
 					$out['front_page_missing'] = true;
@@ -2436,12 +2634,17 @@ class WordPressTools {
 		if ( $page_for_posts > 0 ) {
 			$posts_page = get_post( $page_for_posts );
 			if ( $posts_page instanceof \WP_Post ) {
-				$out['posts_page'] = self::homepage_info_format_post(
-					$posts_page,
-					$include_excerpt,
-					$include_content,
-					false
-				);
+				if ( current_user_can( 'read_post', (int) $posts_page->ID ) ) {
+					$out['posts_page'] = self::homepage_info_format_post(
+						$posts_page,
+						$include_excerpt,
+						$include_content,
+						false
+					);
+				} else {
+					$out['posts_page']            = null;
+					$out['posts_page_unreadable'] = true;
+				}
 			} else {
 				$out['posts_page']         = null;
 				$out['posts_page_missing'] = true;
@@ -2458,12 +2661,9 @@ class WordPressTools {
 					sprintf( 'Post not found for ID %d', $requested_post_id )
 				);
 			}
-			if ( ! current_user_can( 'read_post', $requested_post_id ) ) {
-				return new \WP_Error(
-					'webo_mcp_cannot_read_post',
-					'You do not have permission to read this post',
-					array( 'status' => 403 )
-				);
+			$read_check = self::require_read_post( $requested_post_id );
+			if ( is_wp_error( $read_check ) ) {
+				return $read_check;
 			}
 
 			$by_id                             = self::homepage_info_format_post(
@@ -2792,10 +2992,26 @@ class WordPressTools {
 			return new \WP_Error( 'webo_mcp_invalid_status', 'Invalid status' );
 		}
 		$updated = 0;
+		$skipped = 0;
 		foreach ( array_map( 'intval', $post_ids ) as $post_id ) {
-			if ( $post_id <= 0 || ! get_post( $post_id ) ) {
+			$post = $post_id > 0 ? get_post( $post_id ) : null;
+			if ( ! $post instanceof \WP_Post ) {
+				++$skipped;
 				continue;
 			}
+
+			$edit_check = self::require_edit_post( $post_id );
+			if ( is_wp_error( $edit_check ) ) {
+				++$skipped;
+				continue;
+			}
+
+			$status_check = self::require_post_status_capability( (string) $post->post_type, $status, $post_id );
+			if ( is_wp_error( $status_check ) ) {
+				++$skipped;
+				continue;
+			}
+
 			$result = wp_update_post(
 				array(
 					'ID'          => $post_id,
@@ -2808,9 +3024,10 @@ class WordPressTools {
 			}
 		}
 		return array(
-			'updated' => $updated,
-			'status'  => $status,
-			'tool'    => 'webo/bulk-update-post-status',
+			'updated'               => $updated,
+			'skipped_no_permission' => $skipped,
+			'status'                => $status,
+			'tool'                  => 'webo/bulk-update-post-status',
 		);
 	}
 
@@ -2824,6 +3041,10 @@ class WordPressTools {
 		$post_id = self::resolve_post_id_argument( $arguments );
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
+		}
+		$read_check = self::require_read_post( $post_id );
+		if ( is_wp_error( $read_check ) ) {
+			return $read_check;
 		}
 		$revisions = wp_get_post_revisions( $post_id );
 		$items     = array();
@@ -2857,6 +3078,10 @@ class WordPressTools {
 		$post_id = (int) $revision->post_parent;
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Parent post not found' );
+		}
+		$edit_check = self::require_edit_post( $post_id );
+		if ( is_wp_error( $edit_check ) ) {
+			return $edit_check;
 		}
 		$restored = wp_restore_post_revision( $revision_id );
 		if ( ! $restored ) {
@@ -2918,9 +3143,14 @@ class WordPressTools {
 		);
 
 		$affected = array();
+		$skipped  = 0;
 		foreach ( $query->posts as $post_id ) {
 			$post = get_post( (int) $post_id );
 			if ( ! $post || strpos( $post->post_content, $search ) === false ) {
+				continue;
+			}
+			if ( ! current_user_can( 'edit_post', (int) $post_id ) ) {
+				++$skipped;
 				continue;
 			}
 			$affected[] = array(
@@ -2946,6 +3176,7 @@ class WordPressTools {
 		return array(
 			'affected'       => $affected,
 			'count'          => count( $affected ),
+			'skipped'        => $skipped,
 			'dry_run'        => $dry_run,
 			'offset'         => $offset,
 			'max_scan_posts' => $limit,
@@ -2968,6 +3199,10 @@ class WordPressTools {
 		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : 'category';
 		if ( ! in_array( $taxonomy, array( 'category', 'post_tag' ), true ) ) {
 			return new \WP_Error( 'webo_mcp_invalid_taxonomy', 'taxonomy must be category or post_tag' );
+		}
+		$cap_check = self::require_taxonomy_capability( $taxonomy, 'manage_terms' );
+		if ( is_wp_error( $cap_check ) ) {
+			return $cap_check;
 		}
 		$name = isset( $arguments['name'] ) ? sanitize_text_field( (string) $arguments['name'] ) : '';
 		if ( '' === $name ) {
@@ -3011,6 +3246,10 @@ class WordPressTools {
 		if ( $term_id <= 0 || ! term_exists( $term_id, $taxonomy ) ) {
 			return new \WP_Error( 'webo_mcp_term_not_found', 'Term not found' );
 		}
+		$cap_check = self::require_taxonomy_capability( $taxonomy, 'edit_terms' );
+		if ( is_wp_error( $cap_check ) ) {
+			return $cap_check;
+		}
 		$args = array();
 		if ( isset( $arguments['name'] ) ) {
 			$args['name'] = sanitize_text_field( (string) $arguments['name'] );
@@ -3051,6 +3290,10 @@ class WordPressTools {
 		$taxonomy = isset( $arguments['taxonomy'] ) ? sanitize_key( (string) $arguments['taxonomy'] ) : 'category';
 		if ( $term_id <= 0 || ! term_exists( $term_id, $taxonomy ) ) {
 			return new \WP_Error( 'webo_mcp_term_not_found', 'Term not found' );
+		}
+		$cap_check = self::require_taxonomy_capability( $taxonomy, 'delete_terms' );
+		if ( is_wp_error( $cap_check ) ) {
+			return $cap_check;
 		}
 		$result = wp_delete_term( $term_id, $taxonomy );
 		if ( is_wp_error( $result ) || ! $result ) {
@@ -3144,8 +3387,18 @@ class WordPressTools {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
 		}
 
+		$edit_check = self::require_edit_post( $post_id );
+		if ( is_wp_error( $edit_check ) ) {
+			return $edit_check;
+		}
+
 		if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
 			return new \WP_Error( 'webo_mcp_taxonomy_not_found', 'Taxonomy not found' );
+		}
+
+		$cap_check = self::require_taxonomy_capability( $taxonomy, 'assign_terms' );
+		if ( is_wp_error( $cap_check ) ) {
+			return $cap_check;
 		}
 
 		$term_ids = array_map( 'intval', $term_ids );
@@ -3178,6 +3431,11 @@ class WordPressTools {
 
 		if ( $post_id <= 0 || ! get_post( $post_id ) ) {
 			return new \WP_Error( 'webo_mcp_post_not_found', 'Post not found' );
+		}
+
+		$read_check = self::require_read_post( $post_id );
+		if ( is_wp_error( $read_check ) ) {
+			return $read_check;
 		}
 
 		if ( '' !== $taxonomy && ! taxonomy_exists( $taxonomy ) ) {
@@ -3277,6 +3535,10 @@ class WordPressTools {
 		if ( ! $post || 'attachment' !== $post->post_type ) {
 			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
 		}
+		$read_check = self::require_read_post( $attachment_id );
+		if ( is_wp_error( $read_check ) ) {
+			return $read_check;
+		}
 		return array(
 			'id'            => (int) $post->ID,
 			'attachment_id' => (int) $post->ID,
@@ -3299,6 +3561,10 @@ class WordPressTools {
 		$attachment_id = isset( $arguments['attachment_id'] ) ? (int) $arguments['attachment_id'] : 0;
 		if ( $attachment_id <= 0 || ! get_post( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
+		}
+		$edit_check = self::require_edit_post( $attachment_id );
+		if ( is_wp_error( $edit_check ) ) {
+			return $edit_check;
 		}
 		$updated = array();
 		if ( array_key_exists( 'title', $arguments ) ) {
@@ -3341,6 +3607,10 @@ class WordPressTools {
 		$attachment_id = isset( $arguments['attachment_id'] ) ? (int) $arguments['attachment_id'] : 0;
 		if ( $attachment_id <= 0 || ! get_post( $attachment_id ) || 'attachment' !== get_post_type( $attachment_id ) ) {
 			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
+		}
+		$delete_check = self::require_delete_post( $attachment_id );
+		if ( is_wp_error( $delete_check ) ) {
+			return $delete_check;
 		}
 		$result = wp_delete_attachment( $attachment_id, true );
 		if ( ! $result ) {
@@ -4317,6 +4587,10 @@ class WordPressTools {
 		$att = get_post( $attachment_id );
 		if ( ! $att || 'attachment' !== $att->post_type ) {
 			return new \WP_Error( 'webo_mcp_attachment_not_found', 'Attachment not found' );
+		}
+		$read_attachment_check = self::require_read_post( $attachment_id );
+		if ( is_wp_error( $read_attachment_check ) ) {
+			return $read_attachment_check;
 		}
 
 		if ( ! set_post_thumbnail( $post_id, $attachment_id ) ) {
