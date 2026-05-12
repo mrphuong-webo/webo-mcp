@@ -603,7 +603,7 @@ final class Standalone_Tools {
 			),
 			array(
 				'name'        => 'webo/plugin-mutate',
-				'description' => 'Unified plugin write operations. action (required): install from WordPress.org by slug; activate/deactivate an installed plugin by plugin_file or slug. install supports activate, network_activate, and overwrite when the server permits plugin installation.',
+				'description' => 'Unified plugin write operations. action (required): install from WordPress.org by slug; activate/deactivate an installed plugin by plugin_file or slug. install supports activate, network_activate, site_id/blog_id child-site activation, and overwrite when the server permits plugin installation.',
 				'category'    => 'wordpress',
 				'arguments'   => array(
 					'action'           => array(
@@ -632,6 +632,16 @@ final class Standalone_Tools {
 						'type'     => 'boolean',
 						'required' => false,
 						'default'  => false,
+					),
+					'site_id'          => array(
+						'type'     => 'integer',
+						'required' => false,
+						'min'      => 1,
+					),
+					'blog_id'          => array(
+						'type'     => 'integer',
+						'required' => false,
+						'min'      => 1,
 					),
 					'overwrite'        => array(
 						'type'     => 'boolean',

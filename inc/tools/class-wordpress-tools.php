@@ -1377,7 +1377,7 @@ class WordPressTools {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public static function install_plugin( array $arguments ) {
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! self::current_user_can_install_plugins() ) {
 			return new \WP_Error( 'webo_mcp_permission_denied', 'install_plugins capability required', array( 'status' => 403 ) );
 		}
 
@@ -1388,6 +1388,11 @@ class WordPressTools {
 		$slug = isset( $arguments['slug'] ) ? sanitize_key( (string) $arguments['slug'] ) : '';
 		if ( '' === $slug ) {
 			return new \WP_Error( 'webo_mcp_plugin_slug_required', 'slug is required for plugin install', array( 'status' => 400 ) );
+		}
+
+		$target_blog_id = self::resolve_plugin_target_blog_id( $arguments );
+		if ( is_wp_error( $target_blog_id ) ) {
+			return $target_blog_id;
 		}
 
 		self::load_plugin_admin_functions();
@@ -1468,26 +1473,121 @@ class WordPressTools {
 		}
 
 		$network_activate = ! empty( $arguments['network_activate'] ) || ! empty( $arguments['network_wide'] );
+		if ( $network_activate && $target_blog_id > 0 ) {
+			return new \WP_Error( 'webo_mcp_plugin_target_conflict', 'site_id/blog_id cannot be combined with network_activate or network_wide', array( 'status' => 400 ) );
+		}
+
 		$activate         = ! empty( $arguments['activate'] ) || $network_activate;
 		if ( $activate ) {
-			$activation = self::activate_plugin_file( $plugin_file, $network_activate );
+			$activation = self::run_in_plugin_target_blog(
+				$target_blog_id,
+				static function () use ( $plugin_file, $network_activate ) {
+					return self::activate_plugin_file( $plugin_file, $network_activate );
+				}
+			);
 			if ( is_wp_error( $activation ) ) {
 				return $activation;
 			}
 		}
 
-		return self::plugin_mutation_response(
-			$plugin_file,
-			array(
-				'action'                     => 'install',
-				'slug'                       => $slug,
-				'installed'                  => (bool) $installed,
-				'already_installed'          => (bool) $already_installed,
-				'activate_requested'         => (bool) $activate,
-				'network_activate_requested' => (bool) $network_activate,
-				'overwrite_requested'        => (bool) $overwrite,
-			)
+		return self::run_in_plugin_target_blog(
+			$target_blog_id,
+			static function () use ( $plugin_file, $slug, $installed, $already_installed, $activate, $network_activate, $overwrite ) {
+				return self::plugin_mutation_response(
+					$plugin_file,
+					array(
+						'action'                     => 'install',
+						'slug'                       => $slug,
+						'installed'                  => (bool) $installed,
+						'already_installed'          => (bool) $already_installed,
+						'activate_requested'         => (bool) $activate,
+						'network_activate_requested' => (bool) $network_activate,
+						'overwrite_requested'        => (bool) $overwrite,
+					)
+				);
+			}
 		);
+	}
+
+	/**
+	 * Resolve an optional target child site for site-specific plugin activation.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return int|\WP_Error Target blog ID, or 0 for current site context.
+	 */
+	private static function resolve_plugin_target_blog_id( array $arguments ) {
+		$target_blog_id = 0;
+		if ( isset( $arguments['site_id'] ) ) {
+			$target_blog_id = (int) $arguments['site_id'];
+		} elseif ( isset( $arguments['blog_id'] ) ) {
+			$target_blog_id = (int) $arguments['blog_id'];
+		}
+
+		if ( $target_blog_id <= 0 ) {
+			return 0;
+		}
+
+		if ( ! is_multisite() ) {
+			return new \WP_Error( 'webo_mcp_multisite_required', 'site_id/blog_id requires WordPress multisite', array( 'status' => 400 ) );
+		}
+
+		if ( ! self::current_user_can_manage_network_plugins() ) {
+			return new \WP_Error( 'webo_mcp_permission_denied', 'manage_network_plugins capability required for child-site plugin mutation', array( 'status' => 403 ) );
+		}
+
+		$site = function_exists( 'get_site' ) ? get_site( $target_blog_id ) : null;
+		if ( ! $site ) {
+			return new \WP_Error( 'webo_mcp_site_not_found', sprintf( 'Site not found: %d', $target_blog_id ), array( 'status' => 404 ) );
+		}
+
+		return $target_blog_id;
+	}
+
+	/**
+	 * Run a plugin mutation inside a child site context when requested.
+	 *
+	 * @param int      $target_blog_id Target blog ID, or 0 for current site.
+	 * @param callable $callback       Callback to run.
+	 * @return mixed
+	 */
+	private static function run_in_plugin_target_blog( int $target_blog_id, callable $callback ) {
+		if ( $target_blog_id <= 0 || ! is_multisite() || get_current_blog_id() === $target_blog_id ) {
+			return $callback();
+		}
+
+		switch_to_blog( $target_blog_id );
+		try {
+			return $callback();
+		} finally {
+			restore_current_blog();
+		}
+	}
+
+	/**
+	 * Whether the current user can manage network-level plugins.
+	 *
+	 * @return bool
+	 */
+	private static function current_user_can_manage_network_plugins() {
+		return current_user_can( 'manage_network_plugins' ) || ( is_multisite() && function_exists( 'is_super_admin' ) && is_super_admin() );
+	}
+
+	/**
+	 * Whether the current user can activate plugins in the current site context.
+	 *
+	 * @return bool
+	 */
+	private static function current_user_can_activate_site_plugins() {
+		return current_user_can( 'activate_plugins' ) || ( is_multisite() && function_exists( 'is_super_admin' ) && is_super_admin() );
+	}
+
+	/**
+	 * Whether the current user can install plugins.
+	 *
+	 * @return bool
+	 */
+	private static function current_user_can_install_plugins() {
+		return current_user_can( 'install_plugins' ) || ( is_multisite() && function_exists( 'is_super_admin' ) && is_super_admin() );
 	}
 
 	/**
@@ -1502,18 +1602,37 @@ class WordPressTools {
 			return $plugin_file;
 		}
 
+		$target_blog_id = self::resolve_plugin_target_blog_id( $arguments );
+		if ( is_wp_error( $target_blog_id ) ) {
+			return $target_blog_id;
+		}
+
 		$network_wide = ! empty( $arguments['network_activate'] ) || ! empty( $arguments['network_wide'] );
-		$activation   = self::activate_plugin_file( $plugin_file, $network_wide );
+		if ( $network_wide && $target_blog_id > 0 ) {
+			return new \WP_Error( 'webo_mcp_plugin_target_conflict', 'site_id/blog_id cannot be combined with network_activate or network_wide', array( 'status' => 400 ) );
+		}
+
+		$activation = self::run_in_plugin_target_blog(
+			$target_blog_id,
+			static function () use ( $plugin_file, $network_wide ) {
+				return self::activate_plugin_file( $plugin_file, $network_wide );
+			}
+		);
 		if ( is_wp_error( $activation ) ) {
 			return $activation;
 		}
 
-		return self::plugin_mutation_response(
-			$plugin_file,
-			array(
-				'action'                     => 'activate',
-				'network_activate_requested' => (bool) $network_wide,
-			)
+		return self::run_in_plugin_target_blog(
+			$target_blog_id,
+			static function () use ( $plugin_file, $network_wide ) {
+				return self::plugin_mutation_response(
+					$plugin_file,
+					array(
+						'action'                     => 'activate',
+						'network_activate_requested' => (bool) $network_wide,
+					)
+				);
+			}
 		);
 	}
 
@@ -1529,28 +1648,37 @@ class WordPressTools {
 			return $plugin_file;
 		}
 
-		self::load_plugin_admin_functions();
-
-		$network_wide = ! empty( $arguments['network_wide'] ) || ! empty( $arguments['network_activate'] );
-		if ( $network_wide ) {
-			if ( ! is_multisite() ) {
-				return new \WP_Error( 'webo_mcp_network_plugins_unavailable', 'network_wide requires multisite', array( 'status' => 400 ) );
-			}
-			if ( ! current_user_can( 'manage_network_plugins' ) ) {
-				return new \WP_Error( 'webo_mcp_permission_denied', 'manage_network_plugins capability required', array( 'status' => 403 ) );
-			}
-		} elseif ( ! current_user_can( 'activate_plugins' ) ) {
-			return new \WP_Error( 'webo_mcp_permission_denied', 'activate_plugins capability required', array( 'status' => 403 ) );
+		$target_blog_id = self::resolve_plugin_target_blog_id( $arguments );
+		if ( is_wp_error( $target_blog_id ) ) {
+			return $target_blog_id;
 		}
 
-		deactivate_plugins( $plugin_file, false, $network_wide );
+		$network_wide = ! empty( $arguments['network_wide'] ) || ! empty( $arguments['network_activate'] );
+		if ( $network_wide && $target_blog_id > 0 ) {
+			return new \WP_Error( 'webo_mcp_plugin_target_conflict', 'site_id/blog_id cannot be combined with network_activate or network_wide', array( 'status' => 400 ) );
+		}
 
-		return self::plugin_mutation_response(
-			$plugin_file,
-			array(
-				'action'                 => 'deactivate',
-				'network_wide_requested' => (bool) $network_wide,
-			)
+		$deactivation = self::run_in_plugin_target_blog(
+			$target_blog_id,
+			static function () use ( $plugin_file, $network_wide ) {
+				return self::deactivate_plugin_file( $plugin_file, $network_wide );
+			}
+		);
+		if ( is_wp_error( $deactivation ) ) {
+			return $deactivation;
+		}
+
+		return self::run_in_plugin_target_blog(
+			$target_blog_id,
+			static function () use ( $plugin_file, $network_wide ) {
+				return self::plugin_mutation_response(
+					$plugin_file,
+					array(
+						'action'                 => 'deactivate',
+						'network_wide_requested' => (bool) $network_wide,
+					)
+				);
+			}
 		);
 	}
 
@@ -1568,10 +1696,10 @@ class WordPressTools {
 			if ( ! is_multisite() ) {
 				return new \WP_Error( 'webo_mcp_network_plugins_unavailable', 'network_activate requires multisite', array( 'status' => 400 ) );
 			}
-			if ( ! current_user_can( 'manage_network_plugins' ) ) {
+			if ( ! self::current_user_can_manage_network_plugins() ) {
 				return new \WP_Error( 'webo_mcp_permission_denied', 'manage_network_plugins capability required', array( 'status' => 403 ) );
 			}
-		} elseif ( ! current_user_can( 'activate_plugins' ) ) {
+		} elseif ( ! self::current_user_can_activate_site_plugins() ) {
 			return new \WP_Error( 'webo_mcp_permission_denied', 'activate_plugins capability required', array( 'status' => 403 ) );
 		}
 
@@ -1579,6 +1707,32 @@ class WordPressTools {
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
+
+		return true;
+	}
+
+	/**
+	 * Deactivate a plugin file with the correct site or network permissions.
+	 *
+	 * @param string $plugin_file  Plugin file path.
+	 * @param bool   $network_wide Whether to deactivate network-wide.
+	 * @return true|\WP_Error
+	 */
+	private static function deactivate_plugin_file( string $plugin_file, bool $network_wide ) {
+		self::load_plugin_admin_functions();
+
+		if ( $network_wide ) {
+			if ( ! is_multisite() ) {
+				return new \WP_Error( 'webo_mcp_network_plugins_unavailable', 'network_wide requires multisite', array( 'status' => 400 ) );
+			}
+			if ( ! self::current_user_can_manage_network_plugins() ) {
+				return new \WP_Error( 'webo_mcp_permission_denied', 'manage_network_plugins capability required', array( 'status' => 403 ) );
+			}
+		} elseif ( ! self::current_user_can_activate_site_plugins() ) {
+			return new \WP_Error( 'webo_mcp_permission_denied', 'activate_plugins capability required', array( 'status' => 403 ) );
+		}
+
+		deactivate_plugins( $plugin_file, false, $network_wide );
 
 		return true;
 	}
@@ -1675,11 +1829,15 @@ class WordPressTools {
 
 		$inventory = self::plugin_query_collect_inventory();
 		$asset     = isset( $inventory[ $plugin_file ] ) ? $inventory[ $plugin_file ] : array();
+		$blog_id   = function_exists( 'get_current_blog_id' ) ? (int) get_current_blog_id() : 0;
 
 		return array_merge(
 			array(
 				'tool'           => 'webo/plugin-mutate',
 				'plugin_file'    => $plugin_file,
+				'site_id'        => $blog_id,
+				'blog_id'        => $blog_id,
+				'site_url'       => function_exists( 'home_url' ) ? home_url( '/' ) : '',
 				'active'         => function_exists( 'is_plugin_active' ) ? (bool) is_plugin_active( $plugin_file ) : false,
 				'network_active' => function_exists( 'is_plugin_active_for_network' ) ? (bool) is_plugin_active_for_network( $plugin_file ) : false,
 				'asset'          => $asset,
