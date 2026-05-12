@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.10
+Stable tag: 2.1.11
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,7 +51,7 @@ Standalone core tools included:
 - Comments: `webo/comment-query` (list, get) and `webo/comment-mutate` (update, delete)
 - Taxonomy/Terms: `webo/taxonomy-query` (discover, list, get) and `webo/taxonomy-mutate` (create, update, delete)
 - Nav menus: list menus, list menu items (menu_order, db_id), add menu link from post (explicit post_id + menu_order required)
-- Plugins: `webo/plugin-query` (installed, active, updates, …)
+- Plugins: `webo/plugin-query` (installed, active, updates, …) and `webo/plugin-mutate` (install, activate, deactivate)
 - Themes: `webo/theme-query`, `webo/theme-mutate`
 - Menus: `webo/menu-query`, `webo/menu-mutate`
 - Options: get/update (safe allowlist only), set site icon/favicon from media
@@ -164,6 +164,10 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.11 =
+* Feature: add **`webo/plugin-mutate`** to install WordPress.org plugins by slug and optionally activate them site-wide or network-wide when permissions and filesystem settings allow it.
+* Compatibility: `webo-mcp-ultimo` can delegate its legacy install-plugin flow to the core plugin mutation tool.
+
 = 2.1.10 =
 * Fix: register **`webo/plugin-query`** in `Standalone_Tools` so MCP clients can list plugin updates (`query=updates`, optional `refresh=true`) and other inspection modes.
 * Bootstrap: prime `WP_Abilities_Registry` at `init:2` so `wp_abilities_api_init` runs before MCP bootstrap (`init:20`), preventing `_doing_it_wrong` when abilities register on `webo_mcp_register_tools`.
@@ -345,6 +349,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.11 =
+Adds **`webo/plugin-mutate`** for WordPress.org plugin install and activation through the core MCP plugin endpoint.
+
 = 2.1.10 =
 Registers the missing **`webo/plugin-query`** tool (plugin inventory and updates via MCP). Recommended for automation that lists pending plugin updates.
 

@@ -1350,6 +1350,345 @@ class WordPressTools {
 	}
 
 	/**
+	 * Unified plugin mutation tool.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function plugin_mutate( array $arguments ) {
+		$action = isset( $arguments['action'] ) ? sanitize_key( (string) $arguments['action'] ) : '';
+
+		if ( '' === $action ) {
+			return new \WP_Error( 'webo_mcp_missing_action', 'action is required for plugin-mutate' );
+		}
+
+		return match ( $action ) {
+			'install'    => self::install_plugin( $arguments ),
+			'activate'   => self::activate_plugin_tool( $arguments ),
+			'deactivate' => self::deactivate_plugin_tool( $arguments ),
+			default      => new \WP_Error( 'webo_mcp_invalid_action', sprintf( 'Unknown plugin-mutate action: %s', $action ) ),
+		};
+	}
+
+	/**
+	 * Install a WordPress.org plugin by slug, optionally activating it after install.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	public static function install_plugin( array $arguments ) {
+		if ( ! current_user_can( 'install_plugins' ) ) {
+			return new \WP_Error( 'webo_mcp_permission_denied', 'install_plugins capability required', array( 'status' => 403 ) );
+		}
+
+		if ( function_exists( 'wp_is_file_mod_allowed' ) && ! wp_is_file_mod_allowed( 'capability_install_plugins' ) ) {
+			return new \WP_Error( 'webo_mcp_file_mods_disabled', 'Plugin installation is blocked by WordPress file modification settings.', array( 'status' => 403 ) );
+		}
+
+		$slug = isset( $arguments['slug'] ) ? sanitize_key( (string) $arguments['slug'] ) : '';
+		if ( '' === $slug ) {
+			return new \WP_Error( 'webo_mcp_plugin_slug_required', 'slug is required for plugin install', array( 'status' => 400 ) );
+		}
+
+		self::load_plugin_admin_functions();
+
+		$plugin_file = isset( $arguments['plugin_file'] ) ? self::sanitize_plugin_file_argument( $arguments['plugin_file'] ) : '';
+		if ( '' !== $plugin_file && 0 !== validate_file( $plugin_file ) ) {
+			return new \WP_Error( 'webo_mcp_invalid_plugin_file', 'plugin_file must be a relative plugin path such as akismet/akismet.php', array( 'status' => 400 ) );
+		}
+
+		if ( '' === $plugin_file ) {
+			$plugin_file = self::plugin_query_find_plugin_file_by_slug( $slug );
+		}
+
+		$installed_plugins = function_exists( 'get_plugins' ) ? get_plugins() : array();
+		$already_installed = ( '' !== $plugin_file && isset( $installed_plugins[ $plugin_file ] ) );
+		$installed         = false;
+		$overwrite         = ! empty( $arguments['overwrite'] );
+
+		if ( ! $already_installed ) {
+			if ( ! function_exists( 'plugins_api' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+			}
+			if ( ! class_exists( 'Plugin_Upgrader' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+			}
+			if ( ! function_exists( 'request_filesystem_credentials' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+			}
+
+			$api = plugins_api(
+				'plugin_information',
+				array(
+					'slug'   => $slug,
+					'fields' => array(
+						'sections' => false,
+					),
+				)
+			);
+
+			if ( is_wp_error( $api ) ) {
+				return $api;
+			}
+
+			if ( empty( $api->download_link ) ) {
+				return new \WP_Error( 'webo_mcp_plugin_download_unavailable', sprintf( 'No download link found for plugin slug: %s', $slug ), array( 'status' => 404 ) );
+			}
+
+			$skin     = new \Automatic_Upgrader_Skin();
+			$upgrader = new \Plugin_Upgrader( $skin );
+			$result   = $upgrader->install(
+				(string) $api->download_link,
+				array(
+					'overwrite_package' => $overwrite,
+				)
+			);
+
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+
+			if ( ! $result ) {
+				$errors = method_exists( $skin, 'get_errors' ) ? $skin->get_errors() : null;
+				if ( is_wp_error( $errors ) && $errors->has_errors() ) {
+					return $errors;
+				}
+
+				return new \WP_Error( 'webo_mcp_plugin_install_failed', sprintf( 'Plugin install failed for slug: %s', $slug ), array( 'status' => 500 ) );
+			}
+
+			wp_clean_plugins_cache( true );
+			$plugin_file       = self::plugin_query_find_plugin_file_by_slug( $slug );
+			$installed         = true;
+			$installed_plugins = function_exists( 'get_plugins' ) ? get_plugins() : array();
+		}
+
+		if ( '' === $plugin_file || ! isset( $installed_plugins[ $plugin_file ] ) ) {
+			return new \WP_Error( 'webo_mcp_plugin_file_not_found', sprintf( 'Installed plugin file not found for slug: %s', $slug ), array( 'status' => 404 ) );
+		}
+
+		$network_activate = ! empty( $arguments['network_activate'] ) || ! empty( $arguments['network_wide'] );
+		$activate         = ! empty( $arguments['activate'] ) || $network_activate;
+		if ( $activate ) {
+			$activation = self::activate_plugin_file( $plugin_file, $network_activate );
+			if ( is_wp_error( $activation ) ) {
+				return $activation;
+			}
+		}
+
+		return self::plugin_mutation_response(
+			$plugin_file,
+			array(
+				'action'                     => 'install',
+				'slug'                       => $slug,
+				'installed'                  => (bool) $installed,
+				'already_installed'          => (bool) $already_installed,
+				'activate_requested'         => (bool) $activate,
+				'network_activate_requested' => (bool) $network_activate,
+				'overwrite_requested'        => (bool) $overwrite,
+			)
+		);
+	}
+
+	/**
+	 * Activate an already installed plugin.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	private static function activate_plugin_tool( array $arguments ) {
+		$plugin_file = self::resolve_installed_plugin_file( $arguments );
+		if ( is_wp_error( $plugin_file ) ) {
+			return $plugin_file;
+		}
+
+		$network_wide = ! empty( $arguments['network_activate'] ) || ! empty( $arguments['network_wide'] );
+		$activation   = self::activate_plugin_file( $plugin_file, $network_wide );
+		if ( is_wp_error( $activation ) ) {
+			return $activation;
+		}
+
+		return self::plugin_mutation_response(
+			$plugin_file,
+			array(
+				'action'                     => 'activate',
+				'network_activate_requested' => (bool) $network_wide,
+			)
+		);
+	}
+
+	/**
+	 * Deactivate an already installed plugin.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	private static function deactivate_plugin_tool( array $arguments ) {
+		$plugin_file = self::resolve_installed_plugin_file( $arguments );
+		if ( is_wp_error( $plugin_file ) ) {
+			return $plugin_file;
+		}
+
+		self::load_plugin_admin_functions();
+
+		$network_wide = ! empty( $arguments['network_wide'] ) || ! empty( $arguments['network_activate'] );
+		if ( $network_wide ) {
+			if ( ! is_multisite() ) {
+				return new \WP_Error( 'webo_mcp_network_plugins_unavailable', 'network_wide requires multisite', array( 'status' => 400 ) );
+			}
+			if ( ! current_user_can( 'manage_network_plugins' ) ) {
+				return new \WP_Error( 'webo_mcp_permission_denied', 'manage_network_plugins capability required', array( 'status' => 403 ) );
+			}
+		} elseif ( ! current_user_can( 'activate_plugins' ) ) {
+			return new \WP_Error( 'webo_mcp_permission_denied', 'activate_plugins capability required', array( 'status' => 403 ) );
+		}
+
+		deactivate_plugins( $plugin_file, false, $network_wide );
+
+		return self::plugin_mutation_response(
+			$plugin_file,
+			array(
+				'action'                 => 'deactivate',
+				'network_wide_requested' => (bool) $network_wide,
+			)
+		);
+	}
+
+	/**
+	 * Activate a plugin file with the correct site or network permissions.
+	 *
+	 * @param string $plugin_file  Plugin file path.
+	 * @param bool   $network_wide Whether to activate network-wide.
+	 * @return true|\WP_Error
+	 */
+	private static function activate_plugin_file( string $plugin_file, bool $network_wide ) {
+		self::load_plugin_admin_functions();
+
+		if ( $network_wide ) {
+			if ( ! is_multisite() ) {
+				return new \WP_Error( 'webo_mcp_network_plugins_unavailable', 'network_activate requires multisite', array( 'status' => 400 ) );
+			}
+			if ( ! current_user_can( 'manage_network_plugins' ) ) {
+				return new \WP_Error( 'webo_mcp_permission_denied', 'manage_network_plugins capability required', array( 'status' => 403 ) );
+			}
+		} elseif ( ! current_user_can( 'activate_plugins' ) ) {
+			return new \WP_Error( 'webo_mcp_permission_denied', 'activate_plugins capability required', array( 'status' => 403 ) );
+		}
+
+		$result = activate_plugin( $plugin_file, '', $network_wide, false );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Resolve a plugin file from plugin_file or slug and assert it is installed.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return string|\WP_Error
+	 */
+	private static function resolve_installed_plugin_file( array $arguments ) {
+		self::load_plugin_admin_functions();
+
+		$plugin_file = isset( $arguments['plugin_file'] ) ? self::sanitize_plugin_file_argument( $arguments['plugin_file'] ) : '';
+		if ( '' !== $plugin_file && 0 !== validate_file( $plugin_file ) ) {
+			return new \WP_Error( 'webo_mcp_invalid_plugin_file', 'plugin_file must be a relative plugin path such as akismet/akismet.php', array( 'status' => 400 ) );
+		}
+
+		if ( '' === $plugin_file && isset( $arguments['slug'] ) ) {
+			$plugin_file = self::plugin_query_find_plugin_file_by_slug( sanitize_key( (string) $arguments['slug'] ) );
+		}
+
+		if ( '' === $plugin_file ) {
+			return new \WP_Error( 'webo_mcp_plugin_file_required', 'plugin_file or slug is required', array( 'status' => 400 ) );
+		}
+
+		$installed_plugins = function_exists( 'get_plugins' ) ? get_plugins() : array();
+		if ( ! isset( $installed_plugins[ $plugin_file ] ) ) {
+			return new \WP_Error( 'webo_mcp_plugin_not_installed', sprintf( 'Plugin is not installed: %s', $plugin_file ), array( 'status' => 404 ) );
+		}
+
+		return $plugin_file;
+	}
+
+	/**
+	 * Load WordPress admin plugin helpers when running through REST/MCP.
+	 *
+	 * @return void
+	 */
+	private static function load_plugin_admin_functions() {
+		if ( ! function_exists( 'get_plugins' ) || ! function_exists( 'activate_plugin' ) || ! function_exists( 'deactivate_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+	}
+
+	/**
+	 * Sanitize a plugin file path argument without accepting absolute paths.
+	 *
+	 * @param mixed $plugin_file Raw plugin file value.
+	 * @return string
+	 */
+	private static function sanitize_plugin_file_argument( $plugin_file ) {
+		$plugin_file = trim( str_replace( '\\', '/', (string) $plugin_file ) );
+		$plugin_file = preg_replace( '#/+#', '/', $plugin_file );
+		$plugin_file = preg_replace( '/[^A-Za-z0-9_\-\.\/]/', '', (string) $plugin_file );
+
+		return trim( (string) $plugin_file, '/' );
+	}
+
+	/**
+	 * Find the canonical plugin file for an installed plugin slug.
+	 *
+	 * @param string $slug WordPress.org plugin slug or single-file plugin slug.
+	 * @return string
+	 */
+	private static function plugin_query_find_plugin_file_by_slug( string $slug ) {
+		$slug = sanitize_key( $slug );
+		if ( '' === $slug ) {
+			return '';
+		}
+
+		self::load_plugin_admin_functions();
+		$plugins = function_exists( 'get_plugins' ) ? get_plugins() : array();
+		foreach ( $plugins as $plugin_file => $metadata ) {
+			unset( $metadata );
+			$plugin_file = (string) $plugin_file;
+			if ( $slug === self::plugin_query_slug_from_plugin_file( $plugin_file ) ) {
+				return $plugin_file;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Build the common response envelope for plugin mutations.
+	 *
+	 * @param string               $plugin_file Plugin file path.
+	 * @param array<string, mixed> $extra       Additional response fields.
+	 * @return array<string, mixed>
+	 */
+	private static function plugin_mutation_response( string $plugin_file, array $extra = array() ) {
+		self::load_plugin_admin_functions();
+
+		$inventory = self::plugin_query_collect_inventory();
+		$asset     = isset( $inventory[ $plugin_file ] ) ? $inventory[ $plugin_file ] : array();
+
+		return array_merge(
+			array(
+				'tool'           => 'webo/plugin-mutate',
+				'plugin_file'    => $plugin_file,
+				'active'         => function_exists( 'is_plugin_active' ) ? (bool) is_plugin_active( $plugin_file ) : false,
+				'network_active' => function_exists( 'is_plugin_active_for_network' ) ? (bool) is_plugin_active_for_network( $plugin_file ) : false,
+				'asset'          => $asset,
+			),
+			$extra
+		);
+	}
+
+	/**
 	 * Build canonical plugin inventory for query selectors.
 	 *
 	 * @return array<string, array<string, mixed>>

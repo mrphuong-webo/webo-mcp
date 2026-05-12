@@ -602,6 +602,47 @@ final class Standalone_Tools {
 				'callback'    => array( WordPressTools::class, 'plugin_query' ),
 			),
 			array(
+				'name'        => 'webo/plugin-mutate',
+				'description' => 'Unified plugin write operations. action (required): install from WordPress.org by slug; activate/deactivate an installed plugin by plugin_file or slug. install supports activate, network_activate, and overwrite when the server permits plugin installation.',
+				'category'    => 'wordpress',
+				'arguments'   => array(
+					'action'           => array(
+						'type'     => 'string',
+						'required' => true,
+					),
+					'slug'             => array(
+						'type'     => 'string',
+						'required' => false,
+					),
+					'plugin_file'      => array(
+						'type'     => 'string',
+						'required' => false,
+					),
+					'activate'         => array(
+						'type'     => 'boolean',
+						'required' => false,
+						'default'  => false,
+					),
+					'network_activate' => array(
+						'type'     => 'boolean',
+						'required' => false,
+						'default'  => false,
+					),
+					'network_wide'     => array(
+						'type'     => 'boolean',
+						'required' => false,
+						'default'  => false,
+					),
+					'overwrite'        => array(
+						'type'     => 'boolean',
+						'required' => false,
+						'default'  => false,
+					),
+				),
+				'permission'  => 'install_plugins',
+				'callback'    => array( WordPressTools::class, 'plugin_mutate' ),
+			),
+			array(
 				'name'        => 'webo/get-options',
 				'description' => 'Read selected safe options',
 				'category'    => 'wordpress',

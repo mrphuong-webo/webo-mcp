@@ -49,6 +49,7 @@ All WEBO MCP addons now follow the same query/mutate pattern as the core plugin.
 - Added `webo/list-themes` to discover installed themes and active theme status.
 - Added `webo/switch-theme` to switch the active theme by stylesheet slug.
 - Added `webo/plugin-query` as the unified plugin inspection tool (`installed`, `active`, `updates`, `network-active`, `rental-candidates`, `health`) with optional `scope`, `refresh`, and `fields`.
+- Added `webo/plugin-mutate` as the unified plugin write tool (`install`, `activate`, `deactivate`). `install` downloads a WordPress.org plugin by slug and can optionally activate it site-wide or network-wide when permitted.
 - Release includes the shortened WordPress.org short description so the next tagged import stays under the 150 character limit.
 
 ## Quick Start
@@ -332,6 +333,7 @@ Three tools align with MCP servers like [mcp-wordpress-instaWP](https://glama.ai
 | Tool | Description | Arguments |
 |------|-------------|-----------|
 | `webo/plugin-query` | Unified read-only plugin query with enum allowlist; supports `installed`, `active`, `updates`, `network-active`, `rental-candidates`, `health`. Uses `wp_update_plugins()` + `get_site_transient('update_plugins')` when `refresh=true` for update checks. | `query` (required), `scope` (optional: `all`, `active`, `network-active`), `refresh` (optional bool), `fields` (optional array projection). |
+| `webo/plugin-mutate` | Unified plugin write tool. Supports `install` from WordPress.org by slug plus `activate` and `deactivate` for installed plugins. | `action` (required: `install`, `activate`, `deactivate`), `slug`, `plugin_file`, `activate`, `network_activate`, `network_wide`, `overwrite`. |
 
 ## Tool definition
 
