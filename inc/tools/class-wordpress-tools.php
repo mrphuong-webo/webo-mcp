@@ -1750,9 +1750,46 @@ class WordPressTools {
 
 		switch_to_blog( $target_blog_id );
 		try {
-			return $callback();
+			return self::run_with_child_site_plugin_caps( $target_blog_id, $callback );
 		} finally {
 			restore_current_blog();
+		}
+	}
+
+	/**
+	 * Temporarily bridge plugin-management capabilities while operating inside a child site.
+	 *
+	 * WordPress core re-checks capabilities inside activate_plugin()/deactivate_plugins()
+	 * after switch_to_blog(), so a network operator needs a scoped user_has_cap bridge.
+	 *
+	 * @param int      $target_blog_id Target child-site blog ID.
+	 * @param callable $callback       Callback to execute.
+	 * @return mixed
+	 */
+	private static function run_with_child_site_plugin_caps( int $target_blog_id, callable $callback ) {
+		if ( $target_blog_id <= 0 || ! is_multisite() || ! self::current_user_can_manage_network_plugins() ) {
+			return $callback();
+		}
+
+		$user_id    = get_current_user_id();
+		$grant_caps = static function ( $allcaps, $caps, $args, $user ) use ( $user_id ) {
+			if ( ! $user instanceof \WP_User || (int) $user->ID !== (int) $user_id ) {
+				return $allcaps;
+			}
+
+			$allcaps['activate_plugins']   = true;
+			$allcaps['deactivate_plugins'] = true;
+			$allcaps['update_plugins']     = true;
+			$allcaps['install_plugins']    = true;
+
+			return $allcaps;
+		};
+
+		add_filter( 'user_has_cap', $grant_caps, 10, 4 );
+		try {
+			return $callback();
+		} finally {
+			remove_filter( 'user_has_cap', $grant_caps, 10 );
 		}
 	}
 
@@ -3729,22 +3766,36 @@ class WordPressTools {
 		if ( ! in_array( $action, array( 'activate', 'deactivate' ), true ) ) {
 			return new \WP_Error( 'webo_mcp_invalid_action', 'action must be activate or deactivate' );
 		}
-		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		if ( 'activate' === $action ) {
-			$result = activate_plugin( $plugin, '', false, $silent );
-		} else {
-			deactivate_plugins( $plugin, false, false );
-			$result = null;
+
+		$target_blog_id = self::resolve_plugin_target_blog_id( $arguments );
+		if ( is_wp_error( $target_blog_id ) ) {
+			return $target_blog_id;
 		}
+
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		$result = self::run_in_plugin_target_blog(
+			$target_blog_id,
+			static function () use ( $action, $plugin, $silent ) {
+				if ( 'activate' === $action ) {
+					return activate_plugin( $plugin, '', false, $silent );
+				}
+
+				deactivate_plugins( $plugin, false, false );
+				return null;
+			}
+		);
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 		return array(
-			'plugin'  => $plugin,
-			'action'  => $action,
-			'silent'  => $silent,
-			'success' => true,
-			'tool'    => 'webo/toggle-plugin',
+			'plugin'         => $plugin,
+			'action'         => $action,
+			'silent'         => $silent,
+			'site_id'        => $target_blog_id,
+			'blog_id'        => $target_blog_id,
+			'targeted_child' => $target_blog_id > 0,
+			'success'        => true,
+			'tool'           => 'webo/toggle-plugin',
 		);
 	}
 
