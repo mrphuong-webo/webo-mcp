@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.13
+Stable tag: 2.1.14
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -171,6 +171,10 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.14 =
+* Fix: bridge scoped plugin-management capabilities while network admins activate or deactivate plugins inside a child site.
+* Keeps child-site plugin toggles explicit through `site_id` / `blog_id` without widening network-wide activation behavior.
+
 = 2.1.13 =
 * Added `webo/plugin-mutate` for WordPress.org plugin install, activation, and deactivation through the core plugin endpoint.
 * Added `site_id` / `blog_id` support so network admins can activate or deactivate plugins for one multisite child site from the network MCP endpoint.
@@ -367,6 +371,9 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Session management and optional API key/HMAC security.
 
 == Upgrade Notice ==
+= 2.1.14 =
+Recommended for multisite networks using child-site plugin activation through MCP; fixes WordPress capability checks after `switch_to_blog()`.
+
 = 2.1.13 =
 Adds core plugin mutation plus child-site plugin activation/deactivation via `site_id` or `blog_id` for multisite network admins.
 

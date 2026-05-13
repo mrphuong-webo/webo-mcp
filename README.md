@@ -4,6 +4,11 @@ Token-optimized MCP gateway for WordPress. Unified query/mutate tools cut the `t
 
 ## Recent Changes
 
+### 2.1.14 - Child-site plugin toggle capability bridge
+
+- Fixed child-site plugin activation/deactivation for network admins by bridging scoped plugin-management capabilities after `switch_to_blog()`.
+- Keeps `site_id` / `blog_id` child-site targeting explicit without widening network-wide activation behavior.
+
 ### 2.1.13 — Plugin mutation + multisite child activation
 
 - Added `webo/plugin-mutate` as the unified plugin write tool (`install`, `activate`, `deactivate`).
