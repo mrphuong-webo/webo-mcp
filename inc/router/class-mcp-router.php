@@ -3,12 +3,14 @@
 namespace WeboMCP\Core\Router;
 
 use WeboMCP\Core\Audit\Audit_Log;
+use WeboMCP\Core\Bridge\Ability_Bridge;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Session\SessionManager;
 use WP_Error;
 use WP_REST_Request;
 
 require_once dirname( __DIR__ ) . '/audit/class-audit-log.php';
+require_once dirname( __DIR__ ) . '/bridge/class-ability-bridge.php';
 require_once __DIR__ . '/JsonRpcHelper.php';
 require_once __DIR__ . '/SecurityHelper.php';
 require_once __DIR__ . '/PolicyHelper.php';
@@ -200,6 +202,10 @@ class McpRouter {
 			}
 			$arguments = $params['arguments'];
 		}
+		$ability_authorization = $this->authorize_bridged_ability_call( $request, $params, $tool_name, $tool_definition, $arguments );
+		if ( is_wp_error( $ability_authorization ) ) {
+			return $this->audit_and_error( $request, $audit_base, 'denied', -32001, $ability_authorization->get_error_message(), $id, array( 'code' => $ability_authorization->get_error_code() ) );
+		}
 		try {
 			$result = ToolRegistry::call( $tool_name, $arguments );
 		} catch ( \Exception $exception ) {
@@ -230,6 +236,37 @@ class McpRouter {
 		);
 
 		return JsonRpcHelper::success( $result, $id );
+	}
+
+	/**
+	 * Gate compact and full bridged ability execution before tool callbacks run.
+	 *
+	 * @param WP_REST_Request      $request         Request.
+	 * @param array<string, mixed> $params          JSON-RPC params.
+	 * @param string               $tool_name       Tool name.
+	 * @param array<string, mixed> $tool_definition Tool definition.
+	 * @param array<string, mixed> $arguments       Tool arguments.
+	 * @return true|WP_Error
+	 */
+	private function authorize_bridged_ability_call( WP_REST_Request $request, array $params, string $tool_name, array $tool_definition, array $arguments ) {
+		$ability_name = '';
+		$input        = $arguments;
+
+		if ( 'webo/ability-execute' === $tool_name ) {
+			$ability_name = isset( $arguments['ability'] ) ? sanitize_text_field( (string) $arguments['ability'] ) : '';
+			$input        = isset( $arguments['input'] ) && is_array( $arguments['input'] ) ? $arguments['input'] : array();
+			if ( ! empty( $arguments['dry_run'] ) ) {
+				return true;
+			}
+		} elseif ( isset( $tool_definition['ability_name'] ) ) {
+			$ability_name = sanitize_text_field( (string) $tool_definition['ability_name'] );
+		}
+
+		if ( '' === $ability_name ) {
+			return true;
+		}
+
+		return Ability_Bridge::authorize_execution( $ability_name, $input, $request, $params, $tool_name );
 	}
 
 	/**

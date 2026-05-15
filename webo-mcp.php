@@ -7,7 +7,7 @@
  * Plugin Name: WEBO MCP
  * Plugin URI: https://webomcp.com
  * Description: MCP (Model Context Protocol) gateway for WordPress: JSON-RPC tools over the REST API for MCP clients.
- * Version: 2.1.14
+ * Version: 2.1.15
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Dinh WP
@@ -108,6 +108,14 @@ function webo_mcp_register_settings() {
 		'webo_mcp_tool_allowlist_rules',
 		array(
 			'sanitize_callback' => array( \WeboMCP\Core\Router\ClientToolPolicy::class, 'sanitize_rules_option' ),
+		)
+	);
+
+	register_setting(
+		'webo_mcp_settings',
+		'webo_mcp_bridge_mode',
+		array(
+			'sanitize_callback' => array( \WeboMCP\Core\Bridge\Ability_Bridge::class, 'sanitize_mode' ),
 		)
 	);
 
@@ -257,6 +265,33 @@ function webo_mcp_render_settings_page() {
 					</td>
 				</tr>
 			</table>
+			<h2><?php echo esc_html( __( 'Abilities Bridge', 'webo-mcp' ) ); ?></h2>
+			<p>
+				<?php
+				echo esc_html__(
+					'Default layered mode keeps tools/list compact with webo/ability-query and webo/ability-execute. Full mode exposes individual public abilities and should only be used in private developer environments.',
+					'webo-mcp'
+				);
+				?>
+			</p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row">
+						<label for="webo_mcp_bridge_mode">
+							<?php echo esc_html( __( 'Bridge mode', 'webo-mcp' ) ); ?>
+						</label>
+					</th>
+					<td>
+						<select id="webo_mcp_bridge_mode" name="webo_mcp_bridge_mode">
+							<?php $bridge_mode = \WeboMCP\Core\Bridge\Ability_Bridge::get_mode(); ?>
+							<option value="off" <?php selected( $bridge_mode, 'off' ); ?>><?php echo esc_html__( 'Off', 'webo-mcp' ); ?></option>
+							<option value="layered" <?php selected( $bridge_mode, 'layered' ); ?>><?php echo esc_html__( 'Layered (default)', 'webo-mcp' ); ?></option>
+							<option value="full" <?php selected( $bridge_mode, 'full' ); ?>><?php echo esc_html__( 'Full (private/developer)', 'webo-mcp' ); ?></option>
+						</select>
+						<p class="description"><?php echo esc_html__( 'Constants and filters override this option: WEBO_MCP_BRIDGE_MODE, then webo_mcp_bridge_mode, then this setting.', 'webo-mcp' ); ?></p>
+					</td>
+				</tr>
+			</table>
 			<h2><?php echo esc_html( __( 'Audit Log', 'webo-mcp' ) ); ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -367,19 +402,11 @@ function webo_mcp_handle_clear_audit_log() {
 	exit;
 }
 
-$webo_mcp_autoloader = __DIR__ . '/vendor/autoload.php';
-if ( file_exists( $webo_mcp_autoloader ) ) {
-	require_once $webo_mcp_autoloader;
-}
-
-$webo_mcp_abilities_api = __DIR__ . '/vendor/wordpress/abilities-api/abilities-api.php';
-if ( file_exists( $webo_mcp_abilities_api ) ) {
-	require_once $webo_mcp_abilities_api;
-}
-
+require_once __DIR__ . '/inc/core/class-core-features.php';
 require_once __DIR__ . '/inc/registry/class-tool-registry.php';
 require_once __DIR__ . '/inc/audit/class-audit-log.php';
 require_once __DIR__ . '/inc/abilities/class-site-settings-ability.php';
+require_once __DIR__ . '/inc/bridge/class-ability-bridge.php';
 require_once __DIR__ . '/inc/session/class-session-manager.php';
 require_once __DIR__ . '/inc/router/ClientToolPolicy.php';
 require_once __DIR__ . '/inc/tools/class-wordpress-tools.php';
@@ -390,7 +417,9 @@ require_once __DIR__ . '/inc/router/class-mcp-router.php';
 require_once __DIR__ . '/inc/router/class-rest-json-bom-guard.php';
 
 use WeboMCP\Core\Abilities\Site_Settings_Ability;
+use WeboMCP\Core\Bridge\Ability_Bridge;
 use WeboMCP\Core\Bootstrap\Standalone_Tools;
+use WeboMCP\Core\Core_Features;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Router\AccessHelper;
 use WeboMCP\Core\Router\McpRouter;
@@ -398,6 +427,63 @@ use WP\MCP\Abilities\DiscoverAbilitiesAbility;
 use WP\MCP\Abilities\ExecuteAbilityAbility;
 use WP\MCP\Abilities\GetAbilityInfoAbility;
 use WP\MCP\Core\McpAdapter;
+
+/**
+ * Register the bundled MCP Adapter PSR-4 autoloader without loading duplicate Abilities API code.
+ *
+ * @return void
+ */
+function webo_mcp_register_mcp_adapter_autoloader() {
+	$base = __DIR__ . '/vendor/wordpress/mcp-adapter/includes/';
+	if ( ! is_dir( $base ) ) {
+		return;
+	}
+
+	spl_autoload_register(
+		static function ( $class ) use ( $base ) {
+			$prefix = 'WP\\MCP\\';
+			if ( 0 !== strpos( $class, $prefix ) ) {
+				return;
+			}
+
+			$relative = substr( $class, strlen( $prefix ) );
+			$file     = $base . str_replace( '\\', '/', $relative ) . '.php';
+			if ( file_exists( $file ) ) {
+				require_once $file;
+			}
+		}
+	);
+
+	Core_Features::mark_bundled_mcp_adapter_loaded();
+}
+
+/**
+ * Load bundled fallback dependencies only when Core/external APIs are missing.
+ *
+ * @return void
+ */
+function webo_mcp_load_backcompat_dependencies() {
+	if ( ! Core_Features::has_abilities_api() ) {
+		$webo_mcp_autoloader = __DIR__ . '/vendor/autoload.php';
+		if ( file_exists( $webo_mcp_autoloader ) ) {
+			require_once $webo_mcp_autoloader;
+		}
+
+		$webo_mcp_abilities_api = __DIR__ . '/vendor/wordpress/abilities-api/abilities-api.php';
+		if ( ! Core_Features::has_abilities_api() && file_exists( $webo_mcp_abilities_api ) ) {
+			require_once $webo_mcp_abilities_api;
+		}
+
+		if ( Core_Features::has_abilities_api() ) {
+			Core_Features::mark_bundled_abilities_loaded();
+		}
+	}
+
+	if ( ! Core_Features::has_mcp_adapter() ) {
+		webo_mcp_register_mcp_adapter_autoloader();
+	}
+}
+webo_mcp_load_backcompat_dependencies();
 
 Site_Settings_Ability::hook();
 add_action( 'application_password_did_authenticate', array( \WeboMCP\Core\Router\ClientToolPolicy::class, 'capture_application_password' ), 10, 2 );
@@ -575,21 +661,16 @@ function webo_mcp_control_adapter_default_server( $enabled ) {
 add_filter( 'mcp_adapter_create_default_server', 'webo_mcp_control_adapter_default_server', 1 );
 
 /**
- * Bridges all registered WordPress abilities to MCP ToolRegistry.
+ * Bridges public WordPress abilities as individual MCP tools in full mode only.
  *
  * @return void
  */
 function webo_mcp_register_wordpress_abilities() {
-	if ( ! function_exists( 'wp_get_abilities' ) || ! function_exists( 'wp_get_ability' ) ) {
+	if ( Ability_Bridge::MODE_FULL !== Ability_Bridge::get_mode() ) {
 		return;
 	}
 
-	$abilities = wp_get_abilities();
-	if ( ! is_array( $abilities ) ) {
-		return;
-	}
-
-	foreach ( $abilities as $ability ) {
+	foreach ( Ability_Bridge::public_abilities() as $ability ) {
 		if ( ! is_object( $ability ) || ! method_exists( $ability, 'get_name' ) || ! method_exists( $ability, 'get_description' ) ) {
 			continue;
 		}
@@ -606,22 +687,17 @@ function webo_mcp_register_wordpress_abilities() {
 		$input_schema = method_exists( $ability, 'get_input_schema' ) ? $ability->get_input_schema() : array();
 		$category     = method_exists( $ability, 'get_category' ) ? (string) $ability->get_category() : 'WordPress';
 		$description  = (string) $ability->get_description();
-
-		$visibility = 'internal';
-		if ( method_exists( $ability, 'get_meta' ) ) {
-			$meta = $ability->get_meta();
-			if ( is_array( $meta ) && isset( $meta['mcp'] ) && is_array( $meta['mcp'] ) && array_key_exists( 'public', $meta['mcp'] ) ) {
-				$visibility = (bool) $meta['mcp']['public'] ? 'public' : 'internal';
-			}
-		}
+		$meta         = method_exists( $ability, 'get_meta' ) && is_array( $ability->get_meta() ) ? $ability->get_meta() : array();
 
 		ToolRegistry::register(
 			array(
 				'name'        => $ability_name,
 				'description' => '' !== $description ? $description : sprintf( 'Execute ability: %s', $ability_name ),
 				'category'    => '' !== $category ? $category : 'wordpress',
-				'visibility'  => $visibility,
+				'visibility'  => 'public',
 				'arguments'   => webo_mcp_convert_input_schema_to_tool_arguments( is_array( $input_schema ) ? $input_schema : array() ),
+				'ability_name' => $ability_name,
+				'meta'        => $meta,
 				'callback'    => static function ( array $arguments ) use ( $ability_name ) {
 					$ability_instance = wp_get_ability( $ability_name );
 					if ( ! $ability_instance || ! method_exists( $ability_instance, 'execute' ) ) {
@@ -645,33 +721,7 @@ function webo_mcp_register_wordpress_abilities() {
  * @return bool
  */
 function webo_mcp_should_bridge_ability( string $ability_name ) {
-	$ability_name = trim( $ability_name );
-	if ( '' === $ability_name ) {
-		return false;
-	}
-
-	$deny_patterns = apply_filters(
-		'webo_mcp_bridge_deny_patterns',
-		array(
-			'bulk',
-			'plugins/',
-			'themes/',
-			'multisite/',
-		)
-	);
-
-	$denied = false;
-	if ( is_array( $deny_patterns ) ) {
-		foreach ( $deny_patterns as $pattern ) {
-			$pattern = trim( (string) $pattern );
-			if ( '' !== $pattern && false !== strpos( $ability_name, $pattern ) ) {
-				$denied = true;
-				break;
-			}
-		}
-	}
-
-	return (bool) apply_filters( 'webo_mcp_should_bridge_ability', ! $denied, $ability_name );
+	return Ability_Bridge::should_bridge_ability( $ability_name );
 }
 
 /**
@@ -700,8 +750,7 @@ function webo_mcp_bootstrap() {
 
 	do_action( 'webo_mcp_register_tools' );
 
-	$auto_bridge = (bool) apply_filters( 'webo_mcp_auto_bridge_abilities', true );
-	if ( $auto_bridge ) {
+	if ( Ability_Bridge::is_enabled() ) {
 		webo_mcp_register_wordpress_abilities();
 	}
 

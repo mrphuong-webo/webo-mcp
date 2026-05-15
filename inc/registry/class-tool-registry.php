@@ -40,6 +40,11 @@ class ToolRegistry {
 			'visibility'  => isset( $tool['visibility'] ) ? (string) $tool['visibility'] : 'public',
 			'callback'    => $tool['callback'],
 		);
+		foreach ( array( 'ability_name', 'meta', 'webo_mcp' ) as $optional_key ) {
+			if ( isset( $tool[ $optional_key ] ) ) {
+				self::$tools[ $tool['name'] ][ $optional_key ] = $tool[ $optional_key ];
+			}
+		}
 
 		return true;
 	}

@@ -4,6 +4,14 @@ Token-optimized MCP gateway for WordPress. Unified query/mutate tools cut the `t
 
 ## Recent Changes
 
+### 2.1.15 - WordPress 7.0 Core-aware MCP bridge
+
+- Added defensive WordPress/Core feature detection for Abilities API, MCP Adapter, Connectors API, and `wp_supports_ai()`.
+- Guarded fallback dependency loading so Core/external Abilities API and MCP Adapter implementations are not duplicated.
+- Added bridge modes: `off`, `layered` (default), and `full`. Layered mode keeps `tools/list` compact with `webo/ability-query` and `webo/ability-execute`.
+- Enforced `meta.mcp.public === true`, ability permission checks, WEBO allowlist policy, and scope/risk gates before bridged ability execution.
+- Extended `webo/health-status` with WordPress 7.0/Core AI/MCP diagnostics.
+
 ### 2.1.14 - Child-site plugin toggle capability bridge
 
 - Fixed child-site plugin activation/deactivation for network admins by bridging scoped plugin-management capabilities after `switch_to_blog()`.
@@ -91,9 +99,21 @@ See `AGENTS.md` for the repository rule set used by WEBO MCP agent flows.
 
 ## Dependencies
 
-- This plugin bundles `wordpress/abilities-api` via Composer for standalone abilities bridge.
-- This plugin bundles `wordpress/mcp-adapter` and enables adapter runtime by default.
+- This plugin uses WordPress Core Abilities API when available and falls back to bundled `wordpress/abilities-api` only on older WordPress versions.
+- This plugin can use an existing MCP Adapter package when available and otherwise registers its bundled adapter autoloader.
 - Run `composer install` in plugin root before activation on environments that do not include `vendor/` in deployment.
+
+## WordPress 7.0 Core-aware bridge
+
+WEBO MCP keeps its production router endpoint: `POST /wp-json/mcp/v1/router`. It does not replace that endpoint with the official MCP Adapter default server. The official adapter may exist separately; WEBO MCP remains the policy, audit, addon, and token-optimization gateway layer for production clients.
+
+Bridge modes are controlled by `WEBO_MCP_BRIDGE_MODE`, then the `webo_mcp_bridge_mode` filter, then the `webo_mcp_bridge_mode` option. Supported values:
+
+- `off`: do not expose WordPress abilities through WEBO MCP.
+- `layered`: default. Exposes compact `webo/ability-query` and `webo/ability-execute` tools only.
+- `full`: private/developer mode. Exposes individual public abilities as MCP tools when safe.
+
+Only abilities with `meta.mcp.public === true` are visible to the bridge. Execution also runs the ability permission callback, WEBO policy checks, and scope/risk gates. `webo/health-status` reports Core-aware diagnostics including WordPress/PHP version, Abilities API source, MCP Adapter source, Connectors API presence, `wp_supports_ai()` availability/enabled state, and bridge counts.
 
 ## External services
 

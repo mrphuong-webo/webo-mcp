@@ -7,6 +7,7 @@
 
 namespace WeboMCP\Core\Bootstrap;
 
+use WeboMCP\Core\Bridge\Ability_Bridge;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Tools\HealthStatusTool;
 use WeboMCP\Core\Tools\SeoArticleAnalysis;
@@ -28,6 +29,9 @@ final class Standalone_Tools {
 	 */
 	public static function register() {
 		foreach ( self::get_definitions() as $tool ) {
+			if ( isset( $tool['name'] ) && 0 === strpos( (string) $tool['name'], 'webo/ability-' ) && Ability_Bridge::MODE_OFF === Ability_Bridge::get_mode() ) {
+				continue;
+			}
 			ToolRegistry::register( $tool );
 		}
 	}
@@ -666,6 +670,52 @@ final class Standalone_Tools {
 				),
 				'permission'  => 'manage_options',
 				'callback'    => array( HealthStatusTool::class, 'run' ),
+			),
+			array(
+				'name'        => 'webo/ability-query',
+				'description' => 'Compact read-only bridge for public WordPress abilities. action: list, get, categories, schema. Only abilities with meta.mcp.public=true are returned.',
+				'category'    => 'wordpress',
+				'arguments'   => array(
+					'action'  => array(
+						'type'     => 'string',
+						'required' => true,
+						'default'  => 'list',
+					),
+					'ability' => array(
+						'type'     => 'string',
+						'required' => false,
+					),
+				),
+				'permission'  => 'read',
+				'callback'    => array( Ability_Bridge::class, 'query' ),
+			),
+			array(
+				'name'        => 'webo/ability-execute',
+				'description' => 'Compact execution bridge for one public WordPress ability. Requires ability, optional input object, dry_run, and reason. Execution is gated by WEBO policy, ability permissions, and scope/risk rules.',
+				'category'    => 'wordpress',
+				'arguments'   => array(
+					'ability' => array(
+						'type'     => 'string',
+						'required' => true,
+					),
+					'input'   => array(
+						'type'     => 'array',
+						'required' => false,
+						'default'  => array(),
+					),
+					'dry_run' => array(
+						'type'     => 'boolean',
+						'required' => false,
+						'default'  => false,
+					),
+					'reason'  => array(
+						'type'     => 'string',
+						'required' => false,
+						'default'  => '',
+					),
+				),
+				'permission'  => 'read',
+				'callback'    => array( Ability_Bridge::class, 'execute' ),
 			),
 			array(
 				'name'        => 'webo/get-options',

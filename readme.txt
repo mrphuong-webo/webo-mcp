@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.14
+Stable tag: 2.1.15
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +22,7 @@ WEBO MCP is a standalone MCP gateway for WordPress. It lets compatible clients c
 - Session lifecycle for clients (pass `session_id` or `Mcp-Session-Id` after `initialize`)
 - Built-in tool registry for common WordPress operations (posts, media, terms, menus, options, and more)
 - Bundled Abilities API + MCP Adapter integration, with automatic bridging from registered abilities to MCP tools (configurable)
+- WordPress 7.0/Core-aware bridge mode that uses Core Abilities/API surfaces when available and falls back only when needed
 - Public tool policy controls (category filters and optional allowlists) plus optional internal tool exposure for private environments
 - Bounded MCP audit log, optional per-user/role/client tool allowlists, and a read-only administrator health/status tool
 
@@ -54,6 +55,7 @@ Standalone core tools included:
 - Nav menus: list menus, list menu items (menu_order, db_id), add menu link from post (explicit post_id + menu_order required)
 - Plugins: `webo/plugin-query` (installed, active, updates, …) and `webo/plugin-mutate` (install, activate, deactivate; supports child-site `site_id` / `blog_id` activation for network admins)
 - Health: `webo/health-status` (REST/router status, Application Password support, permalinks, cron, object cache, plugin update summary, WordPress/PHP versions, and redacted MCP config)
+- Abilities bridge: `webo/ability-query` and `webo/ability-execute` in default layered mode. Only abilities with `meta.mcp.public === true` are visible and executable through WEBO MCP.
 - Themes: `webo/theme-query`, `webo/theme-mutate`
 - Menus: `webo/menu-query`, `webo/menu-mutate`
 - Options: get/update (safe allowlist only), set site icon/favicon from media
@@ -117,7 +119,10 @@ The plugin exposes the following actions and filters for developers:
   Controls which abilities are excluded when auto-bridging abilities into MCP tools (e.g. bulk, plugins/, themes/, multisite/).
 
 - `webo_mcp_auto_bridge_abilities` (bool $enabled)
-  Enables or disables automatic bridging of registered abilities into MCP tools. Defaults to true.
+  Enables or disables automatic bridging of registered abilities into MCP tools. Defaults to true; bridge mode still controls whether the bridge is off, layered, or full.
+
+- `webo_mcp_bridge_mode` (string $mode)
+  Controls Abilities bridge mode after the `WEBO_MCP_BRIDGE_MODE` constant and before the stored option. Values: `off`, `layered`, `full`. Default: `layered`.
 
 - `webo_mcp_enable_adapter` (bool $enabled)
   Enables or disables the bundled WordPress MCP Adapter runtime. Defaults to true.
@@ -145,7 +150,10 @@ POST /wp-json/mcp/v1/router
 The project hub is https://webomcp.com. For n8n, install the community node from npm: https://www.npmjs.com/package/n8n-nodes-webo-mcp
 
 = Can this run WordPress abilities by itself? =
-Yes. This plugin bundles Abilities API via Composer and auto-bridges registered abilities to MCP tools. You can disable auto-bridge with filter webo_mcp_auto_bridge_abilities set to false.
+Yes. On WordPress versions where Core provides the Abilities API, WEBO MCP uses Core and does not load a duplicate bundled Abilities API. On older WordPress versions it falls back to the bundled Composer package. The default bridge mode is `layered`, which exposes compact `webo/ability-query` and `webo/ability-execute` tools instead of one tool per ability. You can set bridge mode to `off`, `layered`, or `full` with `WEBO_MCP_BRIDGE_MODE`, the `webo_mcp_bridge_mode` filter, or the `webo_mcp_bridge_mode` option.
+
+= Which abilities are exposed through WEBO MCP? =
+Only abilities that explicitly set `meta.mcp.public` to true are exposed. Execution also checks the ability permission callback, WEBO allowlist/policy, and scope/risk metadata such as `meta.webo_mcp.scope` and `meta.webo_mcp.risk`.
 
 = How do I migrate from legacy one-operation tool names? =
 Use `tools/list` to discover the dispatcher tool names on your site, then pass the correct `action` (or query/mutate discriminant) for each operation. Use docs/MIGRATION_GUIDE_2.1.0.md for the 2.1.0 rollout narrative and docs/MCP_TOOL_MIGRATION.md for a consolidated addon-by-addon map (Rank Math, Rocket, WooCommerce groups, etc.).
@@ -171,6 +179,13 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.15 =
+* WordPress 7.0 readiness: add defensive feature detection for Abilities API, MCP Adapter, Connectors API, and `wp_supports_ai()`.
+* Bootstrap: avoid loading duplicate bundled Abilities API or MCP Adapter code when Core/external implementations are already present.
+* Bridge: add `off`, `layered` (default), and `full` modes. Layered mode exposes compact `webo/ability-query` and `webo/ability-execute` tools so `tools/list` stays small by default.
+* Security: only bridge abilities with `meta.mcp.public === true`; execution now passes through ability permissions, WEBO policy/allowlist checks, and scope/risk gates.
+* Health: extend `webo/health-status` with WordPress 7.0/Core AI/MCP compatibility diagnostics.
+
 = 2.1.14 =
 * Fix: bridge scoped plugin-management capabilities while network admins activate or deactivate plugins inside a child site.
 * Keeps child-site plugin toggles explicit through `site_id` / `blog_id` without widening network-wide activation behavior.

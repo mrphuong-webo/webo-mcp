@@ -8,6 +8,8 @@
 namespace WeboMCP\Core\Tools;
 
 use WeboMCP\Core\Audit\Audit_Log;
+use WeboMCP\Core\Bridge\Ability_Bridge;
+use WeboMCP\Core\Core_Features;
 use WeboMCP\Core\Registry\ToolRegistry;
 use WeboMCP\Core\Router\ClientToolPolicy;
 
@@ -50,6 +52,7 @@ final class HealthStatusTool {
 			'object_cache'          => self::object_cache_status(),
 			'plugin_updates'        => self::plugin_updates_status(),
 			'mcp'                   => self::mcp_status(),
+			'core_compatibility'    => self::core_compatibility_status(),
 		);
 	}
 
@@ -166,6 +169,7 @@ final class HealthStatusTool {
 	 */
 	private static function mcp_status(): array {
 		$all_tools = ToolRegistry::list();
+		$counts    = Ability_Bridge::counts();
 
 		return array(
 			'router_endpoint'        => get_rest_url( null, 'mcp/v1/router' ),
@@ -178,6 +182,56 @@ final class HealthStatusTool {
 			'audit_log_enabled'      => Audit_Log::is_enabled(),
 			'audit_log_entries'      => Audit_Log::count(),
 			'audit_log_max_entries'  => Audit_Log::max_entries(),
+			'webo_bridge'            => array(
+				'mode'             => Ability_Bridge::get_mode(),
+				'auto_bridge'      => Ability_Bridge::is_enabled(),
+				'public_abilities' => $counts['public'],
+				'hidden_abilities' => $counts['hidden'],
+			),
 		);
+	}
+
+	/**
+	 * WordPress 7.0/Core-aware MCP diagnostics.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function core_compatibility_status(): array {
+		return array(
+			'wordpress_version' => Core_Features::get_wordpress_version(),
+			'php_version'       => Core_Features::get_php_version(),
+			'abilities_api'     => array(
+				'available' => Core_Features::has_abilities_api(),
+				'source'    => Core_Features::abilities_api_source(),
+			),
+			'mcp_adapter'       => array(
+				'available'               => Core_Features::has_mcp_adapter(),
+				'source'                  => Core_Features::mcp_adapter_source(),
+				'default_server_detected' => Core_Features::default_mcp_server_detected(),
+			),
+			'connectors_api'    => array(
+				'available'  => Core_Features::has_connectors_api(),
+				'registered' => self::registered_connectors(),
+			),
+			'wp_ai_support'    => array(
+				'available' => Core_Features::has_wp_ai_support_flag(),
+				'enabled'   => Core_Features::ai_supported(),
+			),
+			'webo_bridge'      => self::mcp_status()['webo_bridge'],
+		);
+	}
+
+	/**
+	 * Return connector IDs without exposing credentials.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function registered_connectors(): array {
+		if ( ! function_exists( 'wp_get_connectors' ) ) {
+			return array();
+		}
+
+		$connectors = wp_get_connectors();
+		return is_array( $connectors ) ? array_values( array_map( 'strval', array_keys( $connectors ) ) ) : array();
 	}
 }

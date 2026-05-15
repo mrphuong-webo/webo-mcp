@@ -104,6 +104,11 @@ class Site_Settings_Ability {
 					'mcp'          => array(
 						'public' => true,
 					),
+					'webo_mcp'     => array(
+						'category' => 'site',
+						'scope'    => 'read',
+						'risk'     => 'low',
+					),
 				),
 			)
 		);
