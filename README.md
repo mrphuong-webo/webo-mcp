@@ -11,6 +11,7 @@ Token-optimized MCP gateway for WordPress. Unified query/mutate tools cut the `t
 - Added bridge modes: `off`, `layered` (default), and `full`. Layered mode keeps `tools/list` compact with `webo/ability-query` and `webo/ability-execute`.
 - Enforced `meta.mcp.public === true`, ability permission checks, WEBO allowlist policy, and scope/risk gates before bridged ability execution.
 - Extended `webo/health-status` with WordPress 7.0/Core AI/MCP diagnostics.
+- Extended `webo/theme-mutate` with WordPress.org theme install by slug; optional activation still requires theme-switch capability.
 
 ### 2.1.14 - Child-site plugin toggle capability bridge
 
@@ -372,6 +373,7 @@ Three tools align with MCP servers like [mcp-wordpress-instaWP](https://glama.ai
 |------|-------------|-----------|
 | `webo/plugin-query` | Unified read-only plugin query with enum allowlist; supports `installed`, `active`, `updates`, `network-active`, `rental-candidates`, `health`. Uses `wp_update_plugins()` + `get_site_transient('update_plugins')` when `refresh=true` for update checks. | `query` (required), `scope` (optional: `all`, `active`, `network-active`), `refresh` (optional bool), `fields` (optional array projection). |
 | `webo/plugin-mutate` | Unified plugin write tool. Supports `install` from WordPress.org by slug plus `activate` and `deactivate` for installed plugins. Network admins can pass `site_id`/`blog_id` for one multisite child site. | `action` (required: `install`, `activate`, `deactivate`), `slug`, `plugin_file`, `activate`, `network_activate`, `network_wide`, `site_id`, `blog_id`, `overwrite`. |
+| `webo/theme-mutate` | Unified theme write tool. Supports `install` from WordPress.org by slug plus `switch` for installed themes. | `action` (required: `install`, `switch`), `slug`, `stylesheet`, `activate`, `overwrite`. |
 
 ## Tool definition
 

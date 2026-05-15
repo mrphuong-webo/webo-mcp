@@ -1367,6 +1367,7 @@ class WordPressTools {
 		}
 
 		return match ( $action ) {
+			'install' => self::install_theme( $arguments ),
 			'switch' => self::switch_theme_tool( $arguments ),
 			default => new \WP_Error( 'webo_mcp_invalid_action', sprintf( 'Unknown theme-mutate action: %s', $action ) ),
 		};
@@ -3858,6 +3859,142 @@ class WordPressTools {
 			'active_total' => $active_total,
 			'tool'         => 'webo/list-themes',
 		);
+	}
+
+	/**
+	 * Install a WordPress.org theme by slug.
+	 *
+	 * @param array<string, mixed> $arguments Tool arguments.
+	 * @return array<string, mixed>|\WP_Error
+	 */
+	private static function install_theme( array $arguments ) {
+		if ( ! self::current_user_can_install_themes() ) {
+			return new \WP_Error( 'webo_mcp_permission_denied', 'install_themes capability required', array( 'status' => 403 ) );
+		}
+
+		if ( function_exists( 'wp_is_file_mod_allowed' ) && ! wp_is_file_mod_allowed( 'capability_install_themes' ) ) {
+			return new \WP_Error( 'webo_mcp_file_mods_disabled', 'Theme installation is blocked by WordPress file modification settings.', array( 'status' => 403 ) );
+		}
+
+		$slug = isset( $arguments['slug'] ) ? sanitize_key( (string) $arguments['slug'] ) : '';
+		if ( '' === $slug ) {
+			return new \WP_Error( 'webo_mcp_theme_slug_required', 'slug is required for theme install', array( 'status' => 400 ) );
+		}
+
+		$theme             = wp_get_theme( $slug );
+		$already_installed = $theme instanceof \WP_Theme && $theme->exists();
+		$installed         = false;
+		$activate          = ! empty( $arguments['activate'] );
+		$overwrite         = ! empty( $arguments['overwrite'] );
+
+		if ( ! $already_installed ) {
+			if ( ! function_exists( 'themes_api' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/theme.php';
+			}
+			if ( ! class_exists( 'Theme_Upgrader' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+			}
+			if ( ! function_exists( 'request_filesystem_credentials' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+			}
+
+			$api = themes_api(
+				'theme_information',
+				array(
+					'slug'   => $slug,
+					'fields' => array(
+						'sections' => false,
+						'tags'     => false,
+					),
+				)
+			);
+
+			if ( is_wp_error( $api ) ) {
+				return $api;
+			}
+
+			if ( empty( $api->download_link ) ) {
+				return new \WP_Error( 'webo_mcp_theme_download_unavailable', sprintf( 'No download link found for theme slug: %s', $slug ), array( 'status' => 404 ) );
+			}
+
+			$skin     = new \Automatic_Upgrader_Skin();
+			$upgrader = new \Theme_Upgrader( $skin );
+			$result   = $upgrader->install(
+				(string) $api->download_link,
+				array(
+					'overwrite_package' => $overwrite,
+				)
+			);
+
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+
+			if ( ! $result ) {
+				$errors = method_exists( $skin, 'get_errors' ) ? $skin->get_errors() : null;
+				if ( is_wp_error( $errors ) && $errors->has_errors() ) {
+					return $errors;
+				}
+
+				return new \WP_Error( 'webo_mcp_theme_install_failed', sprintf( 'Theme install failed for slug: %s', $slug ), array( 'status' => 500 ) );
+			}
+
+			if ( function_exists( 'wp_clean_themes_cache' ) ) {
+				wp_clean_themes_cache( true );
+			}
+
+			$theme     = wp_get_theme( $slug );
+			$installed = true;
+		}
+
+		if ( ! $theme instanceof \WP_Theme || ! $theme->exists() ) {
+			return new \WP_Error( 'webo_mcp_theme_not_found', sprintf( 'Installed theme not found for slug: %s', $slug ), array( 'status' => 404 ) );
+		}
+
+		$activation = null;
+		if ( $activate ) {
+			if ( ! current_user_can( 'switch_themes' ) ) {
+				return new \WP_Error( 'webo_mcp_permission_denied', 'switch_themes capability required to activate an installed theme', array( 'status' => 403 ) );
+			}
+
+			$activation = self::switch_theme_tool(
+				array(
+					'stylesheet' => (string) $theme->get_stylesheet(),
+				)
+			);
+			if ( is_wp_error( $activation ) ) {
+				return $activation;
+			}
+		}
+
+		$active = wp_get_theme();
+
+		return array(
+			'action'              => 'install',
+			'slug'                => $slug,
+			'installed'           => (bool) $installed,
+			'already_installed'   => (bool) $already_installed,
+			'activate_requested'  => (bool) $activate,
+			'overwrite_requested' => (bool) $overwrite,
+			'active'              => $active instanceof \WP_Theme && $active->get_stylesheet() === $theme->get_stylesheet(),
+			'theme'               => array(
+				'stylesheet' => (string) $theme->get_stylesheet(),
+				'template'   => (string) $theme->get_template(),
+				'name'       => (string) $theme->get( 'Name' ),
+				'version'    => (string) $theme->get( 'Version' ),
+			),
+			'activation'          => $activation,
+			'tool'                => 'webo/theme-mutate',
+		);
+	}
+
+	/**
+	 * Determine whether the current user may install themes.
+	 *
+	 * @return bool
+	 */
+	private static function current_user_can_install_themes() {
+		return current_user_can( 'install_themes' ) || ( is_multisite() && function_exists( 'is_super_admin' ) && is_super_admin() );
 	}
 
 	/**

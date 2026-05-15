@@ -255,9 +255,6 @@ class McpRouter {
 		if ( 'webo/ability-execute' === $tool_name ) {
 			$ability_name = isset( $arguments['ability'] ) ? sanitize_text_field( (string) $arguments['ability'] ) : '';
 			$input        = isset( $arguments['input'] ) && is_array( $arguments['input'] ) ? $arguments['input'] : array();
-			if ( ! empty( $arguments['dry_run'] ) ) {
-				return true;
-			}
 		} elseif ( isset( $tool_definition['ability_name'] ) ) {
 			$ability_name = sanitize_text_field( (string) $tool_definition['ability_name'] );
 		}

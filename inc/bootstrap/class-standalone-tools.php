@@ -565,17 +565,29 @@ final class Standalone_Tools {
 			),
 			array(
 				'name'        => 'webo/theme-mutate',
-				'description' => 'Switch the active WordPress theme by stylesheet slug (theme directory name). action must be switch. stylesheet is required.',
+				'description' => 'Unified theme write operations. action (required): install from WordPress.org by slug, or switch an installed theme by stylesheet. install supports activate and overwrite when the server permits theme installation.',
 				'category'    => 'wordpress',
 				'arguments'   => array(
 					'action'     => array(
 						'type'     => 'string',
 						'required' => true,
 					),
+					'slug'       => array(
+						'type'     => 'string',
+						'required' => false,
+					),
 					'stylesheet' => array(
 						'type'     => 'string',
 						'required' => false,
 						'default'  => '',
+					),
+					'activate'   => array(
+						'type'     => 'boolean',
+						'required' => false,
+					),
+					'overwrite'  => array(
+						'type'     => 'boolean',
+						'required' => false,
 					),
 				),
 				'permission'  => 'switch_themes',

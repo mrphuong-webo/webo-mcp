@@ -56,7 +56,7 @@ Standalone core tools included:
 - Plugins: `webo/plugin-query` (installed, active, updates, …) and `webo/plugin-mutate` (install, activate, deactivate; supports child-site `site_id` / `blog_id` activation for network admins)
 - Health: `webo/health-status` (REST/router status, Application Password support, permalinks, cron, object cache, plugin update summary, WordPress/PHP versions, and redacted MCP config)
 - Abilities bridge: `webo/ability-query` and `webo/ability-execute` in default layered mode. Only abilities with `meta.mcp.public === true` are visible and executable through WEBO MCP.
-- Themes: `webo/theme-query`, `webo/theme-mutate`
+- Themes: `webo/theme-query` (installed themes) and `webo/theme-mutate` (install from WordPress.org by slug, switch installed theme)
 - Menus: `webo/menu-query`, `webo/menu-mutate`
 - Options: get/update (safe allowlist only), set site icon/favicon from media
 - SEO (WordPress post): seo/article-analysis — requires post_id; merges Rank Math meta when available (same data path as webo-rank-math/get-post-seo-meta); optional related-keyword suggestions via outbound request unless no_autocomplete is true
@@ -185,6 +185,7 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 * Bridge: add `off`, `layered` (default), and `full` modes. Layered mode exposes compact `webo/ability-query` and `webo/ability-execute` tools so `tools/list` stays small by default.
 * Security: only bridge abilities with `meta.mcp.public === true`; execution now passes through ability permissions, WEBO policy/allowlist checks, and scope/risk gates.
 * Health: extend `webo/health-status` with WordPress 7.0/Core AI/MCP compatibility diagnostics.
+* Themes: extend `webo/theme-mutate` with WordPress.org theme install by slug; optional activation still requires `switch_themes`.
 
 = 2.1.14 =
 * Fix: bridge scoped plugin-management capabilities while network admins activate or deactivate plugins inside a child site.

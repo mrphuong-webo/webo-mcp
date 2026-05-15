@@ -32,12 +32,11 @@ final class Ability_Bridge {
 	 * @return string
 	 */
 	public static function get_mode() {
-		$mode = get_option( 'webo_mcp_bridge_mode', self::MODE_LAYERED );
 		if ( defined( 'WEBO_MCP_BRIDGE_MODE' ) ) {
 			$mode = WEBO_MCP_BRIDGE_MODE;
+		} else {
+			$mode = apply_filters( 'webo_mcp_bridge_mode', get_option( 'webo_mcp_bridge_mode', self::MODE_LAYERED ) );
 		}
-
-		$mode = apply_filters( 'webo_mcp_bridge_mode', $mode );
 		$mode = is_scalar( $mode ) ? sanitize_key( (string) $mode ) : self::MODE_LAYERED;
 
 		return in_array( $mode, array( self::MODE_OFF, self::MODE_LAYERED, self::MODE_FULL ), true ) ? $mode : self::MODE_LAYERED;
