@@ -230,6 +230,24 @@ class WordPressTools {
 	}
 
 	/**
+	 * Prepare post content for storage.
+	 *
+	 * Users with unfiltered_html can preserve full block HTML (for example
+	 * style blocks in page builders). Other users keep the normal post KSES
+	 * boundary.
+	 *
+	 * @param string $content Raw submitted post content.
+	 * @return string
+	 */
+	private static function prepare_post_content( string $content ): string {
+		if ( current_user_can( 'unfiltered_html' ) ) {
+			return $content;
+		}
+
+		return wp_kses_post( $content );
+	}
+
+	/**
 	 * Require a taxonomy capability for taxonomy mutations.
 	 *
 	 * @param string $taxonomy Taxonomy key.
@@ -566,7 +584,7 @@ class WordPressTools {
 				$payload['post_title'] = sanitize_text_field( (string) $update['title'] );
 			}
 			if ( isset( $update['content'] ) ) {
-				$payload['post_content'] = wp_kses_post( (string) $update['content'] );
+				$payload['post_content'] = self::prepare_post_content( (string) $update['content'] );
 			}
 			if ( isset( $update['status'] ) ) {
 				$payload['post_status'] = sanitize_key( (string) $update['status'] );
@@ -665,7 +683,7 @@ class WordPressTools {
 	public static function create_post( array $arguments ) {
 		$post_type = isset( $arguments['post_type'] ) ? sanitize_key( (string) $arguments['post_type'] ) : 'post';
 		$title     = isset( $arguments['title'] ) ? sanitize_text_field( (string) $arguments['title'] ) : '';
-		$content   = isset( $arguments['content'] ) ? wp_kses_post( (string) $arguments['content'] ) : '';
+		$content   = isset( $arguments['content'] ) ? self::prepare_post_content( (string) $arguments['content'] ) : '';
 		$status    = isset( $arguments['status'] ) ? sanitize_key( (string) $arguments['status'] ) : 'draft';
 
 		if ( ! in_array( $status, array( 'draft', 'pending', 'publish', 'private' ), true ) ) {
@@ -730,7 +748,7 @@ class WordPressTools {
 		}
 
 		if ( isset( $arguments['content'] ) ) {
-			$payload['post_content'] = wp_kses_post( (string) $arguments['content'] );
+			$payload['post_content'] = self::prepare_post_content( (string) $arguments['content'] );
 		}
 
 		if ( isset( $arguments['excerpt'] ) ) {

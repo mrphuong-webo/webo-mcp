@@ -5,7 +5,7 @@ Tags: mcp, ai, json-rpc, api, automation
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.15
+Stable tag: 2.1.16
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -179,6 +179,10 @@ Use a WordPress **Application Password** (Users → Profile → Application Pass
 3. tools/call response for a WordPress tool
 
 == Changelog ==
+= 2.1.16 =
+* Fix: `webo/content-mutate` can preserve raw block HTML for users with `unfiltered_html`, allowing admin page-builder content and inline styles to be managed through MCP.
+* Security: users without `unfiltered_html` continue to pass content through the normal WordPress post KSES boundary.
+
 = 2.1.15 =
 * WordPress 7.0 readiness: add defensive feature detection for Abilities API, MCP Adapter, Connectors API, and `wp_supports_ai()`.
 * Bootstrap: avoid loading duplicate bundled Abilities API or MCP Adapter code when Core/external implementations are already present.

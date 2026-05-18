@@ -160,10 +160,12 @@ final class Standalone_Tools {
 					'content'       => array(
 						'type'     => 'string',
 						'required' => false,
+						'format'   => 'raw_html',
 					),
 					'excerpt'       => array(
 						'type'     => 'string',
 						'required' => false,
+						'format'   => 'html',
 					),
 					'status'        => array(
 						'type'     => 'string',

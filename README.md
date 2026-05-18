@@ -34,6 +34,11 @@ Suggested GitHub topics: `wordpress`, `wordpress-plugin`, `mcp`, `model-context-
 
 ## Recent Changes
 
+### 2.1.16 - Raw block HTML for trusted MCP content updates
+
+- Fixed `webo/content-mutate` so trusted WordPress users with `unfiltered_html` can preserve full block HTML when creating or updating pages through MCP.
+- Users without `unfiltered_html` still use the normal WordPress post KSES boundary.
+
 ### 2.1.15 - WordPress 7.0 Core-aware MCP bridge
 
 - Added defensive WordPress/Core feature detection for Abilities API, MCP Adapter, Connectors API, and `wp_supports_ai()`.

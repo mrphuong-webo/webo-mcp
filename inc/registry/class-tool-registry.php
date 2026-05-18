@@ -325,7 +325,9 @@ class ToolRegistry {
 							sprintf( 'Argument "%s" must be string', $key )
 						);
 					}
-					if ( isset( $rules['format'] ) && 'html' === (string) $rules['format'] ) {
+					if ( isset( $rules['format'] ) && 'raw_html' === (string) $rules['format'] && current_user_can( 'unfiltered_html' ) ) {
+						$value = (string) $value;
+					} elseif ( isset( $rules['format'] ) && in_array( (string) $rules['format'], array( 'html', 'raw_html' ), true ) ) {
 						$value = wp_kses_post( (string) $value );
 					} else {
 						$value = sanitize_text_field( (string) $value );
