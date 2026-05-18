@@ -1,6 +1,36 @@
-# WEBO MCP
+# WEBO MCP - WordPress MCP Plugin and AI Agent Gateway
 
-Token-optimized MCP gateway for WordPress. Unified query/mutate tools cut the `tools/list` payload by up to 70% — less context consumed, lower cost, fewer tool-name errors.
+WEBO MCP is a production-ready **WordPress MCP plugin** that turns WordPress into a secure **Model Context Protocol (MCP) gateway** for AI agents, automation tools, and developer workflows. It exposes WordPress content, media, users, plugins, themes, SEO data, WooCommerce add-ons, and custom abilities through a stable REST JSON-RPC endpoint:
+
+`POST /wp-json/mcp/v1/router`
+
+Use WEBO MCP when you need a **WordPress MCP server**, **AI agent WordPress integration**, **WordPress automation API**, or a token-optimized bridge between WordPress and tools such as Codex, Cursor, Claude Desktop, n8n, Make, Zapier-style workflows, and custom MCP clients.
+
+## Why WEBO MCP?
+
+- **WordPress MCP gateway:** connect AI agents to WordPress through MCP-compatible `initialize`, `tools/list`, and `tools/call` requests.
+- **Token-optimized tools:** unified query/mutate tools reduce large `tools/list` payloads and help agents choose the right WordPress action faster.
+- **Production security:** supports WordPress Application Passwords, optional API key and HMAC protection, capability checks, policy allowlists, and bounded audit logging.
+- **Core-aware WordPress 7.0 readiness:** detects Core Abilities API, MCP Adapter, Connectors API, and `wp_supports_ai()` without breaking WordPress 6.0+ fallback behavior.
+- **Addon ecosystem:** supports MCP tools for WordPress content, media, menus, plugins, themes, Rank Math SEO, WooCommerce, WP Rocket, WP Ultimo, and custom addon abilities.
+- **Stable endpoint:** keeps WEBO's production router at `/wp-json/mcp/v1/router` even when the official WordPress MCP Adapter is available separately.
+
+## Common WordPress MCP Use Cases
+
+- Let AI agents draft, update, audit, and publish WordPress posts or pages.
+- Query and mutate media, menus, taxonomies, comments, themes, and plugins from an MCP client.
+- Run SEO checks and Rank Math workflows through WordPress MCP tools.
+- Connect WooCommerce store operations to AI agents through unified MCP query/mutate tools.
+- Build private WordPress admin copilots with policy, role, capability, and audit controls.
+- Provide a compact MCP tool surface for n8n, Cursor, Codex, Claude, and custom automation clients.
+
+## SEO Keyword Targets
+
+Primary keyword: **WordPress MCP**
+
+Related keywords: **WordPress MCP plugin**, **WordPress MCP server**, **MCP server for WordPress**, **WordPress AI agent**, **AI agent WordPress plugin**, **WordPress automation API**, **WordPress JSON-RPC MCP**, **WordPress REST MCP gateway**, **MCP tools for WordPress**, **WooCommerce MCP**, **Rank Math MCP**, **WordPress Abilities API**, **WordPress MCP Adapter**.
+
+Suggested GitHub topics: `wordpress`, `wordpress-plugin`, `mcp`, `model-context-protocol`, `mcp-server`, `wordpress-mcp`, `ai-agent`, `ai-automation`, `json-rpc`, `rest-api`, `woocommerce`, `rank-math`, `wp-abilities-api`.
 
 ## Recent Changes
 
