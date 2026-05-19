@@ -136,7 +136,7 @@ final class Standalone_Tools {
 			),
 			array(
 				'name'        => 'webo/content-mutate',
-				'description' => 'Unified write content operations. action (required): create — new post (args: title, content, post_type, status); update — update post (args: post_id|id, title, content, excerpt, status); delete — delete post (args: post_id|id, force); restore-revision — restore revision (args: revision_id); bulk-update-status — change status for many posts (args: post_ids[], status); search-replace — find/replace in content (args: search, replace, dry_run, offset, limit); set-featured-image — set thumbnail (args: post_id|id, attachment_id, remove); assign-terms — assign taxonomy terms (args: post_id|id, taxonomy, term_ids[]). Response always includes id as primary field.',
+				'description' => 'Unified write content operations. action (required): create — new post (args: title, content, post_type, status, post_password); update — update post (args: post_id|id, title, content, excerpt, status, post_password); delete — delete post (args: post_id|id, force); restore-revision — restore revision (args: revision_id); bulk-update-status — change status for many posts (args: post_ids[], status); search-replace — find/replace in content (args: search, replace, dry_run, offset, limit); set-featured-image — set thumbnail (args: post_id|id, attachment_id, remove); assign-terms — assign taxonomy terms (args: post_id|id, taxonomy, term_ids[]). Response always includes id as primary field.',
 				'category'    => 'wordpress',
 				'arguments'   => array(
 					'action'        => array(
@@ -172,6 +172,10 @@ final class Standalone_Tools {
 						'required' => false,
 					),
 					'post_type'     => array(
+						'type'     => 'string',
+						'required' => false,
+					),
+					'post_password' => array(
 						'type'     => 'string',
 						'required' => false,
 					),

@@ -685,6 +685,7 @@ class WordPressTools {
 		$title     = isset( $arguments['title'] ) ? sanitize_text_field( (string) $arguments['title'] ) : '';
 		$content   = isset( $arguments['content'] ) ? self::prepare_post_content( (string) $arguments['content'] ) : '';
 		$status    = isset( $arguments['status'] ) ? sanitize_key( (string) $arguments['status'] ) : 'draft';
+		$password  = isset( $arguments['post_password'] ) ? sanitize_text_field( (string) $arguments['post_password'] ) : '';
 
 		if ( ! in_array( $status, array( 'draft', 'pending', 'publish', 'private' ), true ) ) {
 			return new \WP_Error( 'webo_mcp_invalid_status', 'Invalid status for post creation' );
@@ -705,7 +706,8 @@ class WordPressTools {
 				'post_type'    => $post_type,
 				'post_title'   => $title,
 				'post_content' => $content,
-				'post_status'  => $status,
+				'post_status'   => $status,
+				'post_password' => $password,
 			),
 			true
 		);
@@ -753,6 +755,10 @@ class WordPressTools {
 
 		if ( isset( $arguments['excerpt'] ) ) {
 			$payload['post_excerpt'] = wp_kses_post( (string) $arguments['excerpt'] );
+		}
+
+		if ( array_key_exists( 'post_password', $arguments ) ) {
+			$payload['post_password'] = sanitize_text_field( (string) $arguments['post_password'] );
 		}
 
 		if ( isset( $arguments['status'] ) ) {
